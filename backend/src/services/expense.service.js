@@ -32,9 +32,24 @@ const deleteExpense = async (id, userId) => {
   });
 };
 
+const updateExpense = async (id, data, userId) => {
+  const result = await prisma.expense.updateMany({
+    where: { id: Number(id), userId },
+    data: {
+      title: data.title,
+      amount: data.amount != null ? Number(data.amount) : undefined,
+      category: data.category,
+      date: data.date ? new Date(data.date) : undefined
+    }
+  });
+  if (result.count === 0) throw new Error("Expense not found or not permitted");
+  return prisma.expense.findUnique({ where: { id: Number(id) } });
+};
+
 module.exports = {
   getAllExpenses,
   createExpense,
   deleteExpense
+  ,updateExpense
 };
 

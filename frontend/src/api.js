@@ -36,4 +36,5 @@ export const api = {
   get: (endpoint) => request(endpoint, "GET"),
   post: (endpoint, body) => request(endpoint, "POST", body),
   delete: (endpoint) => request(endpoint, "DELETE"),
+  put: (endpoint, body) => request(endpoint, "PUT", body),
 };

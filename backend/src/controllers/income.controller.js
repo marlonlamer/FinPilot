@@ -15,18 +15,20 @@ const getIncomes = async (req, res) => {
 };
 
 const createIncome = async (req, res) => {
-  const { title, amount, source, } = req.body;
+  // Map frontend fields: frontend may send category/notes/date; use source + amount as required
+  const { amount, source, date, category } = req.body;
 
-  if (!title || !amount || !source) {
-    return res.status(400).json({ error: "All fields are required" });
+  if (!amount || !source) {
+    return res.status(400).json({ error: "Amount and source are required" });
   }
 
   try {
     const income = await incomeService.createIncome({
-      title,
-      amount,
+      title: category || "",
+      amount: Number(amount),
       source,
-      userId: req.userId
+      userId: req.userId,
+      date: date || undefined
     });
 
     res.status(201).json(income);
@@ -46,8 +48,25 @@ const deleteIncome = async (req, res) => {
   }
 };
 
+const updateIncome = async (req, res) => {
+  const { amount, source, date, category } = req.body;
+  try {
+    const updated = await incomeService.updateIncome(req.params.id, {
+      title: category || undefined,
+      amount,
+      source,
+      date
+    }, req.userId);
+    res.json(updated);
+  } catch (error) {
+    console.error("Update income error:", error);
+    res.status(500).json({ error: "Failed to update income" });
+  }
+};
+
 module.exports = {
   getIncomes,
   createIncome,
-  deleteIncome
+  deleteIncome,
+  updateIncome
 };

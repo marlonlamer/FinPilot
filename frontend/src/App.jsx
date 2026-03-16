@@ -125,10 +125,35 @@ function App() {
   // Add Income/Expense modal state
   const [incomeModalOpen, setIncomeModalOpen] = useState(false);
   const [expenseModalOpen, setExpenseModalOpen] = useState(false);
+  const [editingExpenseId, setEditingExpenseId] = useState(null);
+  const [editingIncomeId, setEditingIncomeId] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (editingExpenseId) {
+      // update existing expense
+      try {
+        const updated = await api.put(`/expenses/${editingExpenseId}`, {
+          amount: form.amount,
+          category: form.category,
+          description: form.description,
+          source: form.source,
+          date: form.date,
+          notes: form.notes
+        });
+        setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? updated : p)));
+      } catch (e) {
+        console.warn("Update expense failed, applying locally", e);
+        setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? { ...p, ...form, amount: Number(form.amount) } : p)));
+      } finally {
+        setEditingExpenseId(null);
+        setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+        setExpenseModalOpen(false);
+      }
+      return;
+    }
 
+    // create new expense
     try {
       const newExpense = await api.post("/expenses", {
         amount: form.amount,
@@ -167,6 +192,27 @@ function App() {
 
   const handleIncomeSubmit = async (e) => {
     e.preventDefault();
+    if (editingIncomeId) {
+      try {
+        const updated = await api.put(`/incomes/${editingIncomeId}`, {
+          amount: incomeForm.amount,
+          source: incomeForm.source,
+          date: incomeForm.date,
+          category: incomeForm.category,
+          notes: incomeForm.notes
+        });
+        setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? updated : p)));
+      } catch (e) {
+        console.warn("Update income failed, applying locally", e);
+        setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? { ...p, ...incomeForm, amount: Number(incomeForm.amount) } : p)));
+      } finally {
+        setEditingIncomeId(null);
+        setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+        setIncomeModalOpen(false);
+      }
+      return;
+    }
+
     try {
       const newIncome = await api.post("/incomes", {
         amount: incomeForm.amount,
@@ -193,6 +239,43 @@ function App() {
       setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
       setIncomeModalOpen(false);
     }
+  };
+
+  const openEditExpense = (expense) => {
+    setForm({
+      amount: expense.amount || "",
+      category: expense.category || "",
+      description: expense.description || "",
+      source: expense.source || "",
+      date: expense.date ? expense.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+      notes: expense.notes || ""
+    });
+    setEditingExpenseId(expense.id);
+    setExpenseModalOpen(true);
+  };
+
+  const cancelExpenseEdit = () => {
+    setEditingExpenseId(null);
+    setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+    setExpenseModalOpen(false);
+  };
+
+  const openEditIncome = (income) => {
+    setIncomeForm({
+      amount: income.amount || "",
+      category: income.category || "",
+      source: income.source || "",
+      date: income.date ? income.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+      notes: income.notes || ""
+    });
+    setEditingIncomeId(income.id);
+    setIncomeModalOpen(true);
+  };
+
+  const cancelIncomeEdit = () => {
+    setEditingIncomeId(null);
+    setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+    setIncomeModalOpen(false);
   };
 
   const deleteIncome = async (id) => {
@@ -366,7 +449,7 @@ function App() {
       );
     }
 
-    if (page === "transactions") return <Transactions incomes={incomes} expenses={expenses} deleteIncome={deleteIncome} deleteExpense={deleteExpense} />;
+    if (page === "transactions") return <Transactions incomes={incomes} expenses={expenses} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} />;
     if (page === "income") return (
       <Income
         incomes={incomes}
@@ -376,6 +459,9 @@ function App() {
         incomeModalOpen={incomeModalOpen}
         setIncomeModalOpen={setIncomeModalOpen}
         deleteIncome={deleteIncome}
+        openEditIncome={openEditIncome}
+        editingIncomeId={editingIncomeId}
+        cancelIncomeEdit={cancelIncomeEdit}
       />
     );
     if (page === "expenses") return (
@@ -388,6 +474,9 @@ function App() {
         setExpenseModalOpen={setExpenseModalOpen}
         openBudgetModal={openBudgetModal}
         deleteExpense={deleteExpense}
+        openEditExpense={openEditExpense}
+        editingExpenseId={editingExpenseId}
+        cancelExpenseEdit={cancelExpenseEdit}
       />
     );
     if (page === "savings") return <Savings totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} />;

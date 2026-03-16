@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense }) {
+export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit }) {
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -12,14 +12,14 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
       </div>
 
       {expenseModalOpen && (
-        <div className="modal-overlay" onClick={() => setExpenseModalOpen(false)}>
+        <div className="modal-overlay" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <div style={{ display: "flex", flexDirection: "column" }}>
-                <div className="modal-title">Add Expense</div>
+                <div className="modal-title">{editingExpenseId ? "Edit Expense" : "Add Expense"}</div>
                 <div className="modal-sub">Track where your money went</div>
               </div>
-              <button className="btn btn-ghost" onClick={() => setExpenseModalOpen(false)}>✕</button>
+              <button className="btn btn-ghost" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>✕</button>
             </div>
             <form onSubmit={handleSubmit} className="form-grid">
               <div className="input-with-prefix">
@@ -43,8 +43,8 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
               <input className="modern-input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
               <input className="modern-input form-full" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
               <div className="modal-footer form-full">
-                <button type="button" className="btn" onClick={() => setExpenseModalOpen(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Add Expense</button>
+                <button type="button" className="btn" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>Cancel</button>
+                <button type="submit" className="btn btn-primary">{editingExpenseId ? "Save Changes" : "Add Expense"}</button>
               </div>
             </form>
           </div>
@@ -54,7 +54,10 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
       <h3 style={{ marginTop: 12 }}>Recent Expenses</h3>
       <ul>
         {expenses.map(expense => (
-          <li key={expense.id}>₱{expense.amount} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button></li>
+          <li key={expense.id}>₱{expense.amount} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null}
+            <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
+            <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button>
+          </li>
         ))}
       </ul>
     </div>
