@@ -6,6 +6,8 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("date_desc");
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -60,6 +62,78 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
     return expenses.filter(e => inDateRange(e.date) && matchesCategory(e));
   }, [expenses, dateFilter, customStart, customEnd, categoryFilter]);
 
+  function matchesSearch(item) {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const checks = [
+      item.category,
+      item.source,
+      item.description,
+      item.notes,
+      String(item.amount)
+    ];
+    return checks.some(v => v && String(v).toLowerCase().includes(q));
+  }
+
+  function sortItems(items) {
+    const copy = [...items];
+    copy.sort((a, b) => {
+      const aDate = new Date(a.date || 0).getTime();
+      const bDate = new Date(b.date || 0).getTime();
+      const aAmt = Number(a.amount) || 0;
+      const bAmt = Number(b.amount) || 0;
+
+      switch (sortBy) {
+        case "date_asc":
+          return aDate - bDate;
+        case "date_desc":
+          return bDate - aDate;
+        case "amount_asc":
+          return aAmt - bAmt;
+        case "amount_desc":
+          return bAmt - aAmt;
+        case "category_asc":
+          return String(a.category || "").localeCompare(String(b.category || ""));
+        case "category_desc":
+          return String(b.category || "").localeCompare(String(a.category || ""));
+        default:
+          return bDate - aDate;
+      }
+    });
+    return copy;
+  }
+
+  // Build the displayed list depending on type filter, apply search, sort, and compute running balance
+  const displayedList = useMemo(() => {
+    const mapIncome = (i) => ({ ...i, type: "income" });
+    const mapExpense = (e) => ({ ...e, type: "expense" });
+
+    let list = [];
+    if (typeFilter === "all") {
+      list = [...filteredIncomes.map(mapIncome), ...filteredExpenses.map(mapExpense)];
+    } else if (typeFilter === "income") {
+      list = filteredIncomes.map(mapIncome);
+    } else {
+      list = filteredExpenses.map(mapExpense);
+    }
+
+    // apply search
+    list = list.filter(matchesSearch);
+
+    // sort
+    list = sortItems(list);
+
+    // compute running balance according to current sorted order
+    let running = 0;
+    const withBalance = list.map(item => {
+      const amt = Number(item.amount) || 0;
+      running = item.type === "income" ? running + amt : running - amt;
+      return { ...item, runningBalance: running };
+    });
+
+    return withBalance;
+  }, [typeFilter, filteredIncomes, filteredExpenses, searchQuery, sortBy]);
+
   return (
     <div>
       <h2>All Transactions</h2>
@@ -101,33 +175,94 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
             ))}
           </select>
         </div>
+
+        <div style={{ marginLeft: 8 }}>
+          <label style={{ marginRight: 6 }}>Search:</label>
+          <input placeholder="Search amounts, notes, category..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        </div>
+
+        <div>
+          <label style={{ marginRight: 6 }}>Sort:</label>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="date_desc">Date (newest)</option>
+            <option value="date_asc">Date (oldest)</option>
+            <option value="amount_desc">Amount (high → low)</option>
+            <option value="amount_asc">Amount (low → high)</option>
+            <option value="category_asc">Category (A → Z)</option>
+            <option value="category_desc">Category (Z → A)</option>
+          </select>
+        </div>
       </div>
-
-      {typeFilter !== "expense" && (
+      {/* If viewing all types show merged list with running balance; otherwise show per-type lists */}
+      {typeFilter === "all" ? (
         <>
-          <h3>Incomes</h3>
-          <ul>
-            {filteredIncomes.map(i => (
-              <li key={i.id}>₱{i.amount} {i.category ? `(${i.category})` : `(${i.source})`} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null}
-                <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(i)}>✏️</button>
-                <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(i.id)}>❌</button>
-              </li>
-            ))}
-          </ul>
+          <h3>Transactions</h3>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
+                <th style={{ padding: 8 }}>Date</th>
+                <th style={{ padding: 8 }}>Type</th>
+                <th style={{ padding: 8 }}>Category / Source</th>
+                <th style={{ padding: 8 }}>Amount</th>
+                <th style={{ padding: 8 }}>Running</th>
+                <th style={{ padding: 8 }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {displayedList.map(item => (
+                <tr key={`${item.type}-${item.id}`} style={{ borderBottom: "1px solid #fafafa" }}>
+                  <td style={{ padding: 8 }}>{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</td>
+                  <td style={{ padding: 8 }}>{item.type}</td>
+                  <td style={{ padding: 8 }}>{item.category ? item.category : item.source}</td>
+                  <td style={{ padding: 8 }}>{item.type === "income" ? `₱${Number(item.amount).toFixed(2)}` : `₱${Number(item.amount).toFixed(2)}`}</td>
+                  <td style={{ padding: 8 }}>₱{Number(item.runningBalance).toFixed(2)}</td>
+                  <td style={{ padding: 8 }}>
+                    {item.type === "income" ? (
+                      <>
+                        <button style={{ marginRight: 8 }} onClick={() => openEditIncome(item)}>✏️</button>
+                        <button onClick={() => deleteIncome(item.id)}>❌</button>
+                      </>
+                    ) : (
+                      <>
+                        <button style={{ marginRight: 8 }} onClick={() => openEditExpense(item)}>✏️</button>
+                        <button onClick={() => deleteExpense(item.id)}>❌</button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </>
-      )}
-
-      {typeFilter !== "income" && (
+      ) : (
         <>
-          <h3>Expenses</h3>
-          <ul>
-            {filteredExpenses.map(e => (
-              <li key={e.id}>₱{e.amount} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null}
-                <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(e)}>✏️</button>
-                <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(e.id)}>❌</button>
-              </li>
-            ))}
-          </ul>
+          {typeFilter !== "expense" && (
+            <>
+              <h3>Incomes</h3>
+              <ul>
+                {displayedList.filter(i => i.type === "income").map(i => (
+                  <li key={i.id}>₱{i.amount} {i.category ? `(${i.category})` : `(${i.source})`} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: ₱{Number(i.runningBalance).toFixed(2)}
+                    <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(i)}>✏️</button>
+                    <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(i.id)}>❌</button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {typeFilter !== "income" && (
+            <>
+              <h3>Expenses</h3>
+              <ul>
+                {displayedList.filter(e => e.type === "expense").map(e => (
+                  <li key={e.id}>₱{e.amount} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: ₱{Number(e.runningBalance).toFixed(2)}
+                    <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(e)}>✏️</button>
+                    <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(e.id)}>❌</button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
         </>
       )}
     </div>
