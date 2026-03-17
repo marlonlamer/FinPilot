@@ -1,11 +1,51 @@
-import React from "react";
+import React, { useMemo } from "react";
 
 export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit }) {
+  const totalAll = useMemo(() => incomes.reduce((s, it) => s + (Number(it.amount) || 0), 0), [incomes]);
+  const now = new Date();
+  const monthlyTotal = useMemo(() => {
+    return incomes.reduce((s, it) => {
+      if (!it.date) return s;
+      const d = new Date(it.date);
+      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+        return s + (Number(it.amount) || 0);
+      }
+      return s;
+    }, 0);
+  }, [incomes, now]);
+
+  const bySource = useMemo(() => {
+    const map = {};
+    incomes.forEach(it => {
+      const key = it.source || (it.category ? `${it.category}` : "Unspecified");
+      map[key] = (map[key] || 0) + (Number(it.amount) || 0);
+    });
+    return Object.entries(map).sort((a, b) => b[1] - a[1]); // [ [source, total], ... ]
+  }, [incomes]);
+
+  const recurring = useMemo(() => incomes.filter(i => i.recurring), [incomes]);
+  const nonRecurring = useMemo(() => incomes.filter(i => !i.recurring), [incomes]);
+
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h3 style={{ margin: 0 }}>Incomes</h3>
         <button className="btn btn-primary" onClick={() => setIncomeModalOpen(true)}>＋ Add Income</button>
+      </div>
+
+      <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
+        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
+          <div style={{ fontSize: 12, color: "#666" }}>Total Income</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>₱{totalAll.toFixed(2)}</div>
+        </div>
+        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
+          <div style={{ fontSize: 12, color: "#666" }}>This Month</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>₱{monthlyTotal.toFixed(2)}</div>
+        </div>
+        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 200 }}>
+          <div style={{ fontSize: 12, color: "#666" }}>Recurring Incomes</div>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>{recurring.length}</div>
+        </div>
       </div>
 
       {incomeModalOpen && (
@@ -28,6 +68,22 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
               </select>
               <input className="modern-input" placeholder="Source of Fund" value={incomeForm.source} onChange={e => setIncomeForm({ ...incomeForm, source: e.target.value })} required />
               <input className="modern-input" type="date" value={incomeForm.date} onChange={e => setIncomeForm({ ...incomeForm, date: e.target.value })} />
+
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="checkbox" checked={!!incomeForm.recurring} onChange={e => setIncomeForm({ ...incomeForm, recurring: e.target.checked })} />
+                  <span>Recurring</span>
+                </label>
+                {incomeForm.recurring && (
+                  <select className="modern-input" value={incomeForm.recurrence || "monthly"} onChange={e => setIncomeForm({ ...incomeForm, recurrence: e.target.value })} style={{ width: 160 }}>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                )}
+              </div>
+
               <input className="modern-input" placeholder="Notes" value={incomeForm.notes} onChange={e => setIncomeForm({ ...incomeForm, notes: e.target.value })} />
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
                 <button type="button" className="btn" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>Cancel</button>
@@ -38,9 +94,37 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
         </div>
       )}
 
-      <h3 style={{ marginTop: 12 }}>Incomes</h3>
+      <h3 style={{ marginTop: 12 }}>Recurring Incomes</h3>
+      {recurring.length > 0 ? (
+        <ul>
+          {recurring.map(income => (
+            <li key={income.id}>₱{income.amount} {income.category ? `(${income.category})` : `(${income.source})`} — {income.recurrence ? `${income.recurrence}` : "recurring"} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
+              <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(income)}>✏️</button>
+              <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(income.id)}>❌</button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div style={{ color: "#666" }}>No recurring incomes set.</div>
+      )}
+
+      <h3 style={{ marginTop: 12 }}>Income Source Breakdown</h3>
+      {bySource.length > 0 ? (
+        <div style={{ display: "flex", gap: 12, flexDirection: "column" }}>
+          {bySource.map(([source, total]) => (
+            <div key={source} style={{ display: "flex", justifyContent: "space-between", background: "#fff", padding: 8, borderRadius: 6 }}>
+              <div>{source}</div>
+              <div style={{ fontWeight: 700 }}>₱{total.toFixed(2)}</div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{ color: "#666" }}>No incomes recorded.</div>
+      )}
+
+      <h3 style={{ marginTop: 12 }}>All Incomes</h3>
       <ul>
-        {incomes.map(income => (
+        {nonRecurring.map(income => (
           <li key={income.id}>₱{income.amount} {income.category ? `(${income.category})` : `(${income.source})`} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
             <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(income)}>✏️</button>
             <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(income.id)}>❌</button>
