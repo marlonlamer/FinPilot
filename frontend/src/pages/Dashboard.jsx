@@ -12,6 +12,7 @@ import {
   Pie,
   Cell
 } from "recharts";
+import BudgetOverview from "../components/BudgetOverview";
 
 export default function Dashboard(props) {
   const {
@@ -125,6 +126,15 @@ export default function Dashboard(props) {
           </span>
         )}
       </div>
+
+      <BudgetOverview
+        monthlyBudget={monthlyBudget}
+        percentBudgetUsed={percentBudgetUsed}
+        budgetRemaining={budgetRemaining}
+        budgetColor={budgetColor}
+        overBudgetCategories={overBudgetCategories}
+        COLORS={COLORS}
+      />
 
       <div style={{ marginTop: "1rem" }}>
         <h2>Expenses vs Income Per Month</h2>
