@@ -1,5 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { api } from "../api";
+import React, { useMemo, useState } from "react";
 
 export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense }) {
   const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
@@ -9,8 +8,6 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
-  const [recurringTemplates, setRecurringTemplates] = useState([]);
-  const [showRecurring, setShowRecurring] = useState(true);
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -137,74 +134,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
     return withBalance;
   }, [typeFilter, filteredIncomes, filteredExpenses, searchQuery, sortBy]);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("recurringTemplates");
-      if (raw) setRecurringTemplates(JSON.parse(raw));
-    } catch {
-      setRecurringTemplates([]);
-    }
-  }, []);
-
-  function persistRecurring(templates) {
-    setRecurringTemplates(templates);
-    try {
-      localStorage.setItem("recurringTemplates", JSON.stringify(templates));
-    } catch {}
-  }
-
-  const addRecurringFromItem = (item, type) => {
-    const interval = window.prompt("Set recurrence interval (daily, weekly, monthly, yearly):", "monthly");
-    if (!interval) return;
-    const nextDate = window.prompt("Next occurrence date (YYYY-MM-DD):", (item.date ? item.date.slice(0,10) : new Date().toISOString().slice(0,10)));
-    const tpl = {
-      id: Date.now(),
-      type,
-      amount: item.amount,
-      category: item.category || "",
-      source: item.source || "",
-      description: item.description || "",
-      notes: item.notes || "",
-      interval,
-      nextDate
-    };
-    persistRecurring([tpl, ...recurringTemplates]);
-  };
-
-  const createOccurrence = async (tpl) => {
-    const body = {
-      amount: tpl.amount,
-      date: tpl.nextDate,
-      category: tpl.category,
-      source: tpl.source,
-      description: tpl.description,
-      notes: tpl.notes
-    };
-    try {
-      if (tpl.type === "income") await api.post("/incomes", body);
-      else await api.post("/expenses", body);
-      window.alert("Occurrence created. Refreshing...");
-      window.location.reload();
-    } catch (e) {
-      console.warn("Create occurrence failed", e);
-      window.alert("Failed to create occurrence. See console.");
-    }
-  };
-
-  const deleteRecurring = (id) => {
-    if (!window.confirm("Delete this recurring template?")) return;
-    persistRecurring(recurringTemplates.filter(t => t.id !== id));
-  };
-
-  const editRecurring = (id) => {
-    const tpl = recurringTemplates.find(t => t.id === id);
-    if (!tpl) return;
-    const interval = window.prompt("Recurrence interval:", tpl.interval);
-    if (!interval) return;
-    const nextDate = window.prompt("Next occurrence date (YYYY-MM-DD):", tpl.nextDate);
-    const updated = { ...tpl, interval, nextDate };
-    persistRecurring(recurringTemplates.map(t => t.id === id ? updated : t));
-  };
+  
 
   return (
     <div>
@@ -265,27 +195,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
           </select>
         </div>
       </div>
-      {/* Recurring templates section */}
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ marginRight: 8 }}>
-          <input type="checkbox" checked={showRecurring} onChange={e => setShowRecurring(e.target.checked)} /> Show recurring templates
-        </label>
-        {showRecurring && recurringTemplates.length > 0 && (
-          <div style={{ border: "1px dashed #ddd", padding: 8, marginTop: 8 }}>
-            <strong>Recurring Templates</strong>
-            <ul>
-              {recurringTemplates.map(t => (
-                <li key={t.id} style={{ marginTop: 6 }}>
-                  {t.type.toUpperCase()} • ₱{Number(t.amount).toFixed(2)} • {t.category || t.source} • {t.interval} • next: {t.nextDate}
-                  <button style={{ marginLeft: 8 }} onClick={() => createOccurrence(t)}>Create now</button>
-                  <button style={{ marginLeft: 8 }} onClick={() => editRecurring(t.id)}>Edit</button>
-                  <button style={{ marginLeft: 8 }} onClick={() => deleteRecurring(t.id)}>Delete</button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+      
       {/* If viewing all types show merged list with running balance; otherwise show per-type lists */}
       {typeFilter === "all" ? (
         <>
@@ -306,19 +216,19 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
                 <tr key={`${item.type}-${item.id}`} style={{ borderBottom: "1px solid #fafafa" }}>
                   <td style={{ padding: 8 }}>{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</td>
                   <td style={{ padding: 8 }}>{item.type}</td>
-                  <td style={{ padding: 8 }}>{item.category ? item.category : item.source}</td>
+                  <td style={{ padding: 8 }}>
+                    {item.category ? item.category : item.source} {item.recurring ? <span style={{ marginLeft: 8, fontSize: 12, color: "#2d8f6f" }}>🔁 recurring</span> : null}
+                  </td>
                   <td style={{ padding: 8 }}>{item.type === "income" ? `₱${Number(item.amount).toFixed(2)}` : `₱${Number(item.amount).toFixed(2)}`}</td>
                   <td style={{ padding: 8 }}>₱{Number(item.runningBalance).toFixed(2)}</td>
                   <td style={{ padding: 8 }}>
                     {item.type === "income" ? (
                       <>
-                        <button style={{ marginRight: 8 }} onClick={() => addRecurringFromItem(item, "income")}>🔁</button>
                         <button style={{ marginRight: 8 }} onClick={() => openEditIncome(item)}>✏️</button>
                         <button onClick={() => deleteIncome(item.id)}>❌</button>
                       </>
                     ) : (
                       <>
-                        <button style={{ marginRight: 8 }} onClick={() => addRecurringFromItem(item, "expense")}>🔁</button>
                         <button style={{ marginRight: 8 }} onClick={() => openEditExpense(item)}>✏️</button>
                         <button onClick={() => deleteExpense(item.id)}>❌</button>
                       </>
@@ -336,10 +246,9 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
               <h3>Incomes</h3>
               <ul>
                 {displayedList.filter(i => i.type === "income").map(i => (
-                  <li key={i.id}>₱{i.amount} {i.category ? `(${i.category})` : `(${i.source})`} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: ₱{Number(i.runningBalance).toFixed(2)}
-                      <button style={{ marginLeft: 10 }} onClick={() => addRecurringFromItem(i, "income")}>🔁</button>
-                      <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(i)}>✏️</button>
-                      <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(i.id)}>❌</button>
+                  <li key={i.id}>₱{i.amount} {i.category ? `(${i.category})` : `(${i.source})`} {i.recurring ? `— recurring (${i.recurrence || "monthly"})` : ""} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: ₱{Number(i.runningBalance).toFixed(2)}
+                    <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(i)}>✏️</button>
+                    <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(i.id)}>❌</button>
                   </li>
                 ))}
               </ul>
@@ -351,8 +260,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
               <h3>Expenses</h3>
               <ul>
                 {displayedList.filter(e => e.type === "expense").map(e => (
-                  <li key={e.id}>₱{e.amount} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: ₱{Number(e.runningBalance).toFixed(2)}
-                    <button style={{ marginLeft: 10 }} onClick={() => addRecurringFromItem(e, "expense")}>🔁</button>
+                  <li key={e.id}>₱{e.amount} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} {e.recurring ? ` — recurring (${e.recurrence || "monthly"})` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: ₱{Number(e.runningBalance).toFixed(2)}
                     <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(e)}>✏️</button>
                     <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(e.id)}>❌</button>
                   </li>

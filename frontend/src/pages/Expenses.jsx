@@ -34,6 +34,9 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
     return budgetStatus.filter(s => s.budget > 0 && s.spent > s.budget);
   }, [budgetStatus]);
 
+  const recurring = useMemo(() => expenses.filter(e => e.recurring), [expenses]);
+  const nonRecurring = useMemo(() => expenses.filter(e => !e.recurring), [expenses]);
+
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -99,6 +102,20 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
                 <option value="Bank Transfer">🏦 Bank Transfer</option>
                 <option value="Mobile Wallet">📱 Mobile Wallet</option>
               </select>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <input type="checkbox" checked={!!form.recurring} onChange={e => setForm({ ...form, recurring: e.target.checked })} />
+                  <span>Recurring</span>
+                </label>
+                {form.recurring && (
+                  <select className="modern-input" value={form.recurrence || "monthly"} onChange={e => setForm({ ...form, recurrence: e.target.value })} style={{ width: 160 }}>
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                  </select>
+                )}
+              </div>
               <input className="modern-input form-full" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
               <div className="modal-footer form-full">
                 <button type="button" className="btn" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>Cancel</button>
@@ -128,9 +145,23 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
         <div style={{ color: "#666" }}>No budgets set. Click "Edit Budgets" to configure per-category budgets.</div>
       )}
 
+      <h3 style={{ marginTop: 12 }}>Recurring Expenses</h3>
+      {recurring.length > 0 ? (
+        <ul>
+          {recurring.map(expense => (
+            <li key={expense.id}>₱{expense.amount} {expense.category ? `(${expense.category})` : `(${expense.source})`} — {expense.recurrence ? `${expense.recurrence}` : "recurring"} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
+              <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
+              <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div style={{ color: "#666" }}>No recurring expenses set.</div>
+      )}
+
       <h3 style={{ marginTop: 12 }}>Recent Expenses</h3>
       <ul>
-        {expenses.map(expense => (
+        {nonRecurring.map(expense => (
           <li key={expense.id}>₱{expense.amount} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
             <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
             <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button>

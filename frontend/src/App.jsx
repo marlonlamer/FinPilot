@@ -20,7 +20,9 @@ function App() {
     category: "",
     source: "",
     date: new Date().toISOString().slice(0, 10),
-    notes: ""
+    notes: "",
+    recurring: false,
+    recurrence: "monthly"
   });
 
   const [form, setForm] = useState({
@@ -29,7 +31,10 @@ function App() {
     description: "",
     source: "",
     date: new Date().toISOString().slice(0, 10),
-    notes: ""
+    notes: "",
+    recurring: false,
+    recurrence: "monthly",
+    paymentMethod: ""
   });
 
   const [dateFilter, setDateFilter] = useState("all");
@@ -139,7 +144,10 @@ function App() {
           description: form.description,
           source: form.source,
           date: form.date,
-          notes: form.notes
+          notes: form.notes,
+          recurring: !!form.recurring,
+          recurrence: form.recurrence || undefined,
+          paymentMethod: form.paymentMethod || undefined
         });
         setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? updated : p)));
       } catch (e) {
@@ -161,7 +169,10 @@ function App() {
         description: form.description,
         source: form.source,
         date: form.date,
-        notes: form.notes
+        notes: form.notes,
+        recurring: !!form.recurring,
+        recurrence: form.recurrence || undefined,
+        paymentMethod: form.paymentMethod || undefined
       });
 
       setExpenses(prev => [newExpense, ...prev]);
@@ -175,7 +186,10 @@ function App() {
         amount: Number(form.amount),
         category: form.category,
         date: form.date,
-        notes: form.notes
+        notes: form.notes,
+        recurring: !!form.recurring,
+        recurrence: form.recurrence || undefined,
+        paymentMethod: form.paymentMethod || undefined
       };
       setExpenses(prev => [temp, ...prev]);
     } finally {
@@ -199,7 +213,9 @@ function App() {
           source: incomeForm.source,
           date: incomeForm.date,
           category: incomeForm.category,
-          notes: incomeForm.notes
+          notes: incomeForm.notes,
+          recurring: !!incomeForm.recurring,
+          recurrence: incomeForm.recurrence || undefined
         });
         setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? updated : p)));
       } catch (e) {
@@ -219,7 +235,9 @@ function App() {
         source: incomeForm.source,
         date: incomeForm.date,
         category: incomeForm.category,
-        notes: incomeForm.notes
+        notes: incomeForm.notes,
+        recurring: !!incomeForm.recurring,
+        recurrence: incomeForm.recurrence || undefined
       });
 
       setIncomes(prev => [newIncome, ...prev]);
@@ -232,7 +250,9 @@ function App() {
         source: incomeForm.source,
         date: incomeForm.date,
         category: incomeForm.category,
-        notes: incomeForm.notes
+        notes: incomeForm.notes,
+        recurring: !!incomeForm.recurring,
+        recurrence: incomeForm.recurrence || undefined
       };
       setIncomes(prev => [temp, ...prev]);
     } finally {
@@ -248,7 +268,10 @@ function App() {
       description: expense.description || "",
       source: expense.source || "",
       date: expense.date ? expense.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
-      notes: expense.notes || ""
+      notes: expense.notes || "",
+      recurring: !!expense.recurring,
+      recurrence: expense.recurrence || "monthly",
+      paymentMethod: expense.paymentMethod || ""
     });
     setEditingExpenseId(expense.id);
     setExpenseModalOpen(true);
@@ -256,7 +279,7 @@ function App() {
 
   const cancelExpenseEdit = () => {
     setEditingExpenseId(null);
-    setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+    setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "", recurring: false, recurrence: "monthly", paymentMethod: "" });
     setExpenseModalOpen(false);
   };
 
@@ -266,7 +289,9 @@ function App() {
       category: income.category || "",
       source: income.source || "",
       date: income.date ? income.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
-      notes: income.notes || ""
+      notes: income.notes || "",
+      recurring: !!income.recurring,
+      recurrence: income.recurrence || "monthly"
     });
     setEditingIncomeId(income.id);
     setIncomeModalOpen(true);
@@ -274,7 +299,7 @@ function App() {
 
   const cancelIncomeEdit = () => {
     setEditingIncomeId(null);
-    setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
+    setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "", recurring: false, recurrence: "monthly" });
     setIncomeModalOpen(false);
   };
 
