@@ -111,21 +111,7 @@ export default function Dashboard(props) {
         </select>
       </div>
 
-      <div style={{ marginTop: "0.5rem" }}>
-        <label style={{ marginRight: 8 }}>Monthly Budget:</label>
-        <input
-          type="number"
-          placeholder="Set monthly budget"
-          value={monthlyBudget === null ? "" : monthlyBudget}
-          onChange={e => setMonthlyBudget(e.target.value === "" ? null : Number(e.target.value))}
-        />
-        {monthlyBudget !== null && (
-          <span style={{ marginLeft: 12, color: budgetColor }}>
-            {percentBudgetUsed !== null ? `${percentBudgetUsed.toFixed(1)}% used` : ""}
-            {budgetRemaining !== null && ` — Remaining: ₱${budgetRemaining.toFixed(2)}`}
-          </span>
-        )}
-      </div>
+      {/* Monthly budget editing moved to Expenses -> Edit Budgets modal */}
 
       <BudgetOverview
         monthlyBudget={monthlyBudget}

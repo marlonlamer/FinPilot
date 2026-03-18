@@ -70,7 +70,17 @@ function App() {
     fetchIncomes();
   }, []);
 
-  const [perCategoryBudgets, setPerCategoryBudgets] = useState([]);
+  const [perCategoryBudgets, setPerCategoryBudgets] = useState({});
+  const [newBudgetCategory, setNewBudgetCategory] = useState("");
+  const [newBudgetAmount, setNewBudgetAmount] = useState("");
+  const [tempMonthlyBudget, setTempMonthlyBudget] = useState(() => {
+    try {
+      const raw = localStorage.getItem("monthlyBudget");
+      return raw ? Number(raw) : null;
+    } catch {
+      return null;
+    }
+  });
 
   // Modal & autosave state for editing category budgets
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
@@ -83,6 +93,7 @@ function App() {
   const openBudgetModal = () => {
     originalBudgetsRef.current = { ...perCategoryBudgets };
     setTempBudgets({ ...perCategoryBudgets });
+    setTempMonthlyBudget(monthlyBudget);
     setBudgetModalOpen(true);
   };
 
@@ -91,8 +102,9 @@ function App() {
       clearTimeout(autosaveTimerRef.current);
       autosaveTimerRef.current = null;
     }
-    // revert to original budgets
+    // revert to original budgets and monthly budget
     setPerCategoryBudgets({ ...originalBudgetsRef.current });
+    setTempMonthlyBudget(monthlyBudget);
     setBudgetModalOpen(false);
     setSaving(false);
   };
@@ -104,6 +116,8 @@ function App() {
     }
     setSaving(true);
     setPerCategoryBudgets({ ...tempBudgets });
+    setMonthlyBudget(tempMonthlyBudget);
+    try { localStorage.setItem("monthlyBudget", tempMonthlyBudget == null ? "" : String(tempMonthlyBudget)); } catch {}
     setSaving(false);
     setSavedAt(Date.now());
     setBudgetModalOpen(false);
@@ -115,6 +129,8 @@ function App() {
     setSaving(true);
     autosaveTimerRef.current = setTimeout(() => {
       setPerCategoryBudgets({ ...tempBudgets });
+      setMonthlyBudget(tempMonthlyBudget);
+      try { localStorage.setItem("monthlyBudget", tempMonthlyBudget == null ? "" : String(tempMonthlyBudget)); } catch {}
       autosaveTimerRef.current = null;
       setSaving(false);
       setSavedAt(Date.now());
@@ -534,6 +550,57 @@ function App() {
         </ul>
       </nav>
       <main style={{ flex: 1, padding: "2rem" }}>{renderPage()}</main>
+      {budgetModalOpen && (
+        <div className="modal-overlay" onClick={() => closeBudgetModal()}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div className="modal-title">Edit Budgets</div>
+                <div className="modal-sub">Set monthly budget and per-category budgets</div>
+              </div>
+              <button className="btn btn-ghost" onClick={() => closeBudgetModal()}>✕</button>
+            </div>
+            <div style={{ display: "grid", gap: 10 }}>
+              <div>
+                <label style={{ display: "block", fontSize: 12, color: "#666" }}>Monthly Budget</label>
+                <input type="number" className="modern-input" value={tempMonthlyBudget === null ? "" : tempMonthlyBudget} onChange={e => setTempMonthlyBudget(e.target.value === "" ? null : Number(e.target.value))} />
+              </div>
+
+              <div>
+                <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 6 }}>Per-category budgets</label>
+                <div style={{ display: "grid", gap: 8 }}>
+                  {Object.keys(tempBudgets || {}).length === 0 ? (
+                    <div style={{ color: "#666" }}>No categories available to set budgets for.</div>
+                  ) : (
+                    Object.keys(tempBudgets).map(cat => (
+                      <div key={cat} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <div style={{ minWidth: 160 }}>{cat}</div>
+                        <input type="number" className="modern-input" value={tempBudgets[cat] == null ? "" : tempBudgets[cat]} onChange={e => setTempBudgets(prev => ({ ...prev, [cat]: e.target.value === "" ? null : Number(e.target.value) }))} />
+                        <button className="btn" onClick={() => setTempBudgets(prev => { const next = { ...prev }; delete next[cat]; return next; })}>Clear</button>
+                      </div>
+                    ))
+                  )}
+
+                  <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+                    <input placeholder="Category name" className="modern-input" value={newBudgetCategory} onChange={e => setNewBudgetCategory(e.target.value)} />
+                    <input placeholder="Amount" className="modern-input" type="number" value={newBudgetAmount} onChange={e => setNewBudgetAmount(e.target.value)} />
+                    <button className="btn" onClick={() => {
+                      if (!newBudgetCategory) return;
+                      setTempBudgets(prev => ({ ...prev, [newBudgetCategory]: newBudgetAmount === "" ? null : Number(newBudgetAmount) }));
+                      setNewBudgetCategory(""); setNewBudgetAmount("");
+                    }}>Add</button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <button className="btn" onClick={() => closeBudgetModal()}>Cancel</button>
+                <button className="btn btn-primary" onClick={() => saveBudgetModal()}>Save</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

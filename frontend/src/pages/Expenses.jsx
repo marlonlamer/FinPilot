@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
 export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets }) {
   // budgets: optional object { categoryName: budgetAmount }
@@ -18,6 +19,26 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
       map[key] = (map[key] || 0) + (Number(it.amount) || 0);
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]); // [ [category, total], ... ]
+  }, [expenses]);
+
+  const pieData = useMemo(() => byCategory.map(([name, value]) => ({ name, value })), [byCategory]);
+
+  const lastSixMonthsData = useMemo(() => {
+    const now = new Date();
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      months.push({ key, date: d, label: new Intl.DateTimeFormat("en", { month: "short" }).format(d), value: 0 });
+    }
+    const map = {};
+    expenses.forEach(exp => {
+      const d = exp.date ? new Date(exp.date) : null;
+      if (!d || isNaN(d)) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      map[key] = (map[key] || 0) + Number(exp.amount || 0);
+    });
+    return months.map(m => ({ month: m.label, value: Number(map[m.key] || 0) }));
   }, [expenses]);
 
   const budgetStatus = useMemo(() => {
@@ -44,6 +65,39 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
         <div style={{ display: "flex", gap: 8 }}>
           <button className="btn" onClick={openBudgetModal}>Edit Budgets</button>
           <button className="btn btn-primary" onClick={() => setExpenseModalOpen(true)}>＋ Add Expense</button>
+        </div>
+      </div>
+
+      {/* Mini analytics: 6-month trend + category pie */}
+      <div style={{ display: "flex", gap: 12, marginTop: 12, alignItems: "stretch", flexWrap: "wrap" }}>
+        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 320, flex: "1 1 320px" }}>
+          <div style={{ fontSize: 12, color: "#666" }}>6‑Month Expense Trend</div>
+          <div style={{ width: "100%", height: 120 }}>
+            <ResponsiveContainer>
+              <LineChart data={lastSixMonthsData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis tickFormatter={(v) => `${v.toFixed ? `₱${v.toFixed(0)}` : v}`} />
+                <Tooltip formatter={(value) => `₱${Number(value).toFixed(2)}`} />
+                <Line type="monotone" dataKey="value" stroke="#FF6B6B" strokeWidth={2} dot={{ r: 2 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", width: 260 }}>
+          <div style={{ fontSize: 12, color: "#666" }}>Expenses by Category</div>
+          <div style={{ width: 220, height: 120, margin: "0 auto" }}>
+            <ResponsiveContainer>
+              <PieChart>
+                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={30} outerRadius={50} />
+                <Tooltip formatter={(value) => `₱${Number(value).toFixed(2)}`} />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div style={{ marginTop: 8, fontSize: 12, color: "#444" }}>
+            {pieData.slice(0,3).map(p => `${p.name} (${Math.round((p.value / (pieData.reduce((s, it) => s + it.value, 0) || 1)) * 100)}%)`).join(" • ")}
+          </div>
         </div>
       </div>
 
