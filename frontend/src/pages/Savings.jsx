@@ -28,6 +28,16 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
     } catch {}
   }, [goals]);
 
+  // Auto-save form draft while modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      const draft = { goalName, targetAmount, savedAmount, startDate, targetDate, notes };
+      try {
+        localStorage.setItem("savingGoalDraft", JSON.stringify(draft));
+      } catch {}
+    }
+  }, [goalName, targetAmount, savedAmount, startDate, targetDate, notes, isModalOpen]);
+
   const monthlySuggestion = useMemo(() => {
     const t = parseFloat(targetAmount);
     const s = parseFloat(savedAmount) || 0;
@@ -53,7 +63,7 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
 
   function handleSubmit(e) {
     e.preventDefault();
-    const payload = {
+    const base = {
       id: editGoalId || Date.now().toString(),
       goalName: goalName.trim(),
       targetAmount: parseFloat(targetAmount) || 0,
@@ -63,6 +73,19 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
       notes: notes.trim(),
       createdAt: new Date().toISOString()
     };
+
+    // preserve existing history when editing, or create initial history if there's an initial saved amount
+    let payload = { ...base };
+    if (editGoalId) {
+      const existing = goals.find(g => g.id === editGoalId) || {};
+      payload.history = existing.history || [];
+    } else {
+      payload.history = [];
+      const initialAmount = parseFloat(savedAmount) || 0;
+      if (initialAmount > 0) {
+        payload.history.push({ id: Date.now().toString(), amount: initialAmount, date: new Date().toISOString(), note: "Initial" });
+      }
+    }
 
     if (editGoalId) {
       setGoals(prev => prev.map(g => (g.id === editGoalId ? { ...g, ...payload } : g)));
@@ -101,14 +124,34 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
     e.preventDefault();
     const amt = parseFloat(addMoneyAmount) || 0;
     if (!addMoneyGoalId || amt <= 0) return;
-    setGoals(prev => prev.map(g => g.id === addMoneyGoalId ? { ...g, savedAmount: (parseFloat(g.savedAmount || 0) + amt) } : g));
+    const entry = { id: Date.now().toString(), amount: amt, date: new Date().toISOString(), note: "Added" };
+    setGoals(prev => prev.map(g => g.id === addMoneyGoalId ? { ...g, savedAmount: (parseFloat(g.savedAmount || 0) + amt), history: (g.history || []).concat(entry) } : g));
     setIsAddMoneyOpen(false);
     setAddMoneyGoalId(null);
     setAddMoneyAmount("");
   }
 
   useEffect(() => {
-    if (!isModalOpen) resetForm();
+    if (!isModalOpen) {
+      resetForm();
+      try { localStorage.removeItem("savingGoalDraft"); } catch {}
+    } else {
+      // when opening new modal (not editing), try to restore draft
+      if (!editGoalId) {
+        try {
+          const raw = localStorage.getItem("savingGoalDraft");
+          if (raw) {
+            const d = JSON.parse(raw);
+            setGoalName(d.goalName || "");
+            setTargetAmount(d.targetAmount || "");
+            setSavedAmount(d.savedAmount || "");
+            setStartDate(d.startDate || "");
+            setTargetDate(d.targetDate || "");
+            setNotes(d.notes || "");
+          }
+        } catch {}
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isModalOpen]);
 
@@ -146,6 +189,22 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
                 <div>
                   <strong>{goal.goalName}</strong>
                   <div style={{ fontSize: 12, color: "#666" }}>{goal.startDate ? `${goal.startDate} → ${goal.targetDate || "-"}` : (goal.targetDate || "")}</div>
+                  <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>Remaining: {
+                    (() => {
+                      if (!goal.targetDate) return "-";
+                      const end = new Date(goal.targetDate);
+                      const now = new Date();
+                      if (isNaN(end)) return "-";
+                      if (end <= now) return "Expired";
+                      const totalDays = Math.ceil((end - now) / (1000 * 60 * 60 * 24));
+                      const months = Math.floor(totalDays / 30);
+                      const days = totalDays % 30;
+                      const parts = [];
+                      if (months > 0) parts.push(`${months}mo`);
+                      if (days > 0) parts.push(`${days}d`);
+                      return parts.length ? parts.join(" ") : `~${totalDays}d`;
+                    })()
+                  }</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div>Target: ₱{Number(t).toFixed(2)}</div>
@@ -160,6 +219,23 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
                 </div>
                 <div style={{ fontSize: 12, color: "#444", marginTop: 6 }}>{pct.toFixed(1)}% complete</div>
               </div>
+
+              {goal.history && goal.history.length > 0 && (
+                <div style={{ marginTop: 10, fontSize: 13, color: "#333" }}>
+                  <strong>History</strong>
+                  <ul style={{ margin: "6px 0 0", paddingLeft: 14 }}>
+                    {((goal.history || [])
+                      .slice()
+                      .reverse()
+                      .slice(0, 6)
+                    ).map(entry => (
+                      <li key={entry.id} style={{ marginBottom: 4 }}>
+                        {new Date(entry.date).toLocaleDateString()} — ₱{Number(entry.amount).toFixed(2)}{entry.note ? ` (${entry.note})` : ""}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
                 <button onClick={() => openAddMoney(goal)}>Add Money</button>
