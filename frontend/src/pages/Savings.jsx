@@ -130,6 +130,16 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
           const t = parseFloat(goal.targetAmount) || 0;
           const s = parseFloat(goal.savedAmount) || 0;
           const pct = t > 0 ? Math.min(100, (s / t) * 100) : 0;
+          const suggestedPerMonth = (() => {
+            if (!goal.targetDate) return "";
+            const end = new Date(goal.targetDate);
+            const now = new Date();
+            if (isNaN(end) || end <= now) return "";
+            const months = (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth());
+            if (months <= 0) return "";
+            const remaining = Math.max(0, t - s);
+            return (remaining / months).toFixed(2);
+          })();
           return (
             <div key={goal.id} style={{ border: "1px solid #eee", padding: 12, borderRadius: 6, marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -140,6 +150,7 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
                 <div style={{ textAlign: "right" }}>
                   <div>Target: ₱{Number(t).toFixed(2)}</div>
                   <div>Saved: ₱{Number(s).toFixed(2)}</div>
+                  <div style={{ fontSize: 12, color: "#333", marginTop: 6 }}>Suggested/month: {suggestedPerMonth ? `₱${suggestedPerMonth}` : "-"}</div>
                 </div>
               </div>
 
