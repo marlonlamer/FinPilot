@@ -21,6 +21,9 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
   const [isAddMoneyOpen, setIsAddMoneyOpen] = useState(false);
   const [addMoneyGoalId, setAddMoneyGoalId] = useState(null);
   const [addMoneyAmount, setAddMoneyAmount] = useState("");
+  const [isWithdrawOpen, setIsWithdrawOpen] = useState(false);
+  const [withdrawGoalId, setWithdrawGoalId] = useState(null);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
 
   useEffect(() => {
     try {
@@ -120,6 +123,12 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
     setIsAddMoneyOpen(true);
   }
 
+  function openWithdraw(goal) {
+    setWithdrawGoalId(goal.id);
+    setWithdrawAmount("");
+    setIsWithdrawOpen(true);
+  }
+
   function handleAddMoney(e) {
     e.preventDefault();
     const amt = parseFloat(addMoneyAmount) || 0;
@@ -129,6 +138,22 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
     setIsAddMoneyOpen(false);
     setAddMoneyGoalId(null);
     setAddMoneyAmount("");
+  }
+
+  function handleWithdraw(e) {
+    e.preventDefault();
+    const amt = parseFloat(withdrawAmount) || 0;
+    if (!withdrawGoalId || amt <= 0) return;
+    setGoals(prev => prev.map(g => {
+      if (g.id !== withdrawGoalId) return g;
+      const current = parseFloat(g.savedAmount || 0);
+      const allowed = Math.min(current, amt);
+      const entry = { id: Date.now().toString(), amount: -allowed, date: new Date().toISOString(), note: "Withdrawn" };
+      return { ...g, savedAmount: (current - allowed), history: (g.history || []).concat(entry) };
+    }));
+    setIsWithdrawOpen(false);
+    setWithdrawGoalId(null);
+    setWithdrawAmount("");
   }
 
   useEffect(() => {
@@ -158,6 +183,10 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
   return (
     <div>
       <h2>Savings</h2>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6 }}>
+        <div style={{ fontSize: 14 }}>Total Goals: <strong>{goals.length}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Saved: <strong>₱{Number((goals || []).reduce((acc, g) => acc + (parseFloat(g.savedAmount) || 0), 0)).toFixed(2)}</strong></div>
+      </div>
       <p>Monthly Income: ₱{Number(totalIncomes).toFixed(2)}</p>
       <p>Monthly Expenses: ₱{Number(totalExpenses).toFixed(2)}</p>
       <p>Total Savings: ₱{Number(totalSavings).toFixed(2)}</p>
@@ -239,6 +268,7 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
 
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 10 }}>
                 <button onClick={() => openAddMoney(goal)}>Add Money</button>
+                <button onClick={() => openWithdraw(goal)}>Withdraw</button>
                 <button onClick={() => openEdit(goal)}>Edit</button>
                 <button onClick={() => handleDelete(goal.id)} style={{ color: "#c00" }}>Delete</button>
               </div>
@@ -310,6 +340,24 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
               <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
                 <button type="button" onClick={() => setIsAddMoneyOpen(false)}>Cancel</button>
                 <button type="submit">Add</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isWithdrawOpen && (
+        <div role="dialog" aria-modal="true" style={overlayStyle} onClick={() => setIsWithdrawOpen(false)}>
+          <div style={modalStyle} onClick={e => e.stopPropagation()}>
+            <h3>Withdraw</h3>
+            <form onSubmit={handleWithdraw}>
+              <div style={fieldStyle}>
+                <label>Amount</label>
+                <input type="number" step="0.01" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} required />
+              </div>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <button type="button" onClick={() => setIsWithdrawOpen(false)}>Cancel</button>
+                <button type="submit">Withdraw</button>
               </div>
             </form>
           </div>
