@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavings = 0, savingsRate = null, savingsRateColor = "#000" }) {
+export default function Savings({ totalSavings = 0, savingsRate = null, savingsRateColor = "#000" }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [goalName, setGoalName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -180,15 +180,35 @@ export default function Savings({ totalIncomes = 0, totalExpenses = 0, totalSavi
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isModalOpen]);
 
+  // aggregate history and totals for summaries
+  const totalGoalsCount = (goals || []).length;
+  const totalSavedFromGoals = (goals || []).reduce((acc, g) => acc + (parseFloat(g.savedAmount) || 0), 0);
+  const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
+  const totalWithdrawn = allHistory.reduce((acc, h) => (h.amount < 0 ? acc + Math.abs(h.amount) : acc), 0);
+  const daysWindow = 30;
+  const since = new Date();
+  since.setDate(since.getDate() - daysWindow);
+  const monthlySaved = allHistory.reduce((acc, h) => {
+    const d = new Date(h.date);
+    if (d >= since && h.amount > 0) return acc + h.amount;
+    return acc;
+  }, 0);
+  const monthlyWithdrawn = allHistory.reduce((acc, h) => {
+    const d = new Date(h.date);
+    if (d >= since && h.amount < 0) return acc + Math.abs(h.amount);
+    return acc;
+  }, 0);
+
   return (
     <div>
       <h2>Savings</h2>
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6 }}>
-        <div style={{ fontSize: 14 }}>Total Goals: <strong>{goals.length}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Saved: <strong>₱{Number((goals || []).reduce((acc, g) => acc + (parseFloat(g.savedAmount) || 0), 0)).toFixed(2)}</strong></div>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 14 }}>Total Goals: <strong>{totalGoalsCount}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Saved: <strong>₱{Number(totalSavedFromGoals).toFixed(2)}</strong></div>
+        <div style={{ fontSize: 14 }}>This Month's Savings: <strong>₱{Number(monthlySaved).toFixed(2)}</strong></div>
+        <div style={{ fontSize: 14 }}>This Month's Withdrawals: <strong>₱{Number(monthlyWithdrawn).toFixed(2)}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>₱{Number(totalWithdrawn).toFixed(2)}</strong></div>
       </div>
-      <p>Monthly Income: ₱{Number(totalIncomes).toFixed(2)}</p>
-      <p>Monthly Expenses: ₱{Number(totalExpenses).toFixed(2)}</p>
       <p>Total Savings: ₱{Number(totalSavings).toFixed(2)}</p>
       <p style={{ color: savingsRateColor }}>Savings Rate: {savingsRate !== null ? `${Number(savingsRate).toFixed(1)}%` : "N/A"}</p>
 
