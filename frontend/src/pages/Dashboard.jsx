@@ -25,7 +25,6 @@ export default function Dashboard(props) {
     dateFilter,
     setDateFilter,
     monthlyBudget,
-    setMonthlyBudget,
     combinedLineData,
     pieData,
     overBudgetCategories,
@@ -35,32 +34,26 @@ export default function Dashboard(props) {
     COLORS
   } = props;
 
-  const [includeTotalSavings, setIncludeTotalSavings] = useState(() => {
+  
+
+  // amount to subtract from available balance (persisted)
+  const [savingsAllocation, setSavingsAllocation] = useState(() => {
     try {
-      return localStorage.getItem("includeTotalSavings") === "true";
+      const raw = localStorage.getItem("savingsAllocation");
+      return raw ? raw : "";
     } catch {
-      return false;
+      return "";
     }
   });
 
   useEffect(() => {
     try {
-      localStorage.setItem("includeTotalSavings", includeTotalSavings ? "true" : "false");
+      if (savingsAllocation === "" || savingsAllocation === null) localStorage.removeItem("savingsAllocation");
+      else localStorage.setItem("savingsAllocation", String(savingsAllocation));
     } catch {}
-  }, [includeTotalSavings]);
+  }, [savingsAllocation]);
 
-  const computedAvailableBalance = Number(monthlyIncomeTotal || 0) - Number(monthlyExpenseTotal || 0) - (includeTotalSavings ? Number(totalSavings || 0) : 0);
-
-  function handleToggleIncludeSavings(checked) {
-    if (checked) {
-      const ok = window.confirm(
-        "Include Total Savings in available balance calculation? This will subtract your total savings from the available balance. Continue?"
-      );
-      if (ok) setIncludeTotalSavings(true);
-    } else {
-      setIncludeTotalSavings(false);
-    }
-  }
+  const computedAvailableBalance = Number(monthlyIncomeTotal || 0) - Number(monthlyExpenseTotal || 0) - (Number(savingsAllocation || 0));
 
   return (
     <>
@@ -70,15 +63,18 @@ export default function Dashboard(props) {
           <div style={{ fontSize: 12, color: "#666" }}>Available Balance</div>
           <div style={{ fontSize: 20, fontWeight: 700 }}>₱{computedAvailableBalance.toFixed(2)}</div>
           <div style={{ marginTop: 8, fontSize: 12, color: "#555" }}>
-            <label style={{ cursor: "pointer" }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <label style={{ fontSize: 12, color: "#555" }}>Subtract Savings Amount:</label>
               <input
-                type="checkbox"
-                checked={includeTotalSavings}
-                onChange={e => handleToggleIncludeSavings(e.target.checked)}
-                style={{ marginRight: 6 }}
+                type="number"
+                step="0.01"
+                value={savingsAllocation}
+                onChange={e => setSavingsAllocation(e.target.value)}
+                placeholder="0.00"
+                style={{ width: 120, padding: "4px 6px" }}
               />
-              Subtract Total Savings from Available Balance
-            </label>
+              <button onClick={() => setSavingsAllocation("")} style={{ marginLeft: 6 }}>Clear</button>
+            </div>
           </div>
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
