@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
   LineChart,
@@ -36,24 +35,7 @@ export default function Dashboard(props) {
 
   
 
-  // amount to subtract from available balance (persisted)
-  const [savingsAllocation, setSavingsAllocation] = useState(() => {
-    try {
-      const raw = localStorage.getItem("savingsAllocation");
-      return raw ? raw : "";
-    } catch {
-      return "";
-    }
-  });
-
-  useEffect(() => {
-    try {
-      if (savingsAllocation === "" || savingsAllocation === null) localStorage.removeItem("savingsAllocation");
-      else localStorage.setItem("savingsAllocation", String(savingsAllocation));
-    } catch {}
-  }, [savingsAllocation]);
-
-  const computedAvailableBalance = Number(monthlyIncomeTotal || 0) - Number(monthlyExpenseTotal || 0) - (Number(savingsAllocation || 0));
+  const computedAvailableBalance = Number(monthlyIncomeTotal || 0) - Number(monthlyExpenseTotal || 0);
 
   return (
     <>
@@ -62,20 +44,7 @@ export default function Dashboard(props) {
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Available Balance</div>
           <div style={{ fontSize: 20, fontWeight: 700 }}>₱{computedAvailableBalance.toFixed(2)}</div>
-          <div style={{ marginTop: 8, fontSize: 12, color: "#555" }}>
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <label style={{ fontSize: 12, color: "#555" }}>Subtract Savings Amount:</label>
-              <input
-                type="number"
-                step="0.01"
-                value={savingsAllocation}
-                onChange={e => setSavingsAllocation(e.target.value)}
-                placeholder="0.00"
-                style={{ width: 120, padding: "4px 6px" }}
-              />
-              <button onClick={() => setSavingsAllocation("")} style={{ marginLeft: 6 }}>Clear</button>
-            </div>
-          </div>
+          <div style={{ marginTop: 8, fontSize: 12, color: "#555" }} />
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Total Savings</div>
