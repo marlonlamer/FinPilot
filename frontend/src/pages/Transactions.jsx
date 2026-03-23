@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱" }) {
+export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
   const [dateFilter, setDateFilter] = useState("all"); // all | today | week | month | custom
   const [customStart, setCustomStart] = useState("");
@@ -219,8 +219,8 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
                   <td style={{ padding: 8 }}>
                     {item.category ? item.category : item.source} {item.recurring ? <span style={{ marginLeft: 8, fontSize: 12, color: "#2d8f6f" }}>🔁 recurring</span> : null}
                   </td>
-                  <td style={{ padding: 8 }}>{item.type === "income" ? `${currencySymbol}${Number(item.amount).toFixed(2)}` : `${currencySymbol}${Number(item.amount).toFixed(2)}`}</td>
-                  <td style={{ padding: 8 }}>{currencySymbol}{Number(item.runningBalance).toFixed(2)}</td>
+                  <td style={{ padding: 8 }}>{formatCurrency ? formatCurrency(item.amount) : `${currencySymbol}${Number(item.amount).toFixed(2)}`}</td>
+                  <td style={{ padding: 8 }}>{formatCurrency ? formatCurrency(item.runningBalance) : `${currencySymbol}${Number(item.runningBalance).toFixed(2)}`}</td>
                   <td style={{ padding: 8 }}>
                     {item.type === "income" ? (
                       <>
@@ -246,7 +246,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
               <h3>Incomes</h3>
               <ul>
                 {displayedList.filter(i => i.type === "income").map(i => (
-                    <li key={i.id}>{currencySymbol}{Number(i.amount).toFixed(2)} {i.category ? `(${i.category})` : `(${i.source})`} {i.recurring ? `— recurring (${i.recurrence || "monthly"})` : ""} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: {currencySymbol}{Number(i.runningBalance).toFixed(2)}
+                    <li key={i.id}>{formatCurrency ? formatCurrency(i.amount) : `${currencySymbol}${Number(i.amount).toFixed(2)}`} {i.category ? `(${i.category})` : `(${i.source})`} {i.recurring ? `— recurring (${i.recurrence || "monthly"})` : ""} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: {formatCurrency ? formatCurrency(i.runningBalance) : `${currencySymbol}${Number(i.runningBalance).toFixed(2)}`}
                       <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(i)}>✏️</button>
                       <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(i.id)}>❌</button>
                     </li>
@@ -260,7 +260,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
               <h3>Expenses</h3>
               <ul>
                 {displayedList.filter(e => e.type === "expense").map(e => (
-                  <li key={e.id}>{currencySymbol}{Number(e.amount).toFixed(2)} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} {e.recurring ? ` — recurring (${e.recurrence || "monthly"})` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: {currencySymbol}{Number(e.runningBalance).toFixed(2)}
+                  <li key={e.id}>{formatCurrency ? formatCurrency(e.amount) : `${currencySymbol}${Number(e.amount).toFixed(2)}`} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} {e.recurring ? ` — recurring (${e.recurrence || "monthly"})` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: {formatCurrency ? formatCurrency(e.runningBalance) : `${currencySymbol}${Number(e.runningBalance).toFixed(2)}`}
                     <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(e)}>✏️</button>
                     <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(e.id)}>❌</button>
                   </li>

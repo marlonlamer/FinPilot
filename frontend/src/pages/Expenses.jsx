@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
-export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, currencySymbol = "₱" }) {
+export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, currencySymbol = "₱", formatCurrency }) {
   // budgets: optional object { categoryName: budgetAmount }
   const totalAll = useMemo(() => expenses.reduce((s, it) => s + (Number(it.amount) || 0), 0), [expenses]);
   const now = new Date();
@@ -77,8 +77,8 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
               <LineChart data={lastSixMonthsData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={(v) => `${v.toFixed ? `${currencySymbol}${v.toFixed(0)}` : v}`} />
-                <Tooltip formatter={(value) => `${currencySymbol}${Number(value).toFixed(2)}`} />
+                <YAxis tickFormatter={(v) => (formatCurrency ? formatCurrency(v) : (v.toFixed ? `${currencySymbol}${v.toFixed(0)}` : v))} />
+                <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
                 <Line type="monotone" dataKey="value" stroke="#FF6B6B" strokeWidth={2} dot={{ r: 2 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -91,7 +91,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
             <ResponsiveContainer>
               <PieChart>
                 <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={30} outerRadius={50} />
-                <Tooltip formatter={(value) => `${currencySymbol}${Number(value).toFixed(2)}`} />
+                <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -110,11 +110,11 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
       <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
           <div style={{ fontSize: 12, color: "#666" }}>Total Expenses</div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{totalAll.toFixed(2)}</div>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(totalAll) : `${currencySymbol}${totalAll.toFixed(2)}`}</div>
         </div>
         <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
           <div style={{ fontSize: 12, color: "#666" }}>This Month</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{monthlyTotal.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`}</div>
         </div>
       </div>
 
@@ -191,7 +191,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
                   <div style={{ width: `${Math.min(100, Math.max(0, s.percent || 0))}%`, height: "100%", background: s.percent > 100 ? "#FF6B6B" : "#60a5fa" }} />
                 </div>
               </div>
-              <div style={{ minWidth: 140, textAlign: "right", fontWeight: 700 }}>{currencySymbol}{s.spent.toFixed(2)} / {currencySymbol}{s.budget.toFixed(2)}</div>
+                <div style={{ minWidth: 140, textAlign: "right", fontWeight: 700 }}>{formatCurrency ? formatCurrency(s.spent) : `${currencySymbol}${s.spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(s.budget) : `${currencySymbol}${s.budget.toFixed(2)}`}</div>
             </div>
           ))}
         </div>
@@ -203,7 +203,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
       {recurring.length > 0 ? (
         <ul>
           {recurring.map(expense => (
-            <li key={expense.id}>{currencySymbol}{Number(expense.amount).toFixed(2)} {expense.category ? `(${expense.category})` : `(${expense.source})`} — {expense.recurrence ? `${expense.recurrence}` : "recurring"} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
+            <li key={expense.id}>{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} — {expense.recurrence ? `${expense.recurrence}` : "recurring"} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
               <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
               <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button>
             </li>
@@ -216,7 +216,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
       <h3 style={{ marginTop: 12 }}>Recent Expenses</h3>
       <ul>
         {nonRecurring.map(expense => (
-          <li key={expense.id}>{currencySymbol}{Number(expense.amount).toFixed(2)} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
+          <li key={expense.id}>{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
             <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
             <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button>
           </li>

@@ -30,8 +30,9 @@ export default function Dashboard(props) {
     percentBudgetUsed,
     budgetColor,
     budgetRemaining,
-    COLORS
-    , currencySymbol = "₱"
+    COLORS,
+    currencySymbol = "₱",
+    formatCurrency,
   } = props;
 
   
@@ -44,24 +45,24 @@ export default function Dashboard(props) {
       <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Available Balance</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{computedAvailableBalance.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(computedAvailableBalance) : `${currencySymbol}${computedAvailableBalance.toFixed(2)}`}</div>
           <div style={{ marginTop: 8, fontSize: 12, color: "#555" }} />
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Total Savings</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{totalSavings.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(totalSavings) : `${currencySymbol}${totalSavings.toFixed(2)}`}</div>
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Monthly Income</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{monthlyIncomeTotal.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyIncomeTotal) : `${currencySymbol}${monthlyIncomeTotal.toFixed(2)}`}</div>
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Monthly Expenses</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{monthlyExpenseTotal.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyExpenseTotal) : `${currencySymbol}${monthlyExpenseTotal.toFixed(2)}`}</div>
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Total Net Worth</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{totalNetWorth.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(totalNetWorth) : `${currencySymbol}${totalNetWorth.toFixed(2)}`}</div>
         </div>
       </div>
 
@@ -79,7 +80,7 @@ export default function Dashboard(props) {
 
       {/* Monthly budget editing moved to Expenses -> Edit Budgets modal */}
 
-      <BudgetOverview
+        <BudgetOverview
         monthlyBudget={monthlyBudget}
         percentBudgetUsed={percentBudgetUsed}
         budgetRemaining={budgetRemaining}
@@ -87,6 +88,7 @@ export default function Dashboard(props) {
         overBudgetCategories={overBudgetCategories}
         COLORS={COLORS}
         currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
       />
 
       <div style={{ marginTop: "1rem" }}>
@@ -97,8 +99,8 @@ export default function Dashboard(props) {
               <LineChart data={combinedLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={(v) => `${currencySymbol}${v.toFixed(0)}`} />
-                <Tooltip formatter={(value) => `${currencySymbol}${Number(value).toFixed(2)}`} />
+                <YAxis tickFormatter={(v) => (formatCurrency ? formatCurrency(v) : `${currencySymbol}${v.toFixed(0)}`)} />
+                <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
                 <Legend />
                 <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#FF6B6B" strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="incomes" name="Incomes" stroke="#00C49F" strokeWidth={2} dot={{ r: 3 }} />
@@ -146,7 +148,7 @@ export default function Dashboard(props) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => `${currencySymbol}${Number(value).toFixed(2)}`} />
+              <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

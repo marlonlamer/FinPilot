@@ -73,6 +73,15 @@ function App() {
     try { localStorage.setItem("currencyCode", currencyCode); } catch {}
   }, [currencyCode]);
 
+  const formatCurrency = (value) => {
+    try {
+      if (value == null || isNaN(Number(value))) return "";
+      return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode, minimumFractionDigits: 2 }).format(Number(value));
+    } catch (e) {
+      return `${currencySymbol}${Number(value).toFixed(2)}`;
+    }
+  };
+
   const fetchExpenses = async () => {
     try {
       const data = await api.get("/expenses");
@@ -513,10 +522,11 @@ function App() {
           budgetRemaining={budgetRemaining}
           COLORS={COLORS}
           currencySymbol={currencySymbol}
+          formatCurrency={formatCurrency}
         />
       );
     }
-    if (page === "transactions") return <Transactions incomes={incomes} expenses={expenses} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} />;
+    if (page === "transactions") return <Transactions incomes={incomes} expenses={expenses} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "income") return (
       <Income
         incomes={incomes}
@@ -530,6 +540,7 @@ function App() {
         editingIncomeId={editingIncomeId}
         cancelIncomeEdit={cancelIncomeEdit}
         currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
       />
     );
     if (page === "expenses") return (
@@ -546,12 +557,13 @@ function App() {
         editingExpenseId={editingExpenseId}
         cancelExpenseEdit={cancelExpenseEdit}
         currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
       />
     );
-    if (page === "savings") return <Savings totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} />;
-    if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} />;
-    if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} />;
-    if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} />;
+    if (page === "savings") return <Savings totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
+    if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
+    if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
+    if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
 
     return null;
   };

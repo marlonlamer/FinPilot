@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 
-export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, currencySymbol = "₱" }) {
+export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, currencySymbol = "₱", formatCurrency }) {
   const totalAll = useMemo(() => incomes.reduce((s, it) => s + (Number(it.amount) || 0), 0), [incomes]);
   const now = new Date();
   const monthlyTotal = useMemo(() => {
@@ -36,11 +36,11 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
       <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
           <div style={{ fontSize: 12, color: "#666" }}>Total Income</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{totalAll.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(totalAll) : `${currencySymbol}${totalAll.toFixed(2)}`}</div>
         </div>
         <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
           <div style={{ fontSize: 12, color: "#666" }}>This Month</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{currencySymbol}{monthlyTotal.toFixed(2)}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`}</div>
         </div>
         <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 200 }}>
           <div style={{ fontSize: 12, color: "#666" }}>Recurring Incomes</div>
@@ -98,7 +98,7 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
       {recurring.length > 0 ? (
         <ul>
             {recurring.map(income => (
-            <li key={income.id}>{currencySymbol}{Number(income.amount).toFixed(2)} {income.category ? `(${income.category})` : `(${income.source})`} — {income.recurrence ? `${income.recurrence}` : "recurring"} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
+            <li key={income.id}>{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {income.recurrence ? `${income.recurrence}` : "recurring"} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
               <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(income)}>✏️</button>
               <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(income.id)}>❌</button>
             </li>
@@ -114,7 +114,7 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
               {bySource.map(([source, total]) => (
             <div key={source} style={{ display: "flex", justifyContent: "space-between", background: "#fff", padding: 8, borderRadius: 6 }}>
               <div>{source}</div>
-              <div style={{ fontWeight: 700 }}>{currencySymbol}{total.toFixed(2)}</div>
+              <div style={{ fontWeight: 700 }}>{formatCurrency ? formatCurrency(total) : `${currencySymbol}${total.toFixed(2)}`}</div>
             </div>
           ))}
         </div>
@@ -125,7 +125,7 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
       <h3 style={{ marginTop: 12 }}>All Incomes</h3>
       <ul>
         {nonRecurring.map(income => (
-          <li key={income.id}>{currencySymbol}{Number(income.amount).toFixed(2)} {income.category ? `(${income.category})` : `(${income.source})`} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
+          <li key={income.id}>{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
             <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(income)}>✏️</button>
             <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(income.id)}>❌</button>
           </li>
