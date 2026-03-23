@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-export default function Savings({ totalSavings = 0, savingsRate = null, savingsRateColor = "#000" }) {
+export default function Savings({ totalSavings = 0, savingsRate = null, savingsRateColor = "#000", currencySymbol = "₱" }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [goalName, setGoalName] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
@@ -59,7 +59,7 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
     setTargetAmount("");
     setSavedAmount("");
     setStartDate("");
-    setTargetDate("");
+            const end = new Date(goal.targetDate);
     setNotes("");
     setEditGoalId(null);
   }
@@ -90,9 +90,9 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
       }
     }
 
-    if (editGoalId) {
-      setGoals(prev => prev.map(g => (g.id === editGoalId ? { ...g, ...payload } : g)));
-    } else {
+                  <div>Target: {currencySymbol}{Number(t).toFixed(2)}</div>
+                  <div>Saved: {currencySymbol}{Number(s).toFixed(2)}</div>
+                  <div style={{ fontSize: 12, color: "#333", marginTop: 6 }}>Suggested/month: {suggestedPerMonth ? `${currencySymbol}${suggestedPerMonth}` : "-"}</div>
       setGoals(prev => [payload, ...prev]);
     }
 
@@ -105,7 +105,7 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
     setGoalName(goal.goalName || "");
     setTargetAmount(String(goal.targetAmount || ""));
     setSavedAmount(String(goal.savedAmount || ""));
-    setStartDate(goal.startDate || "");
+                        {new Date(entry.date).toLocaleDateString()} — {currencySymbol}{Number(entry.amount).toFixed(2)}{entry.note ? ` (${entry.note})` : ""}
     setTargetDate(goal.targetDate || "");
     setNotes(goal.notes || "");
     setIsModalOpen(true);
@@ -204,12 +204,12 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
       <h2>Savings</h2>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
         <div style={{ fontSize: 14 }}>Total Goals: <strong>{totalGoalsCount}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Saved: <strong>₱{Number(totalSavedFromGoals).toFixed(2)}</strong></div>
-        <div style={{ fontSize: 14 }}>This Month's Savings: <strong>₱{Number(monthlySaved).toFixed(2)}</strong></div>
-        <div style={{ fontSize: 14 }}>This Month's Withdrawals: <strong>₱{Number(monthlyWithdrawn).toFixed(2)}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>₱{Number(totalWithdrawn).toFixed(2)}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Saved: <strong>{currencySymbol}{Number(totalSavedFromGoals).toFixed(2)}</strong></div>
+        <div style={{ fontSize: 14 }}>This Month's Savings: <strong>{currencySymbol}{Number(monthlySaved).toFixed(2)}</strong></div>
+        <div style={{ fontSize: 14 }}>This Month's Withdrawals: <strong>{currencySymbol}{Number(monthlyWithdrawn).toFixed(2)}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{currencySymbol}{Number(totalWithdrawn).toFixed(2)}</strong></div>
       </div>
-      <p>Total Savings: ₱{Number(totalSavings).toFixed(2)}</p>
+      <p>Total Savings: {currencySymbol}{Number(totalSavings).toFixed(2)}</p>
       <p style={{ color: savingsRateColor }}>Savings Rate: {savingsRate !== null ? `${Number(savingsRate).toFixed(1)}%` : "N/A"}</p>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 12 }}>
@@ -256,9 +256,9 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
                   }</div>
                 </div>
                 <div style={{ textAlign: "right" }}>
-                  <div>Target: ₱{Number(t).toFixed(2)}</div>
-                  <div>Saved: ₱{Number(s).toFixed(2)}</div>
-                  <div style={{ fontSize: 12, color: "#333", marginTop: 6 }}>Suggested/month: {suggestedPerMonth ? `₱${suggestedPerMonth}` : "-"}</div>
+                  <div>Target: {currencySymbol}{Number(t).toFixed(2)}</div>
+                  <div>Saved: {currencySymbol}{Number(s).toFixed(2)}</div>
+                  <div style={{ fontSize: 12, color: "#333", marginTop: 6 }}>Suggested/month: {suggestedPerMonth ? `${currencySymbol}${suggestedPerMonth}` : "-"}</div>
                 </div>
               </div>
 
@@ -279,7 +279,7 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
                       .slice(0, 6)
                     ).map(entry => (
                       <li key={entry.id} style={{ marginBottom: 4 }}>
-                        {new Date(entry.date).toLocaleDateString()} — ₱{Number(entry.amount).toFixed(2)}{entry.note ? ` (${entry.note})` : ""}
+                        {new Date(entry.date).toLocaleDateString()} — {currencySymbol}{Number(entry.amount).toFixed(2)}{entry.note ? ` (${entry.note})` : ""}
                       </li>
                     ))}
                   </ul>
@@ -331,7 +331,7 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
 
               <div style={fieldStyle}>
                 <label>Monthly Contribution Suggestion</label>
-                <input value={monthlySuggestion ? `₱${monthlySuggestion}` : ""} readOnly />
+                <input value={monthlySuggestion ? `${currencySymbol}${monthlySuggestion}` : ""} readOnly />
               </div>
 
               <div style={fieldStyle}>

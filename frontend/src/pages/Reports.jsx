@@ -1,7 +1,7 @@
 import React from "react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, PieChart, Pie } from "recharts";
 
-export default function Reports({ combinedLineData, pieData }) {
+export default function Reports({ combinedLineData, pieData, currencySymbol = "₱" }) {
   return (
     <div>
       <h2>Reports</h2>
@@ -10,8 +10,8 @@ export default function Reports({ combinedLineData, pieData }) {
           <LineChart data={combinedLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="month" />
-            <YAxis tickFormatter={(v) => `₱${v.toFixed(0)}`} />
-            <Tooltip formatter={(value) => `₱${Number(value).toFixed(2)}`} />
+            <YAxis tickFormatter={(v) => `${currencySymbol}${v.toFixed(0)}`} />
+            <Tooltip formatter={(value) => `${currencySymbol}${Number(value).toFixed(2)}`} />
             <Legend />
             <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#FF6B6B" strokeWidth={2} dot={{ r: 3 }} />
             <Line type="monotone" dataKey="incomes" name="Incomes" stroke="#00C49F" strokeWidth={2} dot={{ r: 3 }} />
@@ -23,7 +23,7 @@ export default function Reports({ combinedLineData, pieData }) {
         <ResponsiveContainer>
           <PieChart>
             <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={80} />
-            <Tooltip formatter={(value) => `₱${Number(value).toFixed(2)}`} />
+            <Tooltip formatter={(value) => `${currencySymbol}${Number(value).toFixed(2)}`} />
           </PieChart>
         </ResponsiveContainer>
       </div>

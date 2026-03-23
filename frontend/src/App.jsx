@@ -512,11 +512,11 @@ function App() {
           budgetColor={budgetColor}
           budgetRemaining={budgetRemaining}
           COLORS={COLORS}
+          currencySymbol={currencySymbol}
         />
       );
     }
-
-    if (page === "transactions") return <Transactions incomes={incomes} expenses={expenses} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} />;
+    if (page === "transactions") return <Transactions incomes={incomes} expenses={expenses} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} />;
     if (page === "income") return (
       <Income
         incomes={incomes}
@@ -529,6 +529,7 @@ function App() {
         openEditIncome={openEditIncome}
         editingIncomeId={editingIncomeId}
         cancelIncomeEdit={cancelIncomeEdit}
+        currencySymbol={currencySymbol}
       />
     );
     if (page === "expenses") return (
@@ -544,10 +545,11 @@ function App() {
         openEditExpense={openEditExpense}
         editingExpenseId={editingExpenseId}
         cancelExpenseEdit={cancelExpenseEdit}
+        currencySymbol={currencySymbol}
       />
     );
     if (page === "savings") return <Savings totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} />;
-    if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} />;
+    if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} />;
     if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} />;
     if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} />;
 

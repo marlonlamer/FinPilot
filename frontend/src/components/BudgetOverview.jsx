@@ -1,13 +1,13 @@
 import React from "react";
 
-export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS }) {
+export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱" }) {
   const pct = percentBudgetUsed || 0;
 
   return (
     <div style={{ marginTop: 16, display: "flex", gap: 12, flexWrap: "wrap" }}>
       <div style={{ flex: "1 1 320px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
         <div style={{ fontSize: 12, color: "#666" }}>Monthly Budget</div>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>{monthlyBudget === null ? "Not set" : `₱${Number(monthlyBudget).toFixed(2)}`}</div>
+        <div style={{ fontSize: 20, fontWeight: 700 }}>{monthlyBudget === null ? "Not set" : `${currencySymbol}${Number(monthlyBudget).toFixed(2)}`}</div>
 
         <div style={{ marginTop: 10 }}>
           <div style={{ height: 10, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
@@ -15,7 +15,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
           </div>
           <div style={{ marginTop: 8, fontSize: 12, color: "#555" }}>
             {percentBudgetUsed !== null ? `${percentBudgetUsed.toFixed(1)}% used` : "Usage not available"}
-            {budgetRemaining !== null && ` — Remaining: ₱${Number(budgetRemaining).toFixed(2)}`}
+            {budgetRemaining !== null && ` — Remaining: ${currencySymbol}${Number(budgetRemaining).toFixed(2)}`}
           </div>
         </div>
       </div>
@@ -26,7 +26,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
           <ul style={{ marginTop: 8, paddingLeft: 16 }}>
             {overBudgetCategories.slice(0, 5).map((c, i) => (
               <li key={c.category} style={{ marginBottom: 6, color: COLORS && COLORS[i % COLORS.length] ? COLORS[i % COLORS.length] : "#333" }}>
-                {c.category} — ₱{Number(c.spent || c.value || 0).toFixed(2)}
+                {c.category} — {currencySymbol}{Number(c.spent || c.value || 0).toFixed(2)}
               </li>
             ))}
           </ul>
