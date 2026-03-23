@@ -47,6 +47,32 @@ function App() {
     }
   });
 
+  const currencyMap = {
+    PHP: "₱",
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    JPY: "¥",
+    INR: "₹",
+    CAD: "$",
+    AUD: "$",
+    CNY: "¥"
+  };
+
+  const [currencyCode, setCurrencyCode] = useState(() => {
+    try {
+      return localStorage.getItem("currencyCode") || "PHP";
+    } catch {
+      return "PHP";
+    }
+  });
+
+  const currencySymbol = currencyMap[currencyCode] || "₱";
+
+  useEffect(() => {
+    try { localStorage.setItem("currencyCode", currencyCode); } catch {}
+  }, [currencyCode]);
+
   const fetchExpenses = async () => {
     try {
       const data = await api.get("/expenses");
@@ -520,10 +546,10 @@ function App() {
         cancelExpenseEdit={cancelExpenseEdit}
       />
     );
-    if (page === "savings") return <Savings totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} />;
+    if (page === "savings") return <Savings totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} />;
     if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} />;
-    if (page === "profile") return <Profile />;
-    if (page === "settings") return <Settings />;
+    if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} />;
+    if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} />;
 
     return null;
   };
