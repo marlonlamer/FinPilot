@@ -16,34 +16,17 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
     } catch {}
   }, [goals]);
 
-  const totalGoalsCount = (goals || []).length;
-  const totalSavedFromGoals = (goals || []).reduce((acc, g) => acc + (parseFloat(g.savedAmount) || 0), 0);
+  const totalDeposits = (goals || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
   const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
   const totalWithdrawn = allHistory.reduce((acc, h) => (h.amount < 0 ? acc + Math.abs(h.amount) : acc), 0);
 
-  const daysWindow = 30;
-  const since = new Date();
-  since.setDate(since.getDate() - daysWindow);
-  const monthlySaved = allHistory.reduce((acc, h) => {
-    const d = new Date(h.date);
-    if (d >= since && h.amount > 0) return acc + h.amount;
-    return acc;
-  }, 0);
-  const monthlyWithdrawn = allHistory.reduce((acc, h) => {
-    const d = new Date(h.date);
-    if (d >= since && h.amount < 0) return acc + Math.abs(h.amount);
-    return acc;
-  }, 0);
 
   return (
     <div>
       <h2>Savings</h2>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
-        <div style={{ fontSize: 14 }}>Total Goals: <strong>{totalGoalsCount}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Saved: <strong>{formatCurrency ? formatCurrency(totalSavedFromGoals) : `${currencySymbol}${Number(totalSavedFromGoals).toFixed(2)}`}</strong></div>
-        <div style={{ fontSize: 14 }}>This Month's Savings: <strong>{formatCurrency ? formatCurrency(monthlySaved) : `${currencySymbol}${Number(monthlySaved).toFixed(2)}`}</strong></div>
-        <div style={{ fontSize: 14 }}>This Month's Withdrawals: <strong>{formatCurrency ? formatCurrency(monthlyWithdrawn) : `${currencySymbol}${Number(monthlyWithdrawn).toFixed(2)}`}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Deposits: <strong>{formatCurrency ? formatCurrency(totalDeposits) : `${currencySymbol}${Number(totalDeposits).toFixed(2)}`}</strong></div>
         <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(totalWithdrawn) : `${currencySymbol}${Number(totalWithdrawn).toFixed(2)}`}</strong></div>
       </div>
 
