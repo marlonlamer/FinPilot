@@ -176,7 +176,7 @@ function App() {
         autosaveTimerRef.current = null;
       }
     };
-  }, [tempBudgets, budgetModalOpen]);
+  },);
 
   // Add Income/Expense modal state
   const [incomeModalOpen, setIncomeModalOpen] = useState(false);
@@ -424,6 +424,18 @@ function App() {
       ? "#FFD166"
       : "#2ED573";
 
+  // Compute total savings from saving goals stored in localStorage (deposits - withdrawals)
+  let computedTotalSavingsFromGoals = 0;
+  try {
+    const rawGoals = localStorage.getItem("savingGoals");
+    const sg = rawGoals ? JSON.parse(rawGoals) : [];
+    const deposits = (sg || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
+    const withdrawals = (sg || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount < 0 ? Math.abs(h.amount) : 0), 0)), 0);
+    computedTotalSavingsFromGoals = deposits - withdrawals;
+  } catch (e) {
+    computedTotalSavingsFromGoals = 0;
+  }
+
   const percentBudgetUsed = monthlyBudget && monthlyBudget > 0 ? (totalExpenses / monthlyBudget) * 100 : null;
   const budgetColor =
     percentBudgetUsed === null
@@ -503,6 +515,7 @@ function App() {
         <Dashboard
           availableBalance={availableBalance}
           totalSavings={totalSavings}
+          computedTotalSavings={computedTotalSavingsFromGoals}
           monthlyIncomeTotal={monthlyIncomeTotal}
           monthlyExpenseTotal={monthlyExpenseTotal}
           totalNetWorth={totalNetWorth}

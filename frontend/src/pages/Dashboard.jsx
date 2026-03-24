@@ -15,12 +15,10 @@ import BudgetOverview from "../components/BudgetOverview";
 
 export default function Dashboard(props) {
   const {
-    totalSavings,
+    computedTotalSavings,
     monthlyIncomeTotal,
     monthlyExpenseTotal,
     totalNetWorth,
-    savingsRateColor,
-    savingsRate,
     dateFilter,
     setDateFilter,
     monthlyBudget,
@@ -50,7 +48,7 @@ export default function Dashboard(props) {
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Total Savings</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(totalSavings) : `${currencySymbol}${totalSavings.toFixed(2)}`}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${computedTotalSavings.toFixed(2)}`}</div>
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Monthly Income</div>
@@ -66,7 +64,7 @@ export default function Dashboard(props) {
         </div>
       </div>
 
-      <p style={{ color: savingsRateColor }}>Savings Rate: {savingsRate !== null ? `${savingsRate.toFixed(1)}%` : "N/A"}</p>
+      {/* Savings rate removed per request */}
 
       <div style={{ marginTop: "0.5rem" }}>
         <label style={{ marginRight: 8 }}>Date filter:</label>

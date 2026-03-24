@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect,  useState } from "react";
 
-export default function Savings({ totalSavings = 0, savingsRate = null, savingsRateColor = "#000", currencySymbol = "₱", formatCurrency }) {
-  const [goals, setGoals] = useState(() => {
+export default function Savings({ currencySymbol = "₱", formatCurrency }) {
+  const [goals] = useState(() => {
     try {
       const raw = localStorage.getItem("savingGoals");
       return raw ? JSON.parse(raw) : [];
@@ -20,6 +20,8 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
   const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
   const totalWithdrawn = allHistory.reduce((acc, h) => (h.amount < 0 ? acc + Math.abs(h.amount) : acc), 0);
 
+  const computedTotalSavings = totalDeposits - totalWithdrawn;
+
 
   return (
     <div>
@@ -30,8 +32,7 @@ export default function Savings({ totalSavings = 0, savingsRate = null, savingsR
         <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(totalWithdrawn) : `${currencySymbol}${Number(totalWithdrawn).toFixed(2)}`}</strong></div>
       </div>
 
-      <p>Total Savings: {formatCurrency ? formatCurrency(totalSavings) : `${currencySymbol}${Number(totalSavings).toFixed(2)}`}</p>
-      <p style={{ color: savingsRateColor }}>Savings Rate: {savingsRate !== null ? `${Number(savingsRate).toFixed(1)}%` : "N/A"}</p>
+      <p>Total Savings: {formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${Number(computedTotalSavings).toFixed(2)}`}</p>
 
       <div style={{ marginTop: 18 }}>
         {goals.length === 0 && <p>No saving goals yet.</p>}
