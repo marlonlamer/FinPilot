@@ -120,11 +120,13 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
               {goal.history && goal.history.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: 13, color: "#333" }}>
                   <strong>History</strong>
-                  <ul style={{ margin: "6px 0 0", paddingLeft: 14 }}>
-                    {((goal.history || []).slice().reverse().slice(0, 6)).map(entry => (
-                      <li key={entry.id} style={{ marginBottom: 4 }}>{new Date(entry.date).toLocaleDateString()} — {formatCurrency ? formatCurrency(entry.amount) : `${currencySymbol}${Number(entry.amount).toFixed(2)}`}{entry.note ? ` (${entry.note})` : ""}</li>
-                    ))}
-                  </ul>
+                  <div style={{ marginTop: 6, maxHeight: 160, overflowY: "auto", paddingRight: 8 }}>
+                    <ul style={{ margin: "0", paddingLeft: 14 }}>
+                      {( (goal.history || []).slice().reverse() ).map(entry => (
+                        <li key={entry.id} style={{ marginBottom: 6 }}>{new Date(entry.date).toLocaleDateString()} — {formatCurrency ? formatCurrency(entry.amount) : `${currencySymbol}${Number(entry.amount).toFixed(2)}`}{entry.note ? ` (${entry.note})` : ""}</li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
               )}
 
