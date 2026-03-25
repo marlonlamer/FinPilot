@@ -1,6 +1,6 @@
 import React, { useEffect,  useState } from "react";
 
-export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0 }) {
+export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
   const [goals, setGoals] = useState(() => {
     try {
       const raw = localStorage.getItem("savingGoals");
@@ -33,6 +33,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const note = window.prompt("Note (optional):") || "";
     addHistoryEntry(goalId, Math.abs(amt), note);
+    try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(amt)); } catch {}
   };
 
   const handleWithdraw = (goalId) => {
@@ -45,6 +46,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (amt > currentSaved) return window.alert("Insufficient saved amount for this withdrawal.");
     const note = window.prompt("Note (optional):") || "";
     addHistoryEntry(goalId, -Math.abs(amt), note);
+    try { adjustAvailableBalance && adjustAvailableBalance(Math.abs(amt)); } catch {}
   };
 
   const handleEdit = (goalId) => {

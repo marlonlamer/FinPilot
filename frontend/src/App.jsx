@@ -508,6 +508,7 @@ function App() {
   const totalNetWorth = totalIncomes - totalExpenses;
 
   const [page, setPage] = useState("dashboard");
+  const [savingsBalanceAdjustment, setSavingsBalanceAdjustment] = useState(0);
 
   const renderPage = () => {
     if (page === "dashboard") {
@@ -573,7 +574,7 @@ function App() {
         formatCurrency={formatCurrency}
       />
     );
-    if (page === "savings") return <Savings availableBalance={availableBalance} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
+    if (page === "savings") return <Savings availableBalance={availableBalance + (savingsBalanceAdjustment || 0)} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
