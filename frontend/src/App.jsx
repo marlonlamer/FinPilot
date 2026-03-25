@@ -573,7 +573,7 @@ function App() {
         formatCurrency={formatCurrency}
       />
     );
-    if (page === "savings") return <Savings totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
+    if (page === "savings") return <Savings availableBalance={availableBalance} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;

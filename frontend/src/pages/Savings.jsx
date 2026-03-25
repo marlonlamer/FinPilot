@@ -1,7 +1,7 @@
 import React, { useEffect,  useState } from "react";
 
-export default function Savings({ currencySymbol = "₱", formatCurrency }) {
-  const [goals] = useState(() => {
+export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0 }) {
+  const [goals, setGoals] = useState(() => {
     try {
       const raw = localStorage.getItem("savingGoals");
       return raw ? JSON.parse(raw) : [];
@@ -16,6 +16,54 @@ export default function Savings({ currencySymbol = "₱", formatCurrency }) {
     } catch {}
   }, [goals]);
 
+  const addHistoryEntry = (goalId, amount, note) => {
+    setGoals(prev => prev.map(g => {
+      if (g.id !== goalId) return g;
+      const history = Array.isArray(g.history) ? [...g.history] : [];
+      const entry = { id: Date.now() + Math.floor(Math.random() * 1000), date: new Date().toISOString().slice(0, 10), amount: Number(amount), note: note || "" };
+      const nextSaved = Number(g.savedAmount || 0) + Number(amount);
+      return { ...g, history: [...history, entry], savedAmount: nextSaved };
+    }));
+  };
+
+  const handleDeposit = (goalId) => {
+    const raw = window.prompt("Deposit amount:");
+    if (raw === null) return;
+    const amt = Number(raw);
+    if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
+    const note = window.prompt("Note (optional):") || "";
+    addHistoryEntry(goalId, Math.abs(amt), note);
+  };
+
+  const handleWithdraw = (goalId) => {
+    const goal = goals.find(g => g.id === goalId);
+    const raw = window.prompt("Withdraw amount:");
+    if (raw === null) return;
+    const amt = Number(raw);
+    if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
+    const currentSaved = Number(goal?.savedAmount || 0);
+    if (amt > currentSaved) return window.alert("Insufficient saved amount for this withdrawal.");
+    const note = window.prompt("Note (optional):") || "";
+    addHistoryEntry(goalId, -Math.abs(amt), note);
+  };
+
+  const handleEdit = (goalId) => {
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const name = window.prompt("Goal name:", goal.goalName || "");
+    if (name === null) return;
+    const rawTarget = window.prompt("Target amount:", String(goal.targetAmount || ""));
+    if (rawTarget === null) return;
+    const target = Number(rawTarget) || 0;
+    const targetDate = window.prompt("Target date (YYYY-MM-DD):", goal.targetDate || "") || "";
+    setGoals(prev => prev.map(g => g.id === goalId ? { ...g, goalName: name, targetAmount: target, targetDate } : g));
+  };
+
+  const handleDelete = (goalId) => {
+    if (!window.confirm("Delete this saving goal? This cannot be undone.")) return;
+    setGoals(prev => prev.filter(g => g.id !== goalId));
+  };
+
   const totalDeposits = (goals || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
   const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
   const totalWithdrawn = allHistory.reduce((acc, h) => (h.amount < 0 ? acc + Math.abs(h.amount) : acc), 0);
@@ -28,6 +76,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency }) {
       <h2>Savings</h2>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 14 }}>Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
         <div style={{ fontSize: 14 }}>Total Deposits: <strong>{formatCurrency ? formatCurrency(totalDeposits) : `${currencySymbol}${Number(totalDeposits).toFixed(2)}`}</strong></div>
         <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(totalWithdrawn) : `${currencySymbol}${Number(totalWithdrawn).toFixed(2)}`}</strong></div>
       </div>
@@ -58,6 +107,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency }) {
                   <div style={{ width: `${pct}%`, height: "100%", background: "#4caf50" }} />
                 </div>
                 <div style={{ fontSize: 12, color: "#444", marginTop: 6 }}>{pct.toFixed(1)}% complete</div>
+              </div>
+              <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                <button className="btn" onClick={() => handleDeposit(goal.id)}>Deposit</button>
+                <button className="btn" onClick={() => handleWithdraw(goal.id)}>Withdraw</button>
+                <button className="btn" onClick={() => handleEdit(goal.id)}>Edit</button>
+                <button className="btn" onClick={() => handleDelete(goal.id)}>Delete</button>
               </div>
 
               {goal.history && goal.history.length > 0 && (
