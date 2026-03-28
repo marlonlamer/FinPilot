@@ -1,6 +1,17 @@
 import React, { useEffect,  useState } from "react";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [newGoal, setNewGoal] = useState({
+    goalName: "",
+    targetAmount: "",
+    savedAmount: "",
+    targetDate: "",
+    monthlySuggestion: "",
+    notes: ""
+  });
+
   const [goals, setGoals] = useState(() => {
     try {
       const raw = localStorage.getItem("savingGoals");
@@ -15,6 +26,66 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       localStorage.setItem("savingGoals", JSON.stringify(goals));
     } catch {}
   }, [goals]);
+
+    const handleNewGoalChange = (e) => {
+    setNewGoal({ ...newGoal, [e.target.name]: e.target.value });
+  };
+
+  const calculateMonthlySuggestion = () => {
+    const target = Number(newGoal.targetAmount || 0);
+    const saved = Number(newGoal.savedAmount || 0);
+    const date = newGoal.targetDate;
+
+    if (!target || !date) return "";
+
+    const remaining = target - saved;
+    const months = Math.max(
+      1,
+      (new Date(date) - new Date()) / (1000 * 60 * 60 * 24 * 30)
+    );
+
+    return Math.ceil(remaining / months);
+  };
+
+  const handleAddGoal = (e) => {
+    e.preventDefault();
+
+    const target = Number(newGoal.targetAmount);
+    const saved = Number(newGoal.savedAmount || 0);
+
+    if (!newGoal.goalName || !target || !newGoal.targetDate) {
+      return alert("Please fill required fields.");
+    }
+
+    if (saved > target) {
+      return alert("Saved amount cannot exceed target.");
+    }
+
+    const newEntry = {
+      id: Date.now(),
+      goalName: newGoal.goalName,
+      targetAmount: target,
+      savedAmount: saved,
+      targetDate: newGoal.targetDate,
+      monthlySuggestion: calculateMonthlySuggestion(),
+      notes: newGoal.notes,
+      history: []
+    };
+
+    setGoals(prev => [...prev, newEntry]);
+
+    // reset form
+    setNewGoal({
+      goalName: "",
+      targetAmount: "",
+      savedAmount: "",
+      targetDate: "",
+      monthlySuggestion: "",
+      notes: ""
+    });
+
+    setIsModalOpen(false);
+  };
 
   const addHistoryEntry = (goalId, amount, note) => {
     setGoals(prev => prev.map(g => {
@@ -76,6 +147,91 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   return (
     <div>
       <h2>Savings</h2>
+
+      <button onClick={() => setIsModalOpen(true)}>
+        + Add Saving Goal
+      </button>
+
+      {isModalOpen && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(0,0,0,0.4)",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: "#fff",
+            padding: 20,
+            borderRadius: 10,
+            width: "100%",
+            maxWidth: 400
+          }}>
+            <h3>Add Saving Goal</h3>
+
+            <form onSubmit={handleAddGoal}>
+
+              <input
+                type="text"
+                name="goalName"
+                placeholder="Goal Name"
+                value={newGoal.goalName}
+                onChange={handleNewGoalChange}
+                required
+              />
+
+              <input
+                type="number"
+                name="targetAmount"
+                placeholder="Target Amount"
+                value={newGoal.targetAmount}
+                onChange={handleNewGoalChange}
+                required
+              />
+
+              <input
+                type="number"
+                name="savedAmount"
+                placeholder="Saved Amount"
+                value={newGoal.savedAmount}
+                onChange={handleNewGoalChange}
+              />
+
+              <input
+                type="date"
+                name="targetDate"
+                value={newGoal.targetDate}
+                onChange={handleNewGoalChange}
+                required
+              />
+
+              <input
+                type="number"
+                placeholder="Monthly Suggestion (auto)"
+                value={calculateMonthlySuggestion()}
+                readOnly
+              />
+
+              <textarea
+                name="notes"
+                placeholder="Notes (optional)"
+                value={newGoal.notes}
+                onChange={handleNewGoalChange}
+              />
+
+              <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+                <button type="button" onClick={() => setIsModalOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit">Save</button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
         <div style={{ fontSize: 14 }}>Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
