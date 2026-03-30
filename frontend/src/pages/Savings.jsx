@@ -62,19 +62,27 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       return alert("Saved amount cannot exceed target.");
     }
 
+    const startDateVal = newGoal.startDate || new Date().toISOString().slice(0,10);
+
+    const initialHistory = saved > 0 ? [{ id: Date.now() + 1, date: startDateVal, amount: Number(saved), note: "Initial deposit" }] : [];
+
     const newEntry = {
       id: Date.now(),
       goalName: newGoal.goalName,
       targetAmount: target,
       savedAmount: saved,
-      startDate: newGoal.startDate || new Date().toISOString().slice(0,10),
+      startDate: startDateVal,
       targetDate: newGoal.targetDate,
       monthlySuggestion: calculateMonthlySuggestion(),
       notes: newGoal.notes,
-      history: []
+      history: initialHistory
     };
 
     setGoals(prev => [...prev, newEntry]);
+
+    if (saved > 0) {
+      try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(saved)); } catch {}
+    }
 
     // reset form
     setNewGoal({
