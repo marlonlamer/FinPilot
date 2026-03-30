@@ -7,6 +7,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     goalName: "",
     targetAmount: "",
     savedAmount: "",
+    startDate: "",
     targetDate: "",
     monthlySuggestion: "",
     notes: ""
@@ -66,6 +67,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       goalName: newGoal.goalName,
       targetAmount: target,
       savedAmount: saved,
+      startDate: newGoal.startDate || new Date().toISOString().slice(0,10),
       targetDate: newGoal.targetDate,
       monthlySuggestion: calculateMonthlySuggestion(),
       notes: newGoal.notes,
@@ -79,6 +81,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       goalName: "",
       targetAmount: "",
       savedAmount: "",
+      startDate: "",
       targetDate: "",
       monthlySuggestion: "",
       notes: ""
@@ -201,6 +204,13 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
               <input
                 type="date"
+                name="startDate"
+                value={newGoal.startDate}
+                onChange={handleNewGoalChange}
+              />
+
+              <input
+                type="date"
                 name="targetDate"
                 value={newGoal.targetDate}
                 onChange={handleNewGoalChange}
@@ -241,7 +251,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
       <p>Total Savings: {formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${Number(computedTotalSavings).toFixed(2)}`}</p>
 
-      <div style={{ marginTop: 18 }}>
+      <div style={{ marginTop: 18, maxHeight: '60vh', overflowY: 'auto', paddingRight: 8 }}>
         {goals.length === 0 && <p>No saving goals yet.</p>}
         {goals.map(goal => {
           const t = parseFloat(goal.targetAmount) || 0;
@@ -252,7 +262,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div>
                   <strong>{goal.goalName}</strong>
-                  <div style={{ fontSize: 12, color: "#666" }}>{goal.startDate ? `${goal.startDate} → ${goal.targetDate || "-"}` : (goal.targetDate || "")}</div>
+                  <div style={{ fontSize: 12, color: "#666" }}>
+                    {(goal.startDate || goal.targetDate) ? `${goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''}${goal.startDate && goal.targetDate ? ' → ' : ''}${goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''}` : ''}
+                  </div>
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div>Target: {formatCurrency ? formatCurrency(t) : `${currencySymbol}${Number(t).toFixed(2)}`}</div>
