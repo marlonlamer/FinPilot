@@ -62,6 +62,16 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       return alert("Saved amount cannot exceed target.");
     }
 
+    const avail = Number(availableBalance || 0);
+    if (saved > 0) {
+      if (!avail || avail <= 0) {
+        return alert("Insufficient available balance to set an initial saved amount.");
+      }
+      if (saved > avail) {
+        return alert("Saved amount exceeds available balance.");
+      }
+    }
+
     const startDateVal = newGoal.startDate || new Date().toISOString().slice(0,10);
 
     const initialHistory = saved > 0 ? [{ id: Date.now() + 1, date: startDateVal, amount: Number(saved), note: "Initial deposit" }] : [];
@@ -113,6 +123,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (raw === null) return;
     const amt = Number(raw);
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
+    const avail = Number(availableBalance || 0);
+    if (amt > avail) return window.alert("Insufficient available balance for this deposit.");
     const note = window.prompt("Note (optional):") || "";
     addHistoryEntry(goalId, Math.abs(amt), note);
     try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(amt)); } catch {}
