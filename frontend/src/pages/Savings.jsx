@@ -308,11 +308,20 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
               {goal.history && goal.history.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: 13, color: "#333" }}>
                   <strong>History</strong>
-                  <div style={{ marginTop: 6, maxHeight: 160, overflowY: "auto", paddingRight: 8 }}>
+                  <div style={{ marginTop: 6, maxHeight: 220, overflowY: "auto", paddingRight: 8 }}>
                     <ul style={{ margin: "0", paddingLeft: 14 }}>
-                      {( (goal.history || []).slice().reverse() ).map(entry => (
-                        <li key={entry.id} style={{ marginBottom: 6 }}>{new Date(entry.date).toLocaleDateString()} — {formatCurrency ? formatCurrency(entry.amount) : `${currencySymbol}${Number(entry.amount).toFixed(2)}`}{entry.note ? ` (${entry.note})` : ""}</li>
-                      ))}
+                      {( (goal.history || []).slice().reverse() ).map(entry => {
+                        const isDeposit = Number(entry.amount) > 0;
+                        const label = isDeposit ? 'Deposit' : 'Withdraw';
+                        const amt = Math.abs(Number(entry.amount));
+                        const amountDisplay = formatCurrency ? formatCurrency(isDeposit ? amt : -amt) : `${currencySymbol}${amt.toFixed(2)}`;
+                        const color = isDeposit ? '#2e7d32' : '#c62828';
+                        return (
+                          <li key={entry.id} style={{ marginBottom: 6 }}>
+                            {new Date(entry.date).toLocaleDateString()} — <span style={{ color }}>{label}</span> {amountDisplay}{entry.note ? ` (${entry.note})` : ""}
+                          </li>
+                        );
+                      })}
                     </ul>
                   </div>
                 </div>
