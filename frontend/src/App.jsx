@@ -514,7 +514,7 @@ function App() {
     if (page === "dashboard") {
       return (
         <Dashboard
-          availableBalance={availableBalance}
+          availableBalance={availableBalance + (savingsBalanceAdjustment || 0)}
           totalSavings={totalSavings}
           computedTotalSavings={computedTotalSavingsFromGoals}
           monthlyIncomeTotal={monthlyIncomeTotal}

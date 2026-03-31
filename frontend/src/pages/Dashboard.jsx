@@ -18,7 +18,6 @@ export default function Dashboard(props) {
     computedTotalSavings,
     monthlyIncomeTotal,
     monthlyExpenseTotal,
-    totalNetWorth,
     dateFilter,
     setDateFilter,
     monthlyBudget,
@@ -33,9 +32,8 @@ export default function Dashboard(props) {
     formatCurrency,
   } = props;
 
-  
+  const { availableBalance } = props;
 
-  const computedAvailableBalance = Number(monthlyIncomeTotal || 0) - Number(monthlyExpenseTotal || 0);
 
   return (
     <>
@@ -43,7 +41,7 @@ export default function Dashboard(props) {
       <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Available Balance</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(computedAvailableBalance) : `${currencySymbol}${computedAvailableBalance.toFixed(2)}`}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${availableBalance.toFixed(2)}`}</div>
           <div style={{ marginTop: 8, fontSize: 12, color: "#555" }} />
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
@@ -60,7 +58,11 @@ export default function Dashboard(props) {
         </div>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Total Net Worth</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(totalNetWorth) : `${currencySymbol}${totalNetWorth.toFixed(2)}`}</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>
+            {formatCurrency
+              ? formatCurrency(Number(computedTotalSavings || 0) + Number(availableBalance || 0))
+              : `${currencySymbol}${(Number(computedTotalSavings || 0) + Number(availableBalance || 0)).toFixed(2)}`}
+          </div>
         </div>
       </div>
 
