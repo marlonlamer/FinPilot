@@ -38,6 +38,10 @@ function App() {
   });
 
   const [dateFilter, setDateFilter] = useState("all");
+  const today = new Date();
+  const [selectedYear, setSelectedYear] = useState(today.getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
+  const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   const [monthlyBudget, setMonthlyBudget] = useState(() => {
     try {
       const raw = localStorage.getItem("monthlyBudget");
@@ -392,8 +396,8 @@ function App() {
   };
 
   const isWithinMonth = (date) => {
-    const now = new Date();
-    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+    if (!date) return false;
+    return date.getFullYear() === selectedYear && date.getMonth() === selectedMonth;
   };
 
   const matchesFilter = (expense) => {
@@ -603,7 +607,29 @@ function App() {
           ))}
         </ul>
       </nav>
-      <main style={{ flex: 1, padding: "2rem" }}>{renderPage()}</main>
+      <main style={{ flex: 1, padding: "2rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <button className="btn" onClick={() => { setSelectedYear(y => y - 1); setDateFilter("month"); }}>◀</button>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {monthNames.map((m, idx) => (
+                <button
+                  key={m}
+                  onClick={() => { setSelectedMonth(idx); setDateFilter("month"); }}
+                  className="btn"
+                  style={{ background: idx === selectedMonth ? "#e6f7ff" : "transparent", border: "none", padding: "6px 8px", borderRadius: 6 }}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+            <button className="btn" onClick={() => { setSelectedYear(y => y + 1); setDateFilter("month"); }}>▶</button>
+          </div>
+          <div style={{ fontSize: 14, color: "#333", marginLeft: 6 }}>{selectedYear}</div>
+        </div>
+
+        {renderPage()}
+      </main>
       {budgetModalOpen && (
         <div className="modal-overlay" onClick={() => closeBudgetModal()}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
