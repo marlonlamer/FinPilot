@@ -1,18 +1,17 @@
 import React, { useMemo } from "react";
 
-export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, currencySymbol = "₱", formatCurrency }) {
+export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const totalAll = useMemo(() => incomes.reduce((s, it) => s + (Number(it.amount) || 0), 0), [incomes]);
-  const now = new Date();
   const monthlyTotal = useMemo(() => {
     return incomes.reduce((s, it) => {
       if (!it.date) return s;
       const d = new Date(it.date);
-      if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) {
+      if (d.getFullYear() === selectedYear && d.getMonth() === selectedMonth) {
         return s + (Number(it.amount) || 0);
       }
       return s;
     }, 0);
-  }, [incomes, now]);
+  }, [incomes, selectedYear, selectedMonth]);
 
   const bySource = useMemo(() => {
     const map = {};

@@ -42,14 +42,34 @@ function App() {
   const [selectedYear, setSelectedYear] = useState(today.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-  const [monthlyBudget, setMonthlyBudget] = useState(() => {
+
+  // derive a user key from token (fall back to guest) so budgets are per-user
+  const getUserKey = () => {
+    try { return localStorage.getItem("token") || "guest"; } catch { return "guest"; }
+  };
+  const userKey = getUserKey();
+
+  // store monthly budgets in a map keyed by `${userKey}:YYYY-MM`
+  const [monthlyBudgetMap, setMonthlyBudgetMap] = useState(() => {
     try {
-      const raw = localStorage.getItem("monthlyBudget");
-      return raw ? Number(raw) : null;
+      const raw = localStorage.getItem("monthlyBudgetMap");
+      return raw ? JSON.parse(raw) : {};
     } catch {
-      return null;
+      return {};
     }
   });
+
+  const currentMonthKey = `${userKey}:${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, "0")}`;
+  const selectedMonthlyBudget = monthlyBudgetMap[currentMonthKey] != null ? Number(monthlyBudgetMap[currentMonthKey]) : null;
+
+  const setMonthlyBudgetForCurrentMonth = (val) => {
+    setMonthlyBudgetMap(prev => {
+      const next = { ...prev };
+      if (val == null) delete next[currentMonthKey]; else next[currentMonthKey] = Number(val);
+      try { localStorage.setItem("monthlyBudgetMap", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
 
   const currencyMap = {
     PHP: "₱",
@@ -109,17 +129,22 @@ function App() {
     fetchIncomes();
   }, []);
 
+  // When the selected month/year changes, clear add-form amounts (so amount isn't copied between months)
+  useEffect(() => {
+    const pad = (n) => String(n + 1).padStart(2, "0");
+    const monthStr = `${selectedYear}-${pad(selectedMonth)}-01`;
+    if (!editingExpenseId) {
+      setForm(prev => ({ ...prev, amount: "", date: monthStr }));
+    }
+    if (!editingIncomeId) {
+      setIncomeForm(prev => ({ ...prev, amount: "", date: monthStr }));
+    }
+  }, [selectedYear, selectedMonth]);
+
   const [perCategoryBudgets, setPerCategoryBudgets] = useState({});
   const [newBudgetCategory, setNewBudgetCategory] = useState("");
   const [newBudgetAmount, setNewBudgetAmount] = useState("");
-  const [tempMonthlyBudget, setTempMonthlyBudget] = useState(() => {
-    try {
-      const raw = localStorage.getItem("monthlyBudget");
-      return raw ? Number(raw) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [tempMonthlyBudget, setTempMonthlyBudget] = useState(() => selectedMonthlyBudget);
 
   // Modal & autosave state for editing category budgets
   const [budgetModalOpen, setBudgetModalOpen] = useState(false);
@@ -132,7 +157,7 @@ function App() {
   const openBudgetModal = () => {
     originalBudgetsRef.current = { ...perCategoryBudgets };
     setTempBudgets({ ...perCategoryBudgets });
-    setTempMonthlyBudget(monthlyBudget);
+    setTempMonthlyBudget(selectedMonthlyBudget);
     setBudgetModalOpen(true);
   };
 
@@ -143,7 +168,7 @@ function App() {
     }
     // revert to original budgets and monthly budget
     setPerCategoryBudgets({ ...originalBudgetsRef.current });
-    setTempMonthlyBudget(monthlyBudget);
+    setTempMonthlyBudget(selectedMonthlyBudget);
     setBudgetModalOpen(false);
     setSaving(false);
   };
@@ -155,8 +180,7 @@ function App() {
     }
     setSaving(true);
     setPerCategoryBudgets({ ...tempBudgets });
-    setMonthlyBudget(tempMonthlyBudget);
-    try { localStorage.setItem("monthlyBudget", tempMonthlyBudget == null ? "" : String(tempMonthlyBudget)); } catch {}
+    setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
     setSaving(false);
     setSavedAt(Date.now());
     setBudgetModalOpen(false);
@@ -168,8 +192,7 @@ function App() {
     setSaving(true);
     autosaveTimerRef.current = setTimeout(() => {
       setPerCategoryBudgets({ ...tempBudgets });
-      setMonthlyBudget(tempMonthlyBudget);
-      try { localStorage.setItem("monthlyBudget", tempMonthlyBudget == null ? "" : String(tempMonthlyBudget)); } catch {}
+      setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
       autosaveTimerRef.current = null;
       setSaving(false);
       setSavedAt(Date.now());
@@ -440,7 +463,7 @@ function App() {
     computedTotalSavingsFromGoals = 0;
   }
 
-  const percentBudgetUsed = monthlyBudget && monthlyBudget > 0 ? (totalExpenses / monthlyBudget) * 100 : null;
+  const percentBudgetUsed = selectedMonthlyBudget && selectedMonthlyBudget > 0 ? (totalExpenses / selectedMonthlyBudget) * 100 : null;
   const budgetColor =
     percentBudgetUsed === null
       ? "inherit"
@@ -449,7 +472,7 @@ function App() {
       : percentBudgetUsed >= 80
       ? "#FFD166"
       : "#2ED573";
-  const budgetRemaining = monthlyBudget !== null ? monthlyBudget - totalExpenses : null;
+  const budgetRemaining = selectedMonthlyBudget !== null ? selectedMonthlyBudget - totalExpenses : null;
 
   const categorySummary = Object.values(
     filteredExpenses.reduce((acc, expense) => {
@@ -530,8 +553,8 @@ function App() {
           savingsRate={savingsRate}
           dateFilter={dateFilter}
           setDateFilter={setDateFilter}
-          monthlyBudget={monthlyBudget}
-          setMonthlyBudget={setMonthlyBudget}
+          monthlyBudget={selectedMonthlyBudget}
+          setMonthlyBudget={setMonthlyBudgetForCurrentMonth}
           combinedLineData={combinedLineData}
           pieData={pieData}
           overBudgetCategories={overBudgetCategories}
@@ -557,6 +580,8 @@ function App() {
         openEditIncome={openEditIncome}
         editingIncomeId={editingIncomeId}
         cancelIncomeEdit={cancelIncomeEdit}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
         currencySymbol={currencySymbol}
         formatCurrency={formatCurrency}
       />
@@ -574,6 +599,8 @@ function App() {
         openEditExpense={openEditExpense}
         editingExpenseId={editingExpenseId}
         cancelExpenseEdit={cancelExpenseEdit}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
         currencySymbol={currencySymbol}
         formatCurrency={formatCurrency}
       />
@@ -610,7 +637,7 @@ function App() {
       <main style={{ flex: 1, padding: "2rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <button className="btn" onClick={() => { setSelectedYear(y => y - 1); setDateFilter("month"); }}>◀</button>
+            <button className="btn" onClick={() => { const prev = new Date(selectedYear, selectedMonth, 1); prev.setMonth(prev.getMonth() - 1); setSelectedYear(prev.getFullYear()); setSelectedMonth(prev.getMonth()); setDateFilter("month"); }}>◀</button>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {monthNames.map((m, idx) => (
                 <button
@@ -623,7 +650,7 @@ function App() {
                 </button>
               ))}
             </div>
-            <button className="btn" onClick={() => { setSelectedYear(y => y + 1); setDateFilter("month"); }}>▶</button>
+            <button className="btn" onClick={() => { const nxt = new Date(selectedYear, selectedMonth, 1); nxt.setMonth(nxt.getMonth() + 1); setSelectedYear(nxt.getFullYear()); setSelectedMonth(nxt.getMonth()); setDateFilter("month"); }}>▶</button>
           </div>
           <div style={{ fontSize: 14, color: "#333", marginLeft: 6 }}>{selectedYear}</div>
         </div>

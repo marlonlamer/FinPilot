@@ -1,16 +1,15 @@
 import React, { useMemo } from "react";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
-export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, currencySymbol = "₱", formatCurrency }) {
+export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   // budgets: optional object { categoryName: budgetAmount }
   const totalAll = useMemo(() => expenses.reduce((s, it) => s + (Number(it.amount) || 0), 0), [expenses]);
-  const now = new Date();
   const monthlyTotal = useMemo(() => expenses.reduce((s, it) => {
     if (!it.date) return s;
     const d = new Date(it.date);
-    if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) return s + (Number(it.amount) || 0);
+    if (d.getFullYear() === selectedYear && d.getMonth() === selectedMonth) return s + (Number(it.amount) || 0);
     return s;
-  }, 0), [expenses, now]);
+  }, 0), [expenses, selectedYear, selectedMonth]);
 
   const byCategory = useMemo(() => {
     const map = {};
