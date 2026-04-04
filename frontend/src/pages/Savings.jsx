@@ -2,6 +2,7 @@ import React, { useEffect,  useState } from "react";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("All");
 
   const [newGoal, setNewGoal] = useState({
     goalName: "",
@@ -166,14 +167,51 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
   const computedTotalSavings = totalDeposits - totalWithdrawn;
 
+  const now = new Date();
+  const isThisMonth = activeTab === "This Month";
+
+  const filteredHistory = allHistory.filter(h => {
+    if (!isThisMonth) return true;
+    const d = new Date(h.date);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  });
+
+  const totalDepositsFiltered = filteredHistory.reduce((acc, h) => acc + (h.amount > 0 ? h.amount : 0), 0);
+  const totalWithdrawnFiltered = filteredHistory.reduce((acc, h) => acc + (h.amount < 0 ? Math.abs(h.amount) : 0), 0);
+  const computedSavingsFiltered = totalDepositsFiltered - totalWithdrawnFiltered;
+
 
   return (
     <div>
       <h2>Savings</h2>
 
-      <button onClick={() => setIsModalOpen(true)}>
-        + Add Saving Goal
-      </button>
+      <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
+        {['All', 'This Month', 'Total'].map(tab => {
+          const active = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                padding: '6px 10px',
+                borderRadius: 6,
+                border: active ? '1px solid #1976d2' : '1px solid transparent',
+                background: active ? '#e3f2fd' : 'transparent',
+                color: active ? '#0d47a1' : '#333',
+                cursor: 'pointer'
+              }}
+            >
+              {tab}
+            </button>
+          );
+        })}
+
+        <div style={{ marginLeft: 'auto' }}>
+          <button onClick={() => setIsModalOpen(true)}>
+            + Add Saving Goal
+          </button>
+        </div>
+      </div>
 
       {isModalOpen && (
         <div style={{
@@ -265,11 +303,31 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
         <div style={{ fontSize: 14 }}>Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Deposits: <strong>{formatCurrency ? formatCurrency(totalDeposits) : `${currencySymbol}${Number(totalDeposits).toFixed(2)}`}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(totalWithdrawn) : `${currencySymbol}${Number(totalWithdrawn).toFixed(2)}`}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Deposits: <strong>{formatCurrency ? formatCurrency(isThisMonth ? totalDepositsFiltered : totalDeposits) : `${currencySymbol}${Number(isThisMonth ? totalDepositsFiltered : totalDeposits).toFixed(2)}`}</strong></div>
+        <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(isThisMonth ? totalWithdrawnFiltered : totalWithdrawn) : `${currencySymbol}${Number(isThisMonth ? totalWithdrawnFiltered : totalWithdrawn).toFixed(2)}`}</strong></div>
       </div>
 
-      <p>Total Savings: {formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${Number(computedTotalSavings).toFixed(2)}`}</p>
+      <p>Total Savings: {formatCurrency ? formatCurrency(isThisMonth ? computedSavingsFiltered : computedTotalSavings) : `${currencySymbol}${Number(isThisMonth ? computedSavingsFiltered : computedTotalSavings).toFixed(2)}`}</p>
+
+      {activeTab === 'Total' && (
+        <div style={{ marginTop: 12, padding: 12, border: '1px solid #e0e0e0', borderRadius: 8, background: '#fafafa' }}>
+          <h3>Totals</h3>
+          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ minWidth: 160 }}>
+              <div style={{ fontSize: 12, color: '#666' }}>Total Deposits</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(totalDeposits) : `${currencySymbol}${Number(totalDeposits).toFixed(2)}`}</div>
+            </div>
+            <div style={{ minWidth: 160 }}>
+              <div style={{ fontSize: 12, color: '#666' }}>Total Withdrawals</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(totalWithdrawn) : `${currencySymbol}${Number(totalWithdrawn).toFixed(2)}`}</div>
+            </div>
+            <div style={{ minWidth: 160 }}>
+              <div style={{ fontSize: 12, color: '#666' }}>Net Savings</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${Number(computedTotalSavings).toFixed(2)}`}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ marginTop: 18, maxHeight: '60vh', overflowY: 'auto', paddingRight: 8 }}>
         {goals.length === 0 && <p>No saving goals yet.</p>}
@@ -277,6 +335,11 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           const t = parseFloat(goal.targetAmount) || 0;
           const s = parseFloat(goal.savedAmount) || 0;
           const pct = t > 0 ? Math.min(100, (s / t) * 100) : 0;
+          const historyForDisplay = Array.isArray(goal.history) ? goal.history.filter(h => {
+            if (!isThisMonth) return true;
+            const d = new Date(h.date);
+            return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+          }) : [];
           return (
             <div key={goal.id} style={{ border: "1px solid #eee", padding: 12, borderRadius: 6, marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -305,12 +368,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 <button className="btn" onClick={() => handleDelete(goal.id)}>Delete</button>
               </div>
 
-              {goal.history && goal.history.length > 0 && (
+              {historyForDisplay && historyForDisplay.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: 13, color: "#333" }}>
                   <strong>History</strong>
                   <div style={{ marginTop: 6, maxHeight: 220, overflowY: "auto", paddingRight: 8 }}>
                     <ul style={{ margin: "0", paddingLeft: 14 }}>
-                      {( (goal.history || []).slice().reverse() ).map(entry => {
+                      {( (historyForDisplay || []).slice().reverse() ).map(entry => {
                         const isDeposit = Number(entry.amount) > 0;
                         const label = isDeposit ? 'Deposit' : 'Withdraw';
                         const amt = Math.abs(Number(entry.amount));
