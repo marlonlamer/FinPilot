@@ -1,8 +1,9 @@
-import React, { useEffect,  useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("All");
+  const [activeTab, setActiveTab] = useState("All Time");
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth());
 
   const [newGoal, setNewGoal] = useState({
     goalName: "",
@@ -161,53 +162,70 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     setGoals(prev => prev.filter(g => g.id !== goalId));
   };
 
-  const totalDeposits = (goals || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
   const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
-  const totalWithdrawn = allHistory.reduce((acc, h) => (h.amount < 0 ? acc + Math.abs(h.amount) : acc), 0);
 
-  const computedTotalSavings = totalDeposits - totalWithdrawn;
+  const months = useMemo(() => [
+    'January','February','March','April','May','June','July','August','September','October','November','December'
+  ], []);
 
-  const now = new Date();
-  const isThisMonth = activeTab === "This Month";
+  const now = useMemo(() => new Date(), []);
 
-  const filteredHistory = allHistory.filter(h => {
-    if (!isThisMonth) return true;
-    const d = new Date(h.date);
-    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
-  });
+  const monthFilteredHistory = useMemo(() => {
+    return allHistory.filter(h => {
+      const d = new Date(h.date);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === Number(selectedMonth);
+    });
+  }, [allHistory, selectedMonth, now]);
 
-  const totalDepositsFiltered = filteredHistory.reduce((acc, h) => acc + (h.amount > 0 ? h.amount : 0), 0);
-  const totalWithdrawnFiltered = filteredHistory.reduce((acc, h) => acc + (h.amount < 0 ? Math.abs(h.amount) : 0), 0);
-  const computedSavingsFiltered = totalDepositsFiltered - totalWithdrawnFiltered;
+  const computeTotals = (historyArray) => {
+    const deposits = (historyArray || []).reduce((acc, h) => acc + (h.amount > 0 ? h.amount : 0), 0);
+    const withdrawals = (historyArray || []).reduce((acc, h) => acc + (h.amount < 0 ? Math.abs(h.amount) : 0), 0);
+    return { deposits, withdrawals, net: deposits - withdrawals };
+  };
+
+  const viewHistory = activeTab === 'All Time' ? allHistory : activeTab === 'Selected Month' ? monthFilteredHistory : [];
+
+  const viewTotals = computeTotals(viewHistory);
+  const summaryTotals = computeTotals(allHistory);
 
 
   return (
     <div>
       <h2>Savings</h2>
 
-      <div style={{ marginTop: 8, display: 'flex', gap: 8, alignItems: 'center' }}>
-        {['All', 'This Month', 'Total'].map(tab => {
-          const active = activeTab === tab;
-          return (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              style={{
-                padding: '6px 10px',
-                borderRadius: 6,
-                border: active ? '1px solid #1976d2' : '1px solid transparent',
-                background: active ? '#e3f2fd' : 'transparent',
-                color: active ? '#0d47a1' : '#333',
-                cursor: 'pointer'
-              }}
-            >
-              {tab}
-            </button>
-          );
-        })}
+      <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#fff', padding: 6, borderRadius: 999, boxShadow: '0 1px 0 rgba(0,0,0,0.03)' }}>
+          {['All Time', 'Selected Month', 'Summary'].map(tab => {
+            const active = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 999,
+                  border: 'none',
+                  background: active ? '#e8f0ff' : 'transparent',
+                  color: active ? '#174ea6' : '#444',
+                  fontWeight: active ? 600 : 500,
+                  cursor: 'pointer'
+                }}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
 
-        <div style={{ marginLeft: 'auto' }}>
-          <button onClick={() => setIsModalOpen(true)}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ fontSize: 13, color: '#666' }}>Month</label>
+            <select value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))} style={{ padding: '6px 8px', borderRadius: 6 }}>
+              {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
+            </select>
+          </div>
+
+          <button onClick={() => setIsModalOpen(true)} style={{ padding: '8px 12px', borderRadius: 8 }}>
             + Add Saving Goal
           </button>
         </div>
@@ -301,29 +319,31 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
-        <div style={{ fontSize: 14 }}>Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Deposits: <strong>{formatCurrency ? formatCurrency(isThisMonth ? totalDepositsFiltered : totalDeposits) : `${currencySymbol}${Number(isThisMonth ? totalDepositsFiltered : totalDeposits).toFixed(2)}`}</strong></div>
-        <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(isThisMonth ? totalWithdrawnFiltered : totalWithdrawn) : `${currencySymbol}${Number(isThisMonth ? totalWithdrawnFiltered : totalWithdrawn).toFixed(2)}`}</strong></div>
-      </div>
+      {activeTab !== 'Summary' ? (
+        <>
+          <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 14 }}>Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
+            <div style={{ fontSize: 14 }}>Total Deposits: <strong>{formatCurrency ? formatCurrency(viewTotals.deposits) : `${currencySymbol}${Number(viewTotals.deposits).toFixed(2)}`}</strong></div>
+            <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(viewTotals.withdrawals) : `${currencySymbol}${Number(viewTotals.withdrawals).toFixed(2)}`}</strong></div>
+          </div>
 
-      <p>Total Savings: {formatCurrency ? formatCurrency(isThisMonth ? computedSavingsFiltered : computedTotalSavings) : `${currencySymbol}${Number(isThisMonth ? computedSavingsFiltered : computedTotalSavings).toFixed(2)}`}</p>
-
-      {activeTab === 'Total' && (
+          <p>Total Savings: {formatCurrency ? formatCurrency(viewTotals.net) : `${currencySymbol}${Number(viewTotals.net).toFixed(2)}`}</p>
+        </>
+      ) : (
         <div style={{ marginTop: 12, padding: 12, border: '1px solid #e0e0e0', borderRadius: 8, background: '#fafafa' }}>
-          <h3>Totals</h3>
+          <h3>Summary</h3>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ minWidth: 160 }}>
               <div style={{ fontSize: 12, color: '#666' }}>Total Deposits</div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(totalDeposits) : `${currencySymbol}${Number(totalDeposits).toFixed(2)}`}</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(summaryTotals.deposits) : `${currencySymbol}${Number(summaryTotals.deposits).toFixed(2)}`}</div>
             </div>
             <div style={{ minWidth: 160 }}>
               <div style={{ fontSize: 12, color: '#666' }}>Total Withdrawals</div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(totalWithdrawn) : `${currencySymbol}${Number(totalWithdrawn).toFixed(2)}`}</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(summaryTotals.withdrawals) : `${currencySymbol}${Number(summaryTotals.withdrawals).toFixed(2)}`}</div>
             </div>
             <div style={{ minWidth: 160 }}>
               <div style={{ fontSize: 12, color: '#666' }}>Net Savings</div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${Number(computedTotalSavings).toFixed(2)}`}</div>
+              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(summaryTotals.net) : `${currencySymbol}${Number(summaryTotals.net).toFixed(2)}`}</div>
             </div>
           </div>
         </div>
@@ -336,9 +356,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           const s = parseFloat(goal.savedAmount) || 0;
           const pct = t > 0 ? Math.min(100, (s / t) * 100) : 0;
           const historyForDisplay = Array.isArray(goal.history) ? goal.history.filter(h => {
-            if (!isThisMonth) return true;
+            if (activeTab !== 'Selected Month') return true;
             const d = new Date(h.date);
-            return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            return d.getFullYear() === now.getFullYear() && d.getMonth() === Number(selectedMonth);
           }) : [];
           return (
             <div key={goal.id} style={{ border: "1px solid #eee", padding: 12, borderRadius: 6, marginBottom: 12 }}>
@@ -368,7 +388,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 <button className="btn" onClick={() => handleDelete(goal.id)}>Delete</button>
               </div>
 
-              {historyForDisplay && historyForDisplay.length > 0 && (
+                  {activeTab !== 'Summary' && historyForDisplay && historyForDisplay.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: 13, color: "#333" }}>
                   <strong>History</strong>
                   <div style={{ marginTop: 6, maxHeight: 220, overflowY: "auto", paddingRight: 8 }}>
