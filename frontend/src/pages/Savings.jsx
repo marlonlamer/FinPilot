@@ -360,6 +360,18 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
             const d = new Date(h.date);
             return d.getFullYear() === now.getFullYear() && d.getMonth() === Number(selectedMonth);
           }) : [];
+          const remainingAmount = Math.max(0, t - s);
+          const remainingTimeText = (() => {
+            if (!goal.targetDate) return 'No target date';
+            const diff = new Date(goal.targetDate) - new Date();
+            if (isNaN(diff)) return 'Invalid date';
+            if (diff < 0) return 'Target date passed';
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const months = Math.floor(days / 30);
+            const remDays = days % 30;
+            if (months > 0) return `${months} month${months > 1 ? 's' : ''}${remDays > 0 ? ` ${remDays} day${remDays > 1 ? 's' : ''}` : ''} left`;
+            return `${days} day${days > 1 ? 's' : ''} left`;
+          })();
           return (
             <div key={goal.id} style={{ border: "1px solid #eee", padding: 12, borderRadius: 6, marginBottom: 12 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -372,6 +384,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 <div style={{ textAlign: "right" }}>
                   <div>Target: {formatCurrency ? formatCurrency(t) : `${currencySymbol}${Number(t).toFixed(2)}`}</div>
                   <div>Saved: {formatCurrency ? formatCurrency(s) : `${currencySymbol}${Number(s).toFixed(2)}`}</div>
+                  <div>Remaining: {formatCurrency ? formatCurrency(remainingAmount) : `${currencySymbol}${Number(remainingAmount).toFixed(2)}`}</div>
+                  <div style={{ fontSize: 12, color: '#666' }}>Time Left: {remainingTimeText}</div>
                 </div>
               </div>
 
