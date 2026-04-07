@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import ConfirmModal from "../components/ConfirmModal";
+import FormModal from "../components/FormModal";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -120,42 +121,32 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       return { ...g, history: [...history, entry], savedAmount: nextSaved };
     }));
   };
+  const [modalState, setModalState] = useState({ open: false, mode: null, goalId: null, initial: {} });
 
-  const handleDeposit = (goalId) => {
-    const raw = window.prompt("Deposit amount:");
-    if (raw === null) return;
-    const amt = Number(raw);
+  const handleDepositConfirm = ({ amount, note }) => {
+    const amt = Number(amount || 0);
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const avail = Number(availableBalance || 0);
     if (amt > avail) return window.alert("Insufficient available balance for this deposit.");
-    const note = window.prompt("Note (optional):") || "";
-    addHistoryEntry(goalId, Math.abs(amt), note);
+    addHistoryEntry(modalState.goalId, Math.abs(amt), note || "");
     try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(amt)); } catch {}
+    setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 
-  const handleWithdraw = (goalId) => {
-    const goal = goals.find(g => g.id === goalId);
-    const raw = window.prompt("Withdraw amount:");
-    if (raw === null) return;
-    const amt = Number(raw);
+  const handleWithdrawConfirm = ({ amount, note }) => {
+    const goal = goals.find(g => g.id === modalState.goalId);
+    const amt = Number(amount || 0);
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const currentSaved = Number(goal?.savedAmount || 0);
     if (amt > currentSaved) return window.alert("Insufficient saved amount for this withdrawal.");
-    const note = window.prompt("Note (optional):") || "";
-    addHistoryEntry(goalId, -Math.abs(amt), note);
+    addHistoryEntry(modalState.goalId, -Math.abs(amt), note || "");
     try { adjustAvailableBalance && adjustAvailableBalance(Math.abs(amt)); } catch {}
+    setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 
-  const handleEdit = (goalId) => {
-    const goal = goals.find(g => g.id === goalId);
-    if (!goal) return;
-    const name = window.prompt("Goal name:", goal.goalName || "");
-    if (name === null) return;
-    const rawTarget = window.prompt("Target amount:", String(goal.targetAmount || ""));
-    if (rawTarget === null) return;
-    const target = Number(rawTarget) || 0;
-    const targetDate = window.prompt("Target date (YYYY-MM-DD):", goal.targetDate || "") || "";
-    setGoals(prev => prev.map(g => g.id === goalId ? { ...g, goalName: name, targetAmount: target, targetDate } : g));
+  const handleEditConfirm = ({ goalName, targetAmount, targetDate }) => {
+    setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, targetAmount: Number(targetAmount) || g.targetAmount, targetDate: targetDate || g.targetDate } : g));
+    setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 
   const handleDelete = (goalId) => {
@@ -325,8 +316,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         <>
           <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
             <div style={{ fontSize: 14 }}>Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
-            <div style={{ fontSize: 14 }}>Total Deposits: <strong>{formatCurrency ? formatCurrency(viewTotals.deposits) : `${currencySymbol}${Number(viewTotals.deposits).toFixed(2)}`}</strong></div>
-            <div style={{ fontSize: 14 }}>Total Withdrawals: <strong>{formatCurrency ? formatCurrency(viewTotals.withdrawals) : `${currencySymbol}${Number(viewTotals.withdrawals).toFixed(2)}`}</strong></div>
+            <div style={{ fontSize: 14 }}>{activeTab === 'Selected Month' ? 'This Month Deposits' : 'Total Deposits'}: <strong>{formatCurrency ? formatCurrency(viewTotals.deposits) : `${currencySymbol}${Number(viewTotals.deposits).toFixed(2)}`}</strong></div>
+            <div style={{ fontSize: 14 }}>{activeTab === 'Selected Month' ? 'This Month Withdrawals' : 'Total Withdrawals'}: <strong>{formatCurrency ? formatCurrency(viewTotals.withdrawals) : `${currencySymbol}${Number(viewTotals.withdrawals).toFixed(2)}`}</strong></div>
           </div>
 
           <p>Total Savings: {formatCurrency ? formatCurrency(viewTotals.net) : `${currencySymbol}${Number(viewTotals.net).toFixed(2)}`}</p>
@@ -398,11 +389,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 <div style={{ fontSize: 12, color: "#444", marginTop: 6 }}>{pct.toFixed(1)}% complete</div>
               </div>
               <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
-                <button className="btn" onClick={() => handleDeposit(goal.id)}>Deposit</button>
-                <button className="btn" onClick={() => handleWithdraw(goal.id)}>Withdraw</button>
-                <button className="btn" onClick={() => handleEdit(goal.id)}>Edit</button>
+                <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Deposit</button>
+                <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
+                <button className="btn" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', targetAmount: goal.targetAmount || '', targetDate: goal.targetDate || '' } })}>Edit</button>
                 <button className="btn" onClick={() => setConfirm({ open: true, message: "Delete this saving goal? This cannot be undone.", onConfirm: () => handleDelete(goal.id) })}>Delete</button>
               </div>
+
 
                   {activeTab !== 'Summary' && historyForDisplay && historyForDisplay.length > 0 && (
                 <div style={{ marginTop: 10, fontSize: 13, color: "#333" }}>
@@ -435,6 +427,34 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         message={confirm.message}
         onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
         onCancel={() => setConfirm({ open: false })}
+      />
+      <FormModal
+        open={modalState.open}
+        title={(() => {
+          const goal = goals.find(g => g.id === modalState.goalId) || {};
+          if (modalState.mode === 'deposit') return `Deposit to ${goal.goalName || 'goal'}`;
+          if (modalState.mode === 'withdraw') return `Withdraw from ${goal.goalName || 'goal'}`;
+          return `Edit ${goal.goalName || 'goal'}`;
+        })()}
+        initialValues={modalState.initial}
+        fields={(() => {
+          if (modalState.mode === 'deposit' || modalState.mode === 'withdraw') return [
+            { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
+            { name: 'note', label: 'Note (optional)', type: 'textarea', placeholder: 'Note' }
+          ];
+          return [
+            { name: 'goalName', label: 'Goal name', type: 'text' },
+            { name: 'targetAmount', label: 'Target amount', type: 'number' },
+            { name: 'targetDate', label: 'Target date', type: 'date' }
+          ];
+        })()}
+        onCancel={() => setModalState({ open: false, mode: null, goalId: null, initial: {} })}
+        onSubmit={(values) => {
+          if (modalState.mode === 'deposit') return handleDepositConfirm(values);
+          if (modalState.mode === 'withdraw') return handleWithdrawConfirm(values);
+          return handleEditConfirm(values);
+        }}
+        submitLabel={modalState.mode === 'withdraw' ? 'Withdraw' : modalState.mode === 'deposit' ? 'Deposit' : 'Save'}
       />
     </div>
   );
