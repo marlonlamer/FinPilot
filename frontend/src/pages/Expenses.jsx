@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import ConfirmModal from "../components/ConfirmModal";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
 export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
@@ -56,6 +57,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
 
   const recurring = useMemo(() => expenses.filter(e => e.recurring), [expenses]);
   const nonRecurring = useMemo(() => expenses.filter(e => !e.recurring), [expenses]);
+  const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   return (
     <div>
@@ -204,7 +206,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
           {recurring.map(expense => (
             <li key={expense.id}>{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} — {expense.recurrence ? `${expense.recurrence}` : "recurring"} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
               <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
-              <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button>
+              <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(expense.id) })}>❌</button>
             </li>
           ))}
         </ul>
@@ -217,10 +219,16 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
         {nonRecurring.map(expense => (
           <li key={expense.id}>{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
             <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
-            <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(expense.id)}>❌</button>
+            <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(expense.id) })}>❌</button>
           </li>
         ))}
       </ul>
+      <ConfirmModal
+        open={confirm.open}
+        message={confirm.message}
+        onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
+        onCancel={() => setConfirm({ open: false })}
+      />
     </div>
   );
 }

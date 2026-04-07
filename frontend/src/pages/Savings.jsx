@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -158,9 +159,10 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   };
 
   const handleDelete = (goalId) => {
-    if (!window.confirm("Delete this saving goal? This cannot be undone.")) return;
     setGoals(prev => prev.filter(g => g.id !== goalId));
   };
+
+  const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
 
@@ -399,7 +401,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 <button className="btn" onClick={() => handleDeposit(goal.id)}>Deposit</button>
                 <button className="btn" onClick={() => handleWithdraw(goal.id)}>Withdraw</button>
                 <button className="btn" onClick={() => handleEdit(goal.id)}>Edit</button>
-                <button className="btn" onClick={() => handleDelete(goal.id)}>Delete</button>
+                <button className="btn" onClick={() => setConfirm({ open: true, message: "Delete this saving goal? This cannot be undone.", onConfirm: () => handleDelete(goal.id) })}>Delete</button>
               </div>
 
                   {activeTab !== 'Summary' && historyForDisplay && historyForDisplay.length > 0 && (
@@ -428,6 +430,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           );
         })}
       </div>
+      <ConfirmModal
+        open={confirm.open}
+        message={confirm.message}
+        onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
+        onCancel={() => setConfirm({ open: false })}
+      />
     </div>
   );
 }

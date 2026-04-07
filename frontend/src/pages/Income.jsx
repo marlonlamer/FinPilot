@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const totalAll = useMemo(() => incomes.reduce((s, it) => s + (Number(it.amount) || 0), 0), [incomes]);
@@ -24,6 +25,7 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
 
   const recurring = useMemo(() => incomes.filter(i => i.recurring), [incomes]);
   const nonRecurring = useMemo(() => incomes.filter(i => !i.recurring), [incomes]);
+  const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   return (
     <div>
@@ -99,7 +101,7 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
             {recurring.map(income => (
             <li key={income.id}>{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {income.recurrence ? `${income.recurrence}` : "recurring"} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
               <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(income)}>✏️</button>
-              <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(income.id)}>❌</button>
+              <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
             </li>
           ))}
         </ul>
@@ -126,10 +128,16 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
         {nonRecurring.map(income => (
           <li key={income.id}>{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}
             <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(income)}>✏️</button>
-            <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(income.id)}>❌</button>
+            <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
           </li>
         ))}
       </ul>
+      <ConfirmModal
+        open={confirm.open}
+        message={confirm.message}
+        onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
+        onCancel={() => setConfirm({ open: false })}
+      />
     </div>
   );
 }

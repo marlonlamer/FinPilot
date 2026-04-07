@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
@@ -8,6 +9,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
+  const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -225,12 +227,12 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
                     {item.type === "income" ? (
                       <>
                         <button style={{ marginRight: 8 }} onClick={() => openEditIncome(item)}>✏️</button>
-                        <button onClick={() => deleteIncome(item.id)}>❌</button>
+                        <button onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(item.id) })}>❌</button>
                       </>
                     ) : (
                       <>
                         <button style={{ marginRight: 8 }} onClick={() => openEditExpense(item)}>✏️</button>
-                        <button onClick={() => deleteExpense(item.id)}>❌</button>
+                        <button onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(item.id) })}>❌</button>
                       </>
                     )}
                   </td>
@@ -248,7 +250,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
                 {displayedList.filter(i => i.type === "income").map(i => (
                     <li key={i.id}>{formatCurrency ? formatCurrency(i.amount) : `${currencySymbol}${Number(i.amount).toFixed(2)}`} {i.category ? `(${i.category})` : `(${i.source})`} {i.recurring ? `— recurring (${i.recurrence || "monthly"})` : ""} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: {formatCurrency ? formatCurrency(i.runningBalance) : `${currencySymbol}${Number(i.runningBalance).toFixed(2)}`}
                       <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(i)}>✏️</button>
-                      <button style={{ marginLeft: 10 }} onClick={() => deleteIncome(i.id)}>❌</button>
+                      <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(i.id) })}>❌</button>
                     </li>
                   ))}
               </ul>
@@ -262,7 +264,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
                 {displayedList.filter(e => e.type === "expense").map(e => (
                   <li key={e.id}>{formatCurrency ? formatCurrency(e.amount) : `${currencySymbol}${Number(e.amount).toFixed(2)}`} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} {e.recurring ? ` — recurring (${e.recurrence || "monthly"})` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: {formatCurrency ? formatCurrency(e.runningBalance) : `${currencySymbol}${Number(e.runningBalance).toFixed(2)}`}
                     <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(e)}>✏️</button>
-                    <button style={{ marginLeft: 10 }} onClick={() => deleteExpense(e.id)}>❌</button>
+                    <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(e.id) })}>❌</button>
                   </li>
                 ))}
               </ul>
@@ -270,6 +272,13 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
           )}
         </>
       )}
+      )}
+      <ConfirmModal
+        open={confirm.open}
+        message={confirm.message}
+        onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
+        onCancel={() => setConfirm({ open: false })}
+      />
     </div>
   );
 }
