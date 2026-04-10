@@ -18,8 +18,6 @@ export default function Dashboard(props) {
     computedTotalSavings,
     monthlyIncomeTotal,
     monthlyExpenseTotal,
-    dateFilter,
-    setDateFilter,
     monthlyBudget,
     combinedLineData,
     pieData,
@@ -37,7 +35,7 @@ export default function Dashboard(props) {
 
   return (
     <>
-      <h1>💰 Expense Analyzer</h1>
+  
       <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
           <div style={{ fontSize: 12, color: "#666" }}>Available Balance</div>
@@ -64,18 +62,6 @@ export default function Dashboard(props) {
               : `${currencySymbol}${(Number(computedTotalSavings || 0) + Number(availableBalance || 0)).toFixed(2)}`}
           </div>
         </div>
-      </div>
-
-      {/* Savings rate removed per request */}
-
-      <div style={{ marginTop: "0.5rem" }}>
-        <label style={{ marginRight: 8 }}>Date filter:</label>
-        <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-          <option value="all">All</option>
-          <option value="today">Today</option>
-          <option value="week">Last 7 days</option>
-          <option value="month">This month</option>
-        </select>
       </div>
 
       {/* Monthly budget editing moved to Expenses -> Edit Budgets modal */}
