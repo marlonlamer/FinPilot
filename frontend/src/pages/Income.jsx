@@ -2,7 +2,19 @@ import React, { useMemo, useState } from "react";
 import ConfirmModal from "../components/ConfirmModal";
 
 export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
-  const totalAll = useMemo(() => incomes.reduce((s, it) => s + (Number(it.amount) || 0), 0), [incomes]);
+  const lastMonthTotal = useMemo(() => {
+    let prevMonth = selectedMonth - 1;
+    let prevYear = selectedYear;
+    if (prevMonth < 0) { prevMonth = 11; prevYear = selectedYear - 1; }
+    return incomes.reduce((s, it) => {
+      if (!it.date) return s;
+      const d = new Date(it.date);
+      if (d.getFullYear() === prevYear && d.getMonth() === prevMonth) {
+        return s + (Number(it.amount) || 0);
+      }
+      return s;
+    }, 0);
+  }, [incomes, selectedYear, selectedMonth]);
   const monthlyTotal = useMemo(() => {
     return incomes.reduce((s, it) => {
       if (!it.date) return s;
@@ -36,12 +48,12 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
 
       <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
         <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Total Income</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(totalAll) : `${currencySymbol}${totalAll.toFixed(2)}`}</div>
-        </div>
-        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
           <div style={{ fontSize: 12, color: "#666" }}>This Month</div>
           <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`}</div>
+        </div>
+        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
+          <div style={{ fontSize: 12, color: "#666" }}>Last Month</div>
+          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`}</div>
         </div>
         <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 200 }}>
           <div style={{ fontSize: 12, color: "#666" }}>Recurring Incomes</div>
