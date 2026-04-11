@@ -245,32 +245,36 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
             <form onSubmit={handleAddGoal}>
 
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Goal Name</label>
               <input
                 type="text"
                 name="goalName"
-                placeholder="Goal Name"
+                placeholder="Enter goal name"
                 value={newGoal.goalName}
                 onChange={handleNewGoalChange}
                 required
               />
 
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Target Amount</label>
               <input
                 type="number"
                 name="targetAmount"
-                placeholder="Target Amount"
+                placeholder="Enter target amount"
                 value={newGoal.targetAmount}
                 onChange={handleNewGoalChange}
                 required
               />
 
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Saved Amount</label>
               <input
                 type="number"
                 name="savedAmount"
-                placeholder="Saved Amount"
+                placeholder="Enter saved amount"
                 value={newGoal.savedAmount}
                 onChange={handleNewGoalChange}
               />
 
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Start Date</label>
               <input
                 type="date"
                 name="startDate"
@@ -278,6 +282,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 onChange={handleNewGoalChange}
               />
 
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Target Date</label>
               <input
                 type="date"
                 name="targetDate"
@@ -286,16 +291,18 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 required
               />
 
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Monthly Suggestion</label>
               <input
                 type="number"
-                placeholder="Monthly Suggestion (auto)"
+                placeholder="Monthly Suggestion"
                 value={calculateMonthlySuggestion()}
                 readOnly
               />
 
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Notes(Optional)</label>
               <textarea
                 name="notes"
-                placeholder="Notes (optional)"
+                placeholder="Enter a helpful message"
                 value={newGoal.notes}
                 onChange={handleNewGoalChange}
               />

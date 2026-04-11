@@ -69,9 +69,11 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
               <button className="btn btn-ghost" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>✕</button>
             </div>
             <form onSubmit={handleIncomeSubmit} style={{ display: "grid", gap: 10 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Amount</label>
               <input className="modern-input" placeholder="Amount" type="number" value={incomeForm.amount} onChange={e => setIncomeForm({ ...incomeForm, amount: e.target.value })} required />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Source of Income</label>
               <select className="modern-input" value={incomeForm.category} onChange={e => setIncomeForm({ ...incomeForm, category: e.target.value })}>
-                <option value="">Select category</option>
+                <option value="">Select Source</option>
                 <option value="Salary">💼 Salary</option>
                 <option value="Freelance">💻 Freelance</option>
                 <option value="Investment">📈 Investment</option>
@@ -79,7 +81,9 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
                 <option value="Side Hustle">💪 Side Hustle</option>
                 <option value="Other">➕ Other</option>
               </select>
-              <input className="modern-input" placeholder="Source of Fund" value={incomeForm.source} onChange={e => setIncomeForm({ ...incomeForm, source: e.target.value })} required />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Description</label>
+              <input className="modern-input" placeholder="Description" value={incomeForm.source} onChange={e => setIncomeForm({ ...incomeForm, source: e.target.value })} required />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Date</label>
               <input className="modern-input" type="date" value={incomeForm.date} onChange={e => setIncomeForm({ ...incomeForm, date: e.target.value })} />
 
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -88,16 +92,20 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
                   <span>Recurring</span>
                 </label>
                 {incomeForm.recurring && (
-                  <select className="modern-input" value={incomeForm.recurrence || "monthly"} onChange={e => setIncomeForm({ ...incomeForm, recurrence: e.target.value })} style={{ width: 160 }}>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
+                  <>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Recurrence</label>
+                    <select className="modern-input" value={incomeForm.recurrence || "monthly"} onChange={e => setIncomeForm({ ...incomeForm, recurrence: e.target.value })} style={{ width: 160 }}>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  </>
                 )}
               </div>
 
-              <input className="modern-input" placeholder="Notes" value={incomeForm.notes} onChange={e => setIncomeForm({ ...incomeForm, notes: e.target.value })} />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Notes(Optional)</label>
+              <input className="modern-input" placeholder="Enter a helpful message" value={incomeForm.notes} onChange={e => setIncomeForm({ ...incomeForm, notes: e.target.value })} />
               <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 6 }}>
                 <button type="button" className="btn" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>Cancel</button>
                 <button type="submit" className="btn btn-primary">{editingIncomeId ? "Save Changes" : "Add Income"}</button>

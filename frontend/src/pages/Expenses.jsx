@@ -141,11 +141,13 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
               <button className="btn btn-ghost" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>✕</button>
             </div>
             <form onSubmit={handleSubmit} className="form-grid">
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Amount</label>
               <div className="input-with-prefix">
                 <div className="currency-prefix">{currencySymbol}</div>
-                <input className="modern-input" placeholder="Amount" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
+                <input className="modern-input" placeholder="0.00" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
               </div>
-              <select className="modern-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Category</label>
+               <select className="modern-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required>
                 <option value="">Select category</option>
                 <option value="Food">🍔 Food</option>
                 <option value="Transportation">🚗 Transportation</option>
@@ -157,9 +159,12 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
                 <option value="Education">🎓 Education</option>
                 <option value="Other">➕ Other</option>
               </select>
-              <input className="modern-input form-full" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-              <input className="modern-input" placeholder="Source" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} />
-              <input className="modern-input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Description</label>
+               <input className="modern-input form-full" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Source of Fund</label>
+               <input className="modern-input" placeholder="Enter source of fund" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Date</label>
+               <input className="modern-input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
               <select className="modern-input" value={form.paymentMethod || ""} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}>
                 <option value="">Select payment method</option>
                 <option value="Cash">💵 Cash</option>
@@ -168,21 +173,26 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
                 <option value="Bank Transfer">🏦 Bank Transfer</option>
                 <option value="Mobile Wallet">📱 Mobile Wallet</option>
               </select>
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Payment method</label>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
                   <input type="checkbox" checked={!!form.recurring} onChange={e => setForm({ ...form, recurring: e.target.checked })} />
                   <span>Recurring</span>
                 </label>
                 {form.recurring && (
-                  <select className="modern-input" value={form.recurrence || "monthly"} onChange={e => setForm({ ...form, recurrence: e.target.value })} style={{ width: 160 }}>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                  </select>
+                  <>
+                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Recurrence</label>
+                    <select className="modern-input" value={form.recurrence || "monthly"} onChange={e => setForm({ ...form, recurrence: e.target.value })} style={{ width: 160 }}>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  </>
                 )}
               </div>
-              <input className="modern-input form-full" placeholder="Notes" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Notes(Optional)</label>
+              <input className="modern-input form-full" placeholder="Enter a helpful message" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
               <div className="modal-footer form-full">
                 <button type="button" className="btn" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>Cancel</button>
                 <button type="submit" className="btn btn-primary">{editingExpenseId ? "Save Changes" : "Add Expense"}</button>
