@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import ConfirmModal from "../../components/ConfirmModal";
-import FormModal from "../../components/FormModal";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import FormModal from "../../components/FormModal/FormModal";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../components/ConfirmModal";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 
 export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../components/ConfirmModal";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import "./Expenses.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
 export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
@@ -72,19 +73,19 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
 
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h3 style={{ margin: 0 }}>Expenses</h3>
-        <div style={{ display: "flex", gap: 8 }}>
+      <div className="page-header">
+        <h3 className="header-title">Expenses</h3>
+        <div className="header-actions">
           <button className="btn" onClick={openBudgetModal}>Edit Budgets</button>
           <button className="btn btn-primary" onClick={() => setExpenseModalOpen(true)}>＋ Add Expense</button>
         </div>
       </div>
 
       {/* Mini analytics: 6-month trend + category pie */}
-      <div style={{ display: "flex", gap: 12, marginTop: 12, alignItems: "stretch", flexWrap: "wrap" }}>
-        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 320, flex: "1 1 320px" }}>
-          <div style={{ fontSize: 12, color: "#666" }}>6‑Month Expense Trend</div>
-          <div style={{ width: "100%", height: 120 }}>
+      <div className="analytics-row">
+        <div className="card trend-card">
+          <div className="card-label">6‑Month Expense Trend</div>
+          <div className="chart-small">
             <ResponsiveContainer>
               <LineChart data={lastSixMonthsData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -97,9 +98,9 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
           </div>
         </div>
 
-        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", width: 260 }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Expenses by Category</div>
-          <div style={{ width: 220, height: 120, margin: "0 auto" }}>
+        <div className="card category-card">
+          <div className="card-label">Expenses by Category</div>
+          <div className="chart-small center">
             <ResponsiveContainer>
               <PieChart>
                 <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={30} outerRadius={50} />
@@ -107,26 +108,26 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div style={{ marginTop: 8, fontSize: 12, color: "#444" }}>
+          <div className="card-subtext">
             {pieData.slice(0,3).map(p => `${p.name} (${Math.round((p.value / (pieData.reduce((s, it) => s + it.value, 0) || 1)) * 100)}%)`).join(" • ")}
           </div>
         </div>
       </div>
 
       {overBudgetCategories.length > 0 && (
-        <div style={{ marginTop: 12, padding: 10, background: "#FFEEEE", color: "#AA0000", borderRadius: 6 }}>
+        <div className="budget-alert">
           <strong>Budget Alert:</strong> You've exceeded budgets for {overBudgetCategories.map(c => c.category).join(", ")}
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
-        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
-          <div style={{ fontSize: 12, color: "#666" }}>This Month</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`}</div>
+      <div className="stats-row">
+        <div className="small-stat-card">
+          <div className="stat-label">This Month</div>
+          <div className="stat-value">{formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`}</div>
         </div>
-        <div style={{ background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)", minWidth: 160 }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Last Month</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`}</div>
+        <div className="small-stat-card">
+          <div className="stat-label">Last Month</div>
+          <div className="stat-value">{formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`}</div>
         </div>
       </div>
 
@@ -134,19 +135,19 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
         <div className="modal-overlay" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: "flex", flexDirection: "column" }}>
+              <div className="modal-headers">
                 <div className="modal-title">{editingExpenseId ? "Edit Expense" : "Add Expense"}</div>
                 <div className="modal-sub">Track where your money went</div>
               </div>
               <button className="btn btn-ghost" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>✕</button>
             </div>
             <form onSubmit={handleSubmit} className="form-grid">
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Amount</label>
+              <label className="form-label">Amount</label>
               <div className="input-with-prefix">
                 <div className="currency-prefix">{currencySymbol}</div>
                 <input className="modern-input" placeholder="0.00" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
               </div>
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Category</label>
+              <label className="form-label">Category</label>
                <select className="modern-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required>
                 <option value="">Select category</option>
                 <option value="Food">🍔 Food</option>
@@ -159,11 +160,11 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
                 <option value="Education">🎓 Education</option>
                 <option value="Other">➕ Other</option>
               </select>
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Description</label>
+              <label className="form-label">Description</label>
                <input className="modern-input form-full" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Source of Fund</label>
+              <label className="form-label">Source of Fund</label>
                <input className="modern-input" placeholder="Enter source of fund" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} />
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Date</label>
+              <label className="form-label">Date</label>
                <input className="modern-input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
               <select className="modern-input" value={form.paymentMethod || ""} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}>
                 <option value="">Select payment method</option>
@@ -173,16 +174,16 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
                 <option value="Bank Transfer">🏦 Bank Transfer</option>
                 <option value="Mobile Wallet">📱 Mobile Wallet</option>
               </select>
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Payment method</label>
-              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <label className="form-label">Payment method</label>
+              <div className="recurring-row">
+                <label className="recurring-toggle">
                   <input type="checkbox" checked={!!form.recurring} onChange={e => setForm({ ...form, recurring: e.target.checked })} />
                   <span>Recurring</span>
                 </label>
                 {form.recurring && (
                   <>
-                    <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Recurrence</label>
-                    <select className="modern-input" value={form.recurrence || "monthly"} onChange={e => setForm({ ...form, recurrence: e.target.value })} style={{ width: 160 }}>
+                    <label className="form-label">Recurrence</label>
+                    <select className="modern-input small-select" value={form.recurrence || "monthly"} onChange={e => setForm({ ...form, recurrence: e.target.value })}>
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly</option>
                       <option value="monthly">Monthly</option>
@@ -191,7 +192,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
                   </>
                 )}
               </div>
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Notes(Optional)</label>
+              <label className="form-label">Notes(Optional)</label>
               <input className="modern-input form-full" placeholder="Enter a helpful message" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
               <div className="modal-footer form-full">
                 <button type="button" className="btn" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>Cancel</button>
@@ -202,45 +203,51 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
         </div>
       )}
 
-      <h3 style={{ marginTop: 12 }}>Budget Status</h3>
+      <h3 className="section-title">Budget Status</h3>
       {budgets ? (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="budget-list">
           {budgetStatus.map(s => (
-            <div key={s.category} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "#fff", padding: 8, borderRadius: 6 }}>
-              <div style={{ minWidth: 160 }}>{s.category}</div>
-              <div style={{ flex: 1, marginLeft: 12, marginRight: 12 }}>
-                <div style={{ height: 10, background: "#f1f5f9", borderRadius: 999, overflow: "hidden" }}>
-                  <div style={{ width: `${Math.min(100, Math.max(0, s.percent || 0))}%`, height: "100%", background: s.percent > 100 ? "#FF6B6B" : "#60a5fa" }} />
+            <div key={s.category} className="budget-row">
+              <div className="budget-cat">{s.category}</div>
+              <div className="budget-progress">
+                <div className="progress-track">
+                  <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, s.percent || 0))}%`, background: s.percent > 100 ? "#FF6B6B" : "#60a5fa" }} />
                 </div>
               </div>
-                <div style={{ minWidth: 140, textAlign: "right", fontWeight: 700 }}>{formatCurrency ? formatCurrency(s.spent) : `${currencySymbol}${s.spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(s.budget) : `${currencySymbol}${s.budget.toFixed(2)}`}</div>
+              <div className="budget-amount">{formatCurrency ? formatCurrency(s.spent) : `${currencySymbol}${s.spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(s.budget) : `${currencySymbol}${s.budget.toFixed(2)}`}</div>
             </div>
           ))}
         </div>
       ) : (
-        <div style={{ color: "#666" }}>No budgets set. Click "Edit Budgets" to configure per-category budgets.</div>
+        <div className="muted">No budgets set. Click "Edit Budgets" to configure per-category budgets.</div>
       )}
 
-      <h3 style={{ marginTop: 12 }}>Recurring Expenses</h3>
+      <h3 className="section-title">Recurring Expenses</h3>
       {recurring.length > 0 ? (
-        <ul>
+        <ul className="expense-list">
           {recurring.map(expense => (
-            <li key={expense.id}>{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} — {expense.recurrence ? `${expense.recurrence}` : "recurring"} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
-              <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
-              <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(expense.id) })}>❌</button>
+            <li key={expense.id} className="expense-item">
+              <div className="expense-item-main">{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} — {expense.recurrence ? `${expense.recurrence}` : "recurring"} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}</div>
+              <div className="item-actions">
+                <button className="icon-btn" onClick={() => openEditExpense(expense)}>✏️</button>
+                <button className="icon-btn" onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(expense.id) })}>❌</button>
+              </div>
             </li>
           ))}
         </ul>
       ) : (
-        <div style={{ color: "#666" }}>No recurring expenses set.</div>
+        <div className="muted">No recurring expenses set.</div>
       )}
 
-      <h3 style={{ marginTop: 12 }}>Recent Expenses</h3>
-      <ul>
+      <h3 className="section-title">Recent Expenses</h3>
+      <ul className="expense-list">
         {nonRecurring.map(expense => (
-          <li key={expense.id}>{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}
-            <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(expense)}>✏️</button>
-            <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(expense.id) })}>❌</button>
+          <li key={expense.id} className="expense-item">
+            <div className="expense-item-main">{formatCurrency ? formatCurrency(expense.amount) : `${currencySymbol}${Number(expense.amount).toFixed(2)}`} {expense.category ? `(${expense.category})` : `(${expense.source})`} {expense.description ? `— ${expense.description}` : ""} — {(expense.date ? new Date(expense.date).toLocaleDateString() : "N/A")} {expense.notes ? `— ${expense.notes}` : null} {expense.paymentMethod ? ` — ${expense.paymentMethod}` : null}</div>
+            <div className="item-actions">
+              <button className="icon-btn" onClick={() => openEditExpense(expense)}>✏️</button>
+              <button className="icon-btn" onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(expense.id) })}>❌</button>
+            </div>
           </li>
         ))}
       </ul>
