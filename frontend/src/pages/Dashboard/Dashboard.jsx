@@ -12,6 +12,7 @@ import {
   Cell
 } from "recharts";
 import BudgetOverview from "../../components/BudgetOverview";
+import "./Dashboard.css";
 
 export default function Dashboard(props) {
   const {
@@ -36,31 +37,29 @@ export default function Dashboard(props) {
   return (
     <>
   
-      <div style={{ display: "flex", gap: 12, marginTop: 12, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Available Balance</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${availableBalance.toFixed(2)}`}</div>
-          <div style={{ marginTop: 8, fontSize: 12, color: "#555" }} />
+      <div className="dashboard-stats">
+        <div className="stat-card">
+          <div className="stat-label">Available Balance</div>
+          <div className="stat-value">{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${availableBalance.toFixed(2)}`}</div>
+          <div className="stat-sub" />
         </div>
-        <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Total Savings</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${computedTotalSavings.toFixed(2)}`}</div>
+        <div className="stat-card">
+          <div className="stat-label">Total Savings</div>
+          <div className="stat-value">{formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${computedTotalSavings.toFixed(2)}`}</div>
         </div>
-        <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Monthly Income</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyIncomeTotal) : `${currencySymbol}${monthlyIncomeTotal.toFixed(2)}`}</div>
+        <div className="stat-card">
+          <div className="stat-label">Monthly Income</div>
+          <div className="stat-value">{formatCurrency ? formatCurrency(monthlyIncomeTotal) : `${currencySymbol}${monthlyIncomeTotal.toFixed(2)}`}</div>
         </div>
-        <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Monthly Expenses</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>{formatCurrency ? formatCurrency(monthlyExpenseTotal) : `${currencySymbol}${monthlyExpenseTotal.toFixed(2)}`}</div>
+        <div className="stat-card">
+          <div className="stat-label">Monthly Expenses</div>
+          <div className="stat-value">{formatCurrency ? formatCurrency(monthlyExpenseTotal) : `${currencySymbol}${monthlyExpenseTotal.toFixed(2)}`}</div>
         </div>
-        <div style={{ flex: "1 1 160px", background: "#fff", padding: 12, borderRadius: 8, boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
-          <div style={{ fontSize: 12, color: "#666" }}>Total Net Worth</div>
-          <div style={{ fontSize: 20, fontWeight: 700 }}>
-            {formatCurrency
+        <div className="stat-card">
+          <div className="stat-label">Total Net Worth</div>
+          <div className="stat-value">{formatCurrency
               ? formatCurrency(Number(computedTotalSavings || 0) + Number(availableBalance || 0))
-              : `${currencySymbol}${(Number(computedTotalSavings || 0) + Number(availableBalance || 0)).toFixed(2)}`}
-          </div>
+              : `${currencySymbol}${(Number(computedTotalSavings || 0) + Number(availableBalance || 0)).toFixed(2)}`}</div>
         </div>
       </div>
 
@@ -77,10 +76,10 @@ export default function Dashboard(props) {
         formatCurrency={formatCurrency}
       />
 
-      <div style={{ marginTop: "1rem" }}>
+      <div className="chart-section">
         <h2>Expenses vs Income Per Month</h2>
         {combinedLineData.length > 0 ? (
-          <div style={{ width: "100%", height: 320 }}>
+          <div className="chart-wrapper">
             <ResponsiveContainer>
               <LineChart data={combinedLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -98,15 +97,15 @@ export default function Dashboard(props) {
         )}
       </div>
 
-      <h2 style={{ marginTop: 20 }}>By Category</h2>
+      <h2 className="by-category">By Category</h2>
       {overBudgetCategories.length > 0 && (
-        <div style={{ padding: 10, background: "#FFEEEE", color: "#AA0000", borderRadius: 6, marginBottom: 12 }}>
+        <div className="budget-alert">
           <strong>Budget Alert:</strong> You have exceeded the budget for {overBudgetCategories.map(c => c.category).join(", ")}.
         </div>
       )}
 
       {pieData.length > 0 ? (
-        <div style={{ width: "100%", height: 300 }}>
+        <div className="pie-wrapper">
           <ResponsiveContainer>
             <PieChart>
               <Pie
@@ -124,7 +123,7 @@ export default function Dashboard(props) {
                   const x = cx + radius * Math.cos(-midAngle * RAD);
                   const y = cy + radius * Math.sin(-midAngle * RAD);
                   return (
-                    <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 12, fontWeight: 600 }}>
+                    <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central" className="pie-label">
                       {`${(percent * 100).toFixed(0)}%`}
                     </text>
                   );
