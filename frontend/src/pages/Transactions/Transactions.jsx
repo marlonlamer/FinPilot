@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../components/ConfirmModal";
+import ConfirmModal from "../../components/ConfirmModal";
 
 export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
@@ -272,7 +272,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
           )}
         </>
       )}
-      )}
+    )}
       <ConfirmModal
         open={confirm.open}
         message={confirm.message}
