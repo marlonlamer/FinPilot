@@ -1,0 +1,6 @@
+/* Styles for ConfirmModal (subfolder) */
+.confirm-modal { background:#fff; padding:18px; border-radius:10px; width:90%; max-width:420px; box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+.confirm-message { margin-bottom:12px; font-size:15px; color:#111; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; }
+.modal-footer { display:flex; justify-content:flex-end; gap:8px; }
+.btn-danger { background: linear-gradient(90deg,#ff7a7a,#ff4b4b); color:#fff; border:none; font-weight:600; }
