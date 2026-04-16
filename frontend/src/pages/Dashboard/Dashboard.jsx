@@ -12,7 +12,7 @@ import {
   Cell
 } from "recharts";
 import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
-import "./Dashboard.css";
+import "./DashboardModule.css";
 
 export default function Dashboard(props) {
   const {

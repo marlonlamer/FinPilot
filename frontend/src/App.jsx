@@ -2,14 +2,14 @@ import React, { useEffect, useState, useRef } from "react";
 import { api } from "./api";
 import "./App.css";
 
-import Dashboard from "./pages/Dashboard";
-import Transactions from "./pages/Transactions";
-import Income from "./pages/Income";
-import Expenses from "./pages/Expenses";
-import Savings from "./pages/Savings";
-import Reports from "./pages/Reports";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
+import Dashboard from "./pages/dashboard";
+import Transactions from "./pages/transactions";
+import Income from "./pages/income";
+import Expenses from "./pages/expenses";
+import Savings from "./pages/savings";
+import Reports from "./pages/reports";
+import Profile from "./pages/profile";
+import Settings from "./pages/settings";
 
 function App() {
   const [expenses, setExpenses] = useState([]);
