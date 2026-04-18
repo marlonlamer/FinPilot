@@ -1,11 +1,12 @@
 import React from "react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, PieChart, Pie } from "recharts";
+import "./ReportsModule.css";
 
 export default function Reports({ combinedLineData, pieData, currencySymbol = "â‚±", formatCurrency }) {
   return (
     <div>
       <h2>Reports</h2>
-      <div style={{ width: "100%", height: 320 }}>
+      <div className="reports-chart reports-line">
         <ResponsiveContainer>
           <LineChart data={combinedLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" />
@@ -19,7 +20,7 @@ export default function Reports({ combinedLineData, pieData, currencySymbol = "â
         </ResponsiveContainer>
       </div>
 
-      <div style={{ width: "100%", height: 300, marginTop: 12 }}>
+      <div className="reports-chart reports-pie">
         <ResponsiveContainer>
           <PieChart>
             <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={40} outerRadius={80} />

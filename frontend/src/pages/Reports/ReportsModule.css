@@ -1,0 +1,13 @@
+/* Reports page styles moved from inline JSX */
+.reports-chart {
+  width: 100%;
+}
+
+.reports-line {
+  height: 320px;
+}
+
+.reports-pie {
+  height: 300px;
+  margin-top: 12px;
+}
