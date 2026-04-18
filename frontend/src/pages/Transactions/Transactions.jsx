@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import "./TransactionsModule.css";
 
 export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
@@ -139,12 +140,12 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
   
 
   return (
-    <div>
+    <div className="transactions-root">
       <h2>All Transactions</h2>
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12, flexWrap: "wrap" }}>
-        <div>
-          <label style={{ marginRight: 6 }}>Type:</label>
+      <div className="transactions-controls">
+        <div className="transactions-control">
+          <label className="transactions-label">Type:</label>
           <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
             <option value="all">All</option>
             <option value="income">Income</option>
@@ -152,8 +153,8 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
           </select>
         </div>
 
-        <div>
-          <label style={{ marginRight: 6 }}>Date:</label>
+        <div className="transactions-control">
+          <label className="transactions-label">Date:</label>
           <select value={dateFilter} onChange={e => setDateFilter(e.target.value)}>
             <option value="all">All</option>
             <option value="today">Today</option>
@@ -164,15 +165,15 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
         </div>
 
         {dateFilter === "custom" && (
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <div className="transactions-custom-date">
             <input type="date" value={customStart} onChange={e => setCustomStart(e.target.value)} />
             <span>—</span>
             <input type="date" value={customEnd} onChange={e => setCustomEnd(e.target.value)} />
           </div>
         )}
 
-        <div>
-          <label style={{ marginRight: 6 }}>Category:</label>
+        <div className="transactions-control">
+          <label className="transactions-label">Category:</label>
           <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)}>
             {categories.map(c => (
               <option key={c} value={c}>{c}</option>
@@ -180,13 +181,13 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
           </select>
         </div>
 
-        <div style={{ marginLeft: 8 }}>
-          <label style={{ marginRight: 6 }}>Search:</label>
-          <input placeholder="Search amounts, notes, category..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+        <div className="transactions-search">
+          <label className="transactions-label">Search:</label>
+          <input className="transactions-input" placeholder="Search amounts, notes, category..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
         </div>
 
-        <div>
-          <label style={{ marginRight: 6 }}>Sort:</label>
+        <div className="transactions-control">
+          <label className="transactions-label">Sort:</label>
           <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
             <option value="date_desc">Date (newest)</option>
             <option value="date_asc">Date (oldest)</option>
@@ -202,37 +203,37 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
       {typeFilter === "all" ? (
         <>
           <h3>Transactions</h3>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <table className="transactions-table">
             <thead>
-              <tr style={{ textAlign: "left", borderBottom: "1px solid #eee" }}>
-                <th style={{ padding: 8 }}>Date</th>
-                <th style={{ padding: 8 }}>Type</th>
-                <th style={{ padding: 8 }}>Category / Source</th>
-                <th style={{ padding: 8 }}>Amount</th>
-                <th style={{ padding: 8 }}>Running</th>
-                <th style={{ padding: 8 }}>Actions</th>
+              <tr className="transactions-row-header">
+                <th className="transactions-th">Date</th>
+                <th className="transactions-th">Type</th>
+                <th className="transactions-th">Category / Source</th>
+                <th className="transactions-th">Amount</th>
+                <th className="transactions-th">Running</th>
+                <th className="transactions-th">Actions</th>
               </tr>
             </thead>
             <tbody>
               {displayedList.map(item => (
-                <tr key={`${item.type}-${item.id}`} style={{ borderBottom: "1px solid #fafafa" }}>
-                  <td style={{ padding: 8 }}>{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</td>
-                  <td style={{ padding: 8 }}>{item.type}</td>
-                  <td style={{ padding: 8 }}>
-                    {item.category ? item.category : item.source} {item.recurring ? <span style={{ marginLeft: 8, fontSize: 12, color: "#2d8f6f" }}>🔁 recurring</span> : null}
+                <tr key={`${item.type}-${item.id}`} className="transactions-row">
+                  <td className="transactions-td">{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</td>
+                  <td className="transactions-td">{item.type}</td>
+                  <td className="transactions-td">
+                    {item.category ? item.category : item.source} {item.recurring ? <span className="transactions-recurring">🔁 recurring</span> : null}
                   </td>
-                  <td style={{ padding: 8 }}>{formatCurrency ? formatCurrency(item.amount) : `${currencySymbol}${Number(item.amount).toFixed(2)}`}</td>
-                  <td style={{ padding: 8 }}>{formatCurrency ? formatCurrency(item.runningBalance) : `${currencySymbol}${Number(item.runningBalance).toFixed(2)}`}</td>
-                  <td style={{ padding: 8 }}>
+                  <td className="transactions-td">{formatCurrency ? formatCurrency(item.amount) : `${currencySymbol}${Number(item.amount).toFixed(2)}`}</td>
+                  <td className="transactions-td">{formatCurrency ? formatCurrency(item.runningBalance) : `${currencySymbol}${Number(item.runningBalance).toFixed(2)}`}</td>
+                  <td className="transactions-td">
                     {item.type === "income" ? (
                       <>
-                        <button style={{ marginRight: 8 }} onClick={() => openEditIncome(item)}>✏️</button>
-                        <button onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(item.id) })}>❌</button>
+                        <button className="transactions-action" onClick={() => openEditIncome(item)}>✏️</button>
+                        <button className="transactions-action" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(item.id) })}>❌</button>
                       </>
                     ) : (
                       <>
-                        <button style={{ marginRight: 8 }} onClick={() => openEditExpense(item)}>✏️</button>
-                        <button onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(item.id) })}>❌</button>
+                        <button className="transactions-action" onClick={() => openEditExpense(item)}>✏️</button>
+                        <button className="transactions-action" onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(item.id) })}>❌</button>
                       </>
                     )}
                   </td>

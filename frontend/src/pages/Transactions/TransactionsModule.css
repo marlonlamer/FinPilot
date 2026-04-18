@@ -1,0 +1,63 @@
+/* Transactions page styles moved from inline JSX */
+.transactions-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.transactions-label {
+  margin-right: 6px;
+}
+
+.transactions-custom-date {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.transactions-search {
+  margin-left: 8px;
+}
+
+.transactions-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.transactions-row-header {
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.transactions-row {
+  border-bottom: 1px solid #fafafa;
+}
+
+.transactions-th,
+.transactions-td {
+  padding: 8px;
+}
+
+.transactions-recurring {
+  margin-left: 8px;
+  font-size: 12px;
+  color: #2d8f6f;
+}
+
+.transactions-action {
+  margin-right: 8px;
+}
+
+.transactions-action:last-child {
+  margin-right: 0;
+}
+
+.transactions-list-button {
+  margin-left: 10px;
+}
+
+.transactions-td button.transactions-action {
+  margin-left: 0;
+}
