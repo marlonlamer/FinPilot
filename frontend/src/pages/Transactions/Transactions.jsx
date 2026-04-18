@@ -250,8 +250,8 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
               <ul>
                 {displayedList.filter(i => i.type === "income").map(i => (
                     <li key={i.id}>{formatCurrency ? formatCurrency(i.amount) : `${currencySymbol}${Number(i.amount).toFixed(2)}`} {i.category ? `(${i.category})` : `(${i.source})`} {i.recurring ? `— recurring (${i.recurrence || "monthly"})` : ""} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: {formatCurrency ? formatCurrency(i.runningBalance) : `${currencySymbol}${Number(i.runningBalance).toFixed(2)}`}
-                      <button style={{ marginLeft: 10 }} onClick={() => openEditIncome(i)}>✏️</button>
-                      <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(i.id) })}>❌</button>
+                      <button className="transactions-list-button" onClick={() => openEditIncome(i)}>✏️</button>
+                      <button className="transactions-list-button" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(i.id) })}>❌</button>
                     </li>
                   ))}
               </ul>
@@ -264,8 +264,8 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
               <ul>
                 {displayedList.filter(e => e.type === "expense").map(e => (
                   <li key={e.id}>{formatCurrency ? formatCurrency(e.amount) : `${currencySymbol}${Number(e.amount).toFixed(2)}`} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} {e.recurring ? ` — recurring (${e.recurrence || "monthly"})` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: {formatCurrency ? formatCurrency(e.runningBalance) : `${currencySymbol}${Number(e.runningBalance).toFixed(2)}`}
-                    <button style={{ marginLeft: 10 }} onClick={() => openEditExpense(e)}>✏️</button>
-                    <button style={{ marginLeft: 10 }} onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(e.id) })}>❌</button>
+                    <button className="transactions-list-button" onClick={() => openEditExpense(e)}>✏️</button>
+                    <button className="transactions-list-button" onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(e.id) })}>❌</button>
                   </li>
                 ))}
               </ul>
