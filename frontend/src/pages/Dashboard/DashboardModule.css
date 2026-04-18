@@ -1,63 +1,101 @@
 /* Styles moved from inline styles in Dashboard.jsx */
+.dashboard-root {
+  padding: 28px 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  color: #0f172a;
+}
+
 .dashboard-stats {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
   margin-top: 12px;
-  flex-wrap: wrap;
 }
 
 .stat-card {
-  flex: 1 1 160px;
-  background: #fff;
-  padding: 12px;
-  border-radius: 8px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .stat-label {
   font-size: 12px;
-  color: #666;
+  color: #6b7280;
 }
 
 .stat-value {
   font-size: 20px;
   font-weight: 700;
+  color: #0b1220;
 }
 
 .stat-sub {
   margin-top: 8px;
   font-size: 12px;
-  color: #555;
+  color: #64748b;
 }
 
 .chart-section {
-  margin-top: 1rem;
+  margin-top: 22px;
+}
+
+.chart-section h2 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  color: #0b1220;
 }
 
 .chart-wrapper {
   width: 100%;
-  height: 320px;
+  height: 340px;
+  background: #fff;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.04);
 }
 
 .by-category {
-  margin-top: 20px;
+  margin-top: 22px;
+  font-size: 16px;
 }
 
 .budget-alert {
-  padding: 10px;
-  background: #FFEEEE;
-  color: #AA0000;
-  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fff7f7;
+  color: #b91c1c;
+  border-radius: 8px;
   margin-bottom: 12px;
+  border: 1px solid rgba(185,28,28,0.06);
 }
 
 .pie-wrapper {
   width: 100%;
   height: 300px;
+  background: #fff;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(15,23,42,0.04);
 }
 
 .pie-label {
   font-size: 12px;
   font-weight: 600;
   fill: #ffffff;
+}
+
+@media (min-width: 900px) {
+  .chart-section {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .chart-wrapper { height: 360px; }
+  .pie-wrapper { height: 360px; }
 }

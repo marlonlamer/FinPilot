@@ -35,7 +35,7 @@ export default function Dashboard(props) {
 
 
   return (
-    <>
+    <div className="dashboard-root">
   
       <div className="dashboard-stats">
         <div className="stat-card">
@@ -141,6 +141,6 @@ export default function Dashboard(props) {
       ) : (
         <p>No expenses to display.</p>
       )}
-    </>
+    </div>
   );
 }
