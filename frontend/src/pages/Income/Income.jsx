@@ -41,7 +41,7 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
   const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   return (
-    <div>
+    <div className="income-root">
       <div className="income-header">
         <h3 className="page-title">Incomes</h3>
         <button className="btn btn-primary" onClick={() => setIncomeModalOpen(true)}>＋ Add Income</button>
@@ -123,8 +123,8 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
             <li key={income.id} className="income-item">
               <div className="income-item-main">{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {income.recurrence ? `${income.recurrence}` : "recurring"} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}</div>
               <div className="income-item-actions">
-                <button onClick={() => openEditIncome(income)}>✏️</button>
-                <button onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
+                <button className="icon-btn" onClick={() => openEditIncome(income)}>✏️</button>
+                <button className="icon-btn" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
               </div>
             </li>
           ))}
@@ -153,8 +153,8 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
           <li key={income.id} className="income-item">
             <div className="income-item-main">{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}</div>
             <div className="income-item-actions">
-              <button onClick={() => openEditIncome(income)}>✏️</button>
-              <button onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
+              <button className="icon-btn" onClick={() => openEditIncome(income)}>✏️</button>
+              <button className="icon-btn" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
             </div>
           </li>
         ))}
