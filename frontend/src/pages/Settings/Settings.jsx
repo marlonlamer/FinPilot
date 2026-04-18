@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import "./SettingsModule.css";
 
 const DEFAULTS = {
   PHP: "₱",
@@ -35,16 +36,16 @@ export default function Settings({ currencyCode: propCurrencyCode, setCurrencyCo
   }
 
   return (
-    <div>
+    <div className="settings-root">
       <h2>Settings</h2>
-      <div style={{ marginTop: 8 }}>
-        <label style={{ display: "block", fontSize: 13, marginBottom: 6 }}>Currency</label>
-        <select value={currencyCode} onChange={e => applyCurrency(e.target.value)}>
+      <div className="settings-section">
+        <label className="settings-label">Currency</label>
+        <select className="settings-select" value={currencyCode} onChange={e => applyCurrency(e.target.value)}>
           {Object.keys(DEFAULTS).map(code => (
             <option key={code} value={code}>{code} — {DEFAULTS[code]}</option>
           ))}
         </select>
-        <div style={{ marginTop: 10, fontSize: 13 }}>
+        <div className="settings-preview">
           Preview: <strong>{(propCurrencySymbol || DEFAULTS[currencyCode] || "₱")}1234.56</strong>
         </div>
       </div>
