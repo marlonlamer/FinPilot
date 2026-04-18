@@ -273,7 +273,6 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
           )}
         </>
       )}
-    )}
       <ConfirmModal
         open={confirm.open}
         message={confirm.message}
