@@ -1,4 +1,11 @@
 /* Savings page styles moved from inline JSX */
+.savings-root {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  color: #0b1220;
+}
+
 .savings-controls {
   margin-top: 12px;
   display: flex;
@@ -14,7 +21,7 @@
   background: #fff;
   padding: 6px;
   border-radius: 999px;
-  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
 }
 
 .savings-pill {
@@ -74,9 +81,10 @@
 .savings-modal {
   background: #fff;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 12px;
   width: 100%;
-  max-width: 400px;
+  max-width: 480px;
+  box-shadow: 0 8px 24px rgba(2,6,23,0.06);
 }
 
 .savings-form-label {
@@ -106,10 +114,10 @@
 
 .savings-summary-panel {
   margin-top: 12px;
-  padding: 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: #fafafa;
+  padding: 14px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
 }
 
 .savings-summary-items {
@@ -140,10 +148,11 @@
 }
 
 .savings-goal-card {
-  border: 1px solid #eee;
+  background: #fff;
   padding: 12px;
-  border-radius: 6px;
+  border-radius: 10px;
   margin-bottom: 12px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.04);
 }
 
 .savings-goal-header {
@@ -172,15 +181,18 @@
 
 .savings-progress {
   height: 10px;
-  background: #f1f1f1;
-  border-radius: 6px;
+  background: #f1f5f9;
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .savings-progress-fill {
   height: 100%;
-  background: #4caf50;
+  transition: width 300ms ease;
 }
+
+.savings-progress-fill.normal { background: #4caf50; }
+.savings-progress-fill.over { background: #ff6b6b; }
 
 .savings-progress-label {
   font-size: 12px;
