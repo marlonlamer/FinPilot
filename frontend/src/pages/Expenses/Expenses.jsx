@@ -72,7 +72,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
   const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   return (
-    <div>
+    <div className="expenses-root">
       <div className="page-header">
         <h3 className="header-title">Expenses</h3>
         <div className="header-actions">
@@ -209,11 +209,14 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
           {budgetStatus.map(s => (
             <div key={s.category} className="budget-row">
               <div className="budget-cat">{s.category}</div>
-              <div className="budget-progress">
-                <div className="progress-track">
-                  <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, s.percent || 0))}%`, background: s.percent > 100 ? "#FF6B6B" : "#60a5fa" }} />
+                <div className="budget-progress">
+                  <div className="progress-track">
+                    <div
+                      className={"progress-fill " + (s.percent > 100 ? 'over' : 'normal')}
+                      style={{ width: `${Math.min(100, Math.max(0, s.percent || 0))}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
               <div className="budget-amount">{formatCurrency ? formatCurrency(s.spent) : `${currencySymbol}${s.spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(s.budget) : `${currencySymbol}${s.budget.toFixed(2)}`}</div>
             </div>
           ))}
