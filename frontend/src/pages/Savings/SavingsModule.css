@@ -1,0 +1,225 @@
+/* Savings page styles moved from inline JSX */
+.savings-controls {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.savings-pill-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  background: #fff;
+  padding: 6px;
+  border-radius: 999px;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+}
+
+.savings-pill {
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: #444;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.savings-pill.active {
+  background: #e8f0ff;
+  color: #174ea6;
+  font-weight: 600;
+}
+
+.savings-controls-right {
+  margin-left: auto;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.savings-month {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.savings-small-label {
+  font-size: 13px;
+  color: #666;
+}
+
+.savings-select {
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+
+.savings-add-button {
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+.savings-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.savings-modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.savings-form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: #333;
+}
+
+.savings-modal-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.savings-stats {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.savings-stat {
+  font-size: 14px;
+}
+
+.savings-summary-panel {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.savings-summary-items {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.savings-summary-item {
+  min-width: 160px;
+}
+
+.savings-summary-label {
+  font-size: 12px;
+  color: #666;
+}
+
+.savings-summary-value {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.savings-list-container {
+  margin-top: 18px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.savings-goal-card {
+  border: 1px solid #eee;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 12px;
+}
+
+.savings-goal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.savings-goal-dates {
+  font-size: 12px;
+  color: #666;
+}
+
+.savings-goal-meta {
+  text-align: right;
+}
+
+.savings-goal-time {
+  font-size: 12px;
+  color: #666;
+}
+
+.savings-progress-wrap {
+  margin-top: 8px;
+}
+
+.savings-progress {
+  height: 10px;
+  background: #f1f1f1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.savings-progress-fill {
+  height: 100%;
+  background: #4caf50;
+}
+
+.savings-progress-label {
+  font-size: 12px;
+  color: #444;
+  margin-top: 6px;
+}
+
+.savings-goal-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.savings-history {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #333;
+}
+
+.savings-history-list {
+  margin-top: 6px;
+  max-height: 220px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.savings-history-ul {
+  margin: 0;
+  padding-left: 14px;
+}
+
+.savings-history-item {
+  margin-bottom: 6px;
+}
+
+.savings-deposit {
+  color: #2e7d32;
+}
+
+.savings-withdraw {
+  color: #c62828;
+}

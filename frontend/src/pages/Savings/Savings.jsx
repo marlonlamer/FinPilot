@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
+import "./SavingsModule.css";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -183,26 +184,18 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
 
   return (
-    <div>
+    <div className="savings-root">
       <h2>Savings</h2>
 
-      <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#fff', padding: 6, borderRadius: 999, boxShadow: '0 1px 0 rgba(0,0,0,0.03)' }}>
+      <div className="savings-controls">
+        <div className="savings-pill-group">
           {['All Time', 'Selected Month', 'Summary'].map(tab => {
             const active = activeTab === tab;
             return (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                style={{
-                  padding: '8px 12px',
-                  borderRadius: 999,
-                  border: 'none',
-                  background: active ? '#e8f0ff' : 'transparent',
-                  color: active ? '#174ea6' : '#444',
-                  fontWeight: active ? 600 : 500,
-                  cursor: 'pointer'
-                }}
+                className={"savings-pill" + (active ? ' active' : '')}
               >
                 {tab}
               </button>
@@ -210,42 +203,28 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           })}
         </div>
 
-        <div style={{ marginLeft: 'auto', display: 'flex', gap: 12, alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={{ fontSize: 13, color: '#666' }}>Month</label>
-            <select value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))} style={{ padding: '6px 8px', borderRadius: 6 }}>
+        <div className="savings-controls-right">
+          <div className="savings-month">
+            <label className="savings-small-label">Month</label>
+            <select className="savings-select" value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))}>
               {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
             </select>
           </div>
 
-          <button onClick={() => setIsModalOpen(true)} style={{ padding: '8px 12px', borderRadius: 8 }}>
+          <button className="savings-add-button" onClick={() => setIsModalOpen(true)}>
             + Add Saving Goal
           </button>
         </div>
       </div>
 
       {isModalOpen && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(0,0,0,0.4)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1000
-        }}>
-          <div style={{
-            background: "#fff",
-            padding: 20,
-            borderRadius: 10,
-            width: "100%",
-            maxWidth: 400
-          }}>
+        <div className="savings-modal-overlay">
+          <div className="savings-modal">
             <h3>Add Saving Goal</h3>
 
             <form onSubmit={handleAddGoal}>
 
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Goal Name</label>
+              <label className="savings-form-label">Goal Name</label>
               <input
                 type="text"
                 name="goalName"
@@ -255,7 +234,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 required
               />
 
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Target Amount</label>
+              <label className="savings-form-label">Target Amount</label>
               <input
                 type="number"
                 name="targetAmount"
@@ -265,7 +244,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 required
               />
 
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Saved Amount</label>
+              <label className="savings-form-label">Saved Amount</label>
               <input
                 type="number"
                 name="savedAmount"
@@ -274,7 +253,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 onChange={handleNewGoalChange}
               />
 
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Start Date</label>
+              <label className="savings-form-label">Start Date</label>
               <input
                 type="date"
                 name="startDate"
@@ -282,7 +261,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 onChange={handleNewGoalChange}
               />
 
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Target Date</label>
+              <label className="savings-form-label">Target Date</label>
               <input
                 type="date"
                 name="targetDate"
@@ -291,7 +270,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 required
               />
 
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Monthly Suggestion</label>
+              <label className="savings-form-label">Monthly Suggestion</label>
               <input
                 type="number"
                 placeholder="Monthly Suggestion"
@@ -299,7 +278,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 readOnly
               />
 
-              <label style={{ display: 'block', marginBottom: 6, fontSize: 13, color: '#333' }}>Notes(Optional)</label>
+              <label className="savings-form-label">Notes(Optional)</label>
               <textarea
                 name="notes"
                 placeholder="Enter a helpful message"
@@ -307,7 +286,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 onChange={handleNewGoalChange}
               />
 
-              <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+              <div className="savings-modal-actions">
                 <button type="button" onClick={() => setIsModalOpen(false)}>
                   Cancel
                 </button>
@@ -321,35 +300,35 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
       {activeTab !== 'Summary' ? (
         <>
-          <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6, flexWrap: "wrap" }}>
-            <div style={{ fontSize: 14 }}>Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
-            <div style={{ fontSize: 14 }}>{activeTab === 'Selected Month' ? 'This Month Deposits' : 'Total Deposits'}: <strong>{formatCurrency ? formatCurrency(viewTotals.deposits) : `${currencySymbol}${Number(viewTotals.deposits).toFixed(2)}`}</strong></div>
-            <div style={{ fontSize: 14 }}>{activeTab === 'Selected Month' ? 'This Month Withdrawals' : 'Total Withdrawals'}: <strong>{formatCurrency ? formatCurrency(viewTotals.withdrawals) : `${currencySymbol}${Number(viewTotals.withdrawals).toFixed(2)}`}</strong></div>
+          <div className="savings-stats">
+            <div className="savings-stat">Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
+            <div className="savings-stat">{activeTab === 'Selected Month' ? 'This Month Deposits' : 'Total Deposits'}: <strong>{formatCurrency ? formatCurrency(viewTotals.deposits) : `${currencySymbol}${Number(viewTotals.deposits).toFixed(2)}`}</strong></div>
+            <div className="savings-stat">{activeTab === 'Selected Month' ? 'This Month Withdrawals' : 'Total Withdrawals'}: <strong>{formatCurrency ? formatCurrency(viewTotals.withdrawals) : `${currencySymbol}${Number(viewTotals.withdrawals).toFixed(2)}`}</strong></div>
           </div>
 
           <p>Total Savings: {formatCurrency ? formatCurrency(viewTotals.net) : `${currencySymbol}${Number(viewTotals.net).toFixed(2)}`}</p>
         </>
       ) : (
-        <div style={{ marginTop: 12, padding: 12, border: '1px solid #e0e0e0', borderRadius: 8, background: '#fafafa' }}>
+        <div className="savings-summary-panel">
           <h3>Summary</h3>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ minWidth: 160 }}>
-              <div style={{ fontSize: 12, color: '#666' }}>Total Deposits</div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(summaryTotals.deposits) : `${currencySymbol}${Number(summaryTotals.deposits).toFixed(2)}`}</div>
+          <div className="savings-summary-items">
+            <div className="savings-summary-item">
+              <div className="savings-summary-label">Total Deposits</div>
+              <div className="savings-summary-value">{formatCurrency ? formatCurrency(summaryTotals.deposits) : `${currencySymbol}${Number(summaryTotals.deposits).toFixed(2)}`}</div>
             </div>
-            <div style={{ minWidth: 160 }}>
-              <div style={{ fontSize: 12, color: '#666' }}>Total Withdrawals</div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(summaryTotals.withdrawals) : `${currencySymbol}${Number(summaryTotals.withdrawals).toFixed(2)}`}</div>
+            <div className="savings-summary-item">
+              <div className="savings-summary-label">Total Withdrawals</div>
+              <div className="savings-summary-value">{formatCurrency ? formatCurrency(summaryTotals.withdrawals) : `${currencySymbol}${Number(summaryTotals.withdrawals).toFixed(2)}`}</div>
             </div>
-            <div style={{ minWidth: 160 }}>
-              <div style={{ fontSize: 12, color: '#666' }}>Net Savings</div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>{formatCurrency ? formatCurrency(summaryTotals.net) : `${currencySymbol}${Number(summaryTotals.net).toFixed(2)}`}</div>
+            <div className="savings-summary-item">
+              <div className="savings-summary-label">Net Savings</div>
+              <div className="savings-summary-value">{formatCurrency ? formatCurrency(summaryTotals.net) : `${currencySymbol}${Number(summaryTotals.net).toFixed(2)}`}</div>
             </div>
           </div>
         </div>
       )}
 
-      <div style={{ marginTop: 18, maxHeight: '60vh', overflowY: 'auto', paddingRight: 8 }}>
+      <div className="savings-list-container">
         {goals.length === 0 && <p>No saving goals yet.</p>}
         {goals.map(goal => {
           const t = parseFloat(goal.targetAmount) || 0;
@@ -373,29 +352,29 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
             return `${days} day${days > 1 ? 's' : ''} left`;
           })();
           return (
-            <div key={goal.id} style={{ border: "1px solid #eee", padding: 12, borderRadius: 6, marginBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div key={goal.id} className="savings-goal-card">
+              <div className="savings-goal-header">
                 <div>
                   <strong>{goal.goalName}</strong>
-                  <div style={{ fontSize: 12, color: "#666" }}>
+                  <div className="savings-goal-dates">
                     {(goal.startDate || goal.targetDate) ? `${goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''}${goal.startDate && goal.targetDate ? ' → ' : ''}${goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''}` : ''}
                   </div>
                 </div>
-                <div style={{ textAlign: "right" }}>
+                <div className="savings-goal-meta">
                   <div>Target: {formatCurrency ? formatCurrency(t) : `${currencySymbol}${Number(t).toFixed(2)}`}</div>
                   <div>Saved: {formatCurrency ? formatCurrency(s) : `${currencySymbol}${Number(s).toFixed(2)}`}</div>
                   <div>Remaining: {formatCurrency ? formatCurrency(remainingAmount) : `${currencySymbol}${Number(remainingAmount).toFixed(2)}`}</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>Time Left: {remainingTimeText}</div>
+                  <div className="savings-goal-time">Time Left: {remainingTimeText}</div>
                 </div>
               </div>
 
-              <div style={{ marginTop: 8 }}>
-                <div style={{ height: 10, background: "#f1f1f1", borderRadius: 6, overflow: "hidden" }}>
-                  <div style={{ width: `${pct}%`, height: "100%", background: "#4caf50" }} />
+              <div className="savings-progress-wrap">
+                <div className="savings-progress">
+                  <div className="savings-progress-fill" style={{ width: `${pct}%` }} />
                 </div>
-                <div style={{ fontSize: 12, color: "#444", marginTop: 6 }}>{pct.toFixed(1)}% complete</div>
+                <div className="savings-progress-label">{pct.toFixed(1)}% complete</div>
               </div>
-              <div style={{ marginTop: 10, display: "flex", gap: 8 }}>
+              <div className="savings-goal-actions">
                 <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Deposit</button>
                 <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
                 <button className="btn" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', targetAmount: goal.targetAmount || '', targetDate: goal.targetDate || '' } })}>Edit</button>
@@ -404,19 +383,18 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
 
                   {activeTab !== 'Summary' && historyForDisplay && historyForDisplay.length > 0 && (
-                <div style={{ marginTop: 10, fontSize: 13, color: "#333" }}>
+                <div className="savings-history">
                   <strong>History</strong>
-                  <div style={{ marginTop: 6, maxHeight: 220, overflowY: "auto", paddingRight: 8 }}>
-                    <ul style={{ margin: "0", paddingLeft: 14 }}>
+                  <div className="savings-history-list">
+                    <ul className="savings-history-ul">
                       {( (historyForDisplay || []).slice().reverse() ).map(entry => {
                         const isDeposit = Number(entry.amount) > 0;
                         const label = isDeposit ? 'Deposit' : 'Withdraw';
                         const amt = Math.abs(Number(entry.amount));
                         const amountDisplay = formatCurrency ? formatCurrency(isDeposit ? amt : -amt) : `${currencySymbol}${amt.toFixed(2)}`;
-                        const color = isDeposit ? '#2e7d32' : '#c62828';
                         return (
-                          <li key={entry.id} style={{ marginBottom: 6 }}>
-                            {new Date(entry.date).toLocaleDateString()} — <span style={{ color }}>{label}</span> {amountDisplay}{entry.note ? ` (${entry.note})` : ""}
+                          <li key={entry.id} className="savings-history-item">
+                            {new Date(entry.date).toLocaleDateString()} — <span className={isDeposit ? 'savings-deposit' : 'savings-withdraw'}>{label}</span> {amountDisplay}{entry.note ? ` (${entry.note})` : ""}
                           </li>
                         );
                       })}
