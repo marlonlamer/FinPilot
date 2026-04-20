@@ -117,20 +117,22 @@
 
 /* App layout and navigation */
 .app-root { display: flex; min-height: 100vh; }
-.sidebar { width: 220px; border-right: 1px solid #eee; padding: 1rem; background: #fafafa; }
+.sidebar { width: 220px; border-right: 1px solid #eee; padding: 1rem; background: #666; }
 .sidebar h2, .sidebar-title { margin-top: 0; }
 .nav-list { list-style: none; padding: 0; }
 .nav-item { margin-bottom: 8px; }
 .nav-button { width: 100%; text-align: left; padding: 8px 10px; background: transparent; border: none; border-radius: 4px; }
-.nav-button.active { background: #e6f7ff; }
+.nav-button.active { background: #0088ff; }
+.nav-button:hover { background: #0088ff; color: #fff; transition: all 0.2s ease;}
 
 .main-content { flex: 1; padding: 2rem; }
 .top-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
 .month-controls { display: flex; align-items: center; gap: 8px; }
 .month-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
-.month-btn { border: none; padding: 6px 8px; border-radius: 6px; background: transparent; }
-.month-btn.active { background: #e6f7ff; }
-.year-display { font-size: 14px; color: #333; margin-left: 6px; }
+.month-btn { border: none; padding: 6px 8px; border-radius: 6px; background: transparent; color: #667085; }
+.month-btn:hover { background: #0088ff; color: #fff; transition: all 0.2s ease;}
+.month-btn.active { background: #0088ff; color: #fff; }
+.year-display { font-size: 14px; color: #667085; margin-left: 6px; }
 
 /* Modal / budget editor small helpers */
 .modal-header-col { display: flex; flex-direction: column; }
