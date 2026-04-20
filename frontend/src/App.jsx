@@ -614,10 +614,10 @@ function App() {
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <nav style={{ width: 220, borderRight: "1px solid #eee", padding: "1rem", background: "#fafafa" }}>
-        <h2 style={{ marginTop: 0 }}>Expense Analyzer</h2>
-        <ul style={{ listStyle: "none", padding: 0 }}>
+    <div className="app-root">
+      <nav className="sidebar">
+        <h2 className="sidebar-title">Expense Analyzer</h2>
+        <ul className="nav-list">
           {[
             ["dashboard", "🏠 Dashboard"],
             ["transactions", "🧾 Transactions"],
@@ -628,23 +628,22 @@ function App() {
             ["profile", "👤 Profile"],
             ["settings", "⚙️ Settings"]
           ].map(([key, label]) => (
-            <li key={key} style={{ marginBottom: 8 }}>
-              <button onClick={() => setPage(key)} style={{ width: "100%", textAlign: "left", padding: "8px 10px", background: page === key ? "#e6f7ff" : "transparent", border: "none", borderRadius: 4 }}>{label}</button>
+            <li key={key} className="nav-item">
+              <button onClick={() => setPage(key)} className={`btn nav-button ${page === key ? 'active' : ''}`}>{label}</button>
             </li>
           ))}
         </ul>
       </nav>
-      <main style={{ flex: 1, padding: "2rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <main className="main-content">
+        <div className="top-controls">
+          <div className="month-controls">
             <button className="btn" onClick={() => { const prev = new Date(selectedYear, selectedMonth, 1); prev.setMonth(prev.getMonth() - 1); setSelectedYear(prev.getFullYear()); setSelectedMonth(prev.getMonth()); setDateFilter("month"); }}>◀</button>
-            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+            <div className="month-buttons">
               {monthNames.map((m, idx) => (
                 <button
                   key={m}
                   onClick={() => { setSelectedMonth(idx); setDateFilter("month"); }}
-                  className="btn"
-                  style={{ background: idx === selectedMonth ? "#e6f7ff" : "transparent", border: "none", padding: "6px 8px", borderRadius: 6 }}
+                  className={`btn month-btn ${idx === selectedMonth ? 'active' : ''}`}
                 >
                   {m}
                 </button>
@@ -652,7 +651,7 @@ function App() {
             </div>
             <button className="btn" onClick={() => { const nxt = new Date(selectedYear, selectedMonth, 1); nxt.setMonth(nxt.getMonth() + 1); setSelectedYear(nxt.getFullYear()); setSelectedMonth(nxt.getMonth()); setDateFilter("month"); }}>▶</button>
           </div>
-          <div style={{ fontSize: 14, color: "#333", marginLeft: 6 }}>{selectedYear}</div>
+          <div className="year-display">{selectedYear}</div>
         </div>
 
         {renderPage()}
@@ -661,34 +660,34 @@ function App() {
         <div className="modal-overlay" onClick={() => closeBudgetModal()}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div className="modal-title">Edit Budgets</div>
-                <div className="modal-sub">Set monthly budget and per-category budgets</div>
-              </div>
+              <div className="modal-header-col">
+                  <div className="modal-title">Edit Budgets</div>
+                  <div className="modal-sub">Set monthly budget and per-category budgets</div>
+                </div>
               <button className="btn btn-ghost" onClick={() => closeBudgetModal()}>✕</button>
             </div>
-            <div style={{ display: "grid", gap: 10 }}>
+            <div className="modal-body">
               <div>
-                <label style={{ display: "block", fontSize: 12, color: "#666" }}>Monthly Budget</label>
+                <label className="label-block">Monthly Budget</label>
                 <input type="number" className="modern-input" value={tempMonthlyBudget === null ? "" : tempMonthlyBudget} onChange={e => setTempMonthlyBudget(e.target.value === "" ? null : Number(e.target.value))} />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: 12, color: "#666", marginBottom: 6 }}>Per-category budgets</label>
-                <div style={{ display: "grid", gap: 8 }}>
+                <label className="label-block mb">Per-category budgets</label>
+                <div className="budgets-grid">
                   {Object.keys(tempBudgets || {}).length === 0 ? (
-                    <div style={{ color: "#666" }}>No categories available to set budgets for.</div>
+                    <div className="text-muted">No categories available to set budgets for.</div>
                   ) : (
                     Object.keys(tempBudgets).map(cat => (
-                      <div key={cat} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                        <div style={{ minWidth: 160 }}>{cat}</div>
+                      <div key={cat} className="budget-item">
+                        <div className="budget-name">{cat}</div>
                         <input type="number" className="modern-input" value={tempBudgets[cat] == null ? "" : tempBudgets[cat]} onChange={e => setTempBudgets(prev => ({ ...prev, [cat]: e.target.value === "" ? null : Number(e.target.value) }))} />
                         <button className="btn" onClick={() => setTempBudgets(prev => { const next = { ...prev }; delete next[cat]; return next; })}>Clear</button>
                       </div>
                     ))
                   )}
 
-                  <div style={{ marginTop: 8, display: "flex", gap: 8, alignItems: "center" }}>
+                  <div className="add-budget-row">
                     <input placeholder="Category name" className="modern-input" value={newBudgetCategory} onChange={e => setNewBudgetCategory(e.target.value)} />
                     <input placeholder="Amount" className="modern-input" type="number" value={newBudgetAmount} onChange={e => setNewBudgetAmount(e.target.value)} />
                     <button className="btn" onClick={() => {
@@ -699,8 +698,7 @@ function App() {
                   </div>
                 </div>
               </div>
-
-              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <div className="modal-actions">
                 <button className="btn" onClick={() => closeBudgetModal()}>Cancel</button>
                 <button className="btn btn-primary" onClick={() => saveBudgetModal()}>Save</button>
               </div>
