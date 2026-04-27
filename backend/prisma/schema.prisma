@@ -29,6 +29,18 @@ model Income {
   user      User     @relation(fields: [userId], references: [id])
 }
 
+model Savings {
+  id           Int      @id @default(autoincrement())
+  name         String
+  targetAmount Float
+  currentAmount Float    @default(0)
+  startDate    DateTime @default(now())
+  targetDate   DateTime?
+
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+}
+
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique
@@ -37,6 +49,7 @@ model User {
 
   expenses  Expense[]
   income    Income[]
+  savings   Savings[]
 }
 
 
