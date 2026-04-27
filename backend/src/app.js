@@ -6,6 +6,7 @@ const incomeRoutes = require("./routes/income.routes");
 const authRoutes = require("./routes/auth.routes");
 const savingsRoutes = require("./routes/savings.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
+const reportsRoutes = require("./routes/reports.routes");
 
 const app = express();
 
@@ -21,5 +22,6 @@ app.use(incomeRoutes);
 app.use(authRoutes);
 app.use(savingsRoutes);
 app.use(dashboardRoutes);
+app.use(reportsRoutes);
 
 module.exports = app;
