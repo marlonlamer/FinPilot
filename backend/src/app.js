@@ -4,6 +4,7 @@ const cors = require("cors");
 const expenseRoutes = require("./routes/expense.routes");
 const incomeRoutes = require("./routes/income.routes");
 const authRoutes = require("./routes/auth.routes");
+const savingsRoutes = require("./routes/savings.routes");
 
 const app = express();
 
@@ -17,5 +18,6 @@ app.get("/", (req, res) => {
 app.use(expenseRoutes);
 app.use(incomeRoutes);
 app.use(authRoutes);
+app.use(savingsRoutes);
 
 module.exports = app;
