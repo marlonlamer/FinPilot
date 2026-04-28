@@ -10,6 +10,8 @@ import Savings from "./pages/Savings/Savings";
 import Reports from "./pages/Reports/Reports";
 import Profile from "./pages/Profile/Profile";
 import Settings from "./pages/Settings/Settings";
+import Login from "./pages/Auth/Login";
+import Register from "./pages/Auth/Register";
 
 function App() {
   const [expenses, setExpenses] = useState([]);
@@ -536,6 +538,22 @@ function App() {
 
   const [page, setPage] = useState("dashboard");
   const [savingsBalanceAdjustment, setSavingsBalanceAdjustment] = useState(0);
+  const [authToken, setAuthToken] = useState(() => {
+    try { return localStorage.getItem("token"); } catch { return null; }
+  });
+
+  const onAuthSuccess = (token) => {
+    setAuthToken(token);
+    fetchExpenses();
+    fetchIncomes();
+    setPage("dashboard");
+  };
+
+  const logout = () => {
+    try { localStorage.removeItem("token"); } catch {}
+    setAuthToken(null);
+    setPage("dashboard");
+  };
 
   const renderPage = () => {
     if (page === "dashboard") {
@@ -610,6 +628,9 @@ function App() {
     if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
 
+    if (page === "login") return <Login onAuthSuccess={onAuthSuccess} />;
+    if (page === "register") return <Register onAuthSuccess={onAuthSuccess} />;
+
     return null;
   };
 
@@ -618,20 +639,35 @@ function App() {
       <nav className="sidebar">
         <h2 className="sidebar-title">Expense Analyzer</h2>
         <ul className="nav-list">
-          {[
-            ["dashboard", "🏠 Dashboard"],
-            ["transactions", "🧾 Transactions"],
-            ["income", "💰 Income"],
-            ["expenses", "💸 Expenses"],
-            ["savings", "🏦 Savings"],
-            ["reports", "📈 Reports"],
-            ["profile", "👤 Profile"],
-            ["settings", "⚙️ Settings"]
-          ].map(([key, label]) => (
-            <li key={key} className="nav-item">
-              <button onClick={() => setPage(key)} className={`btn nav-button ${page === key ? 'active' : ''}`}>{label}</button>
-            </li>
-          ))}
+          {(() => {
+            const base = [
+              ["dashboard", "🏠 Dashboard"],
+              ["transactions", "🧾 Transactions"],
+              ["income", "💰 Income"],
+              ["expenses", "💸 Expenses"],
+              ["savings", "🏦 Savings"],
+              ["reports", "📈 Reports"],
+              ["profile", "👤 Profile"],
+              ["settings", "⚙️ Settings"]
+            ];
+            if (!authToken) {
+              base.push(["login", "🔐 Login"]);
+              base.push(["register", "✍️ Register"]);
+            } else {
+              base.push(["logout", "🚪 Logout"]);
+            }
+            return base.map(([key, label]) => (
+              <li key={key} className="nav-item">
+                <button
+                  onClick={() => {
+                    if (key === "logout") return logout();
+                    setPage(key);
+                  }}
+                  className={`btn nav-button ${page === key ? 'active' : ''}`}
+                >{label}</button>
+              </li>
+            ));
+          })()}
         </ul>
       </nav>
       <main className="main-content">
