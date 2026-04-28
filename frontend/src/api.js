@@ -1,40 +1,27 @@
-const API_URL = "http://localhost:5000";
+import axios from "axios";
 
-const getToken = () => {
-  return localStorage.getItem("token");
-};
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-const request = async (endpoint, method = "GET", body = null) => {
-  const headers = {
-    "Content-Type": "application/json",
-  };
+const getToken = () => localStorage.getItem("token");
 
+const apiClient = axios.create({
+  baseURL: API_URL,
+});
+
+apiClient.interceptors.request.use((config) => {
   const token = getToken();
-  if (token) {
-    headers["Authorization"] = `Bearer ${token}`;
-  }
+  if (token) config.headers = { ...(config.headers || {}), Authorization: `Bearer ${token}` };
+  return config;
+});
 
-  const options = {
-    method,
-    headers,
-  };
-
-  if (body) {
-    options.body = JSON.stringify(body);
-  }
-
-  const response = await fetch(`${API_URL}${endpoint}`, options);
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
-};
+const handleResponse = (response) => response.data;
 
 export const api = {
-  get: (endpoint) => request(endpoint, "GET"),
-  post: (endpoint, body) => request(endpoint, "POST", body),
-  delete: (endpoint) => request(endpoint, "DELETE"),
-  put: (endpoint, body) => request(endpoint, "PUT", body),
+  get: (endpoint, config) => apiClient.get(endpoint, config).then(handleResponse),
+  post: (endpoint, body, config) => apiClient.post(endpoint, body, config).then(handleResponse),
+  put: (endpoint, body, config) => apiClient.put(endpoint, body, config).then(handleResponse),
+  delete: (endpoint, config) => apiClient.delete(endpoint, config).then(handleResponse),
+  setBaseURL: (url) => {
+    apiClient.defaults.baseURL = url;
+  },
 };
