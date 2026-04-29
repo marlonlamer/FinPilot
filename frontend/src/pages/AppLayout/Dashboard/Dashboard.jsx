@@ -11,7 +11,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
+import BudgetOverview from "../../../components/BudgetOverview/BudgetOverview";
 import "./DashboardModule.css";
 
 export default function Dashboard(props) {

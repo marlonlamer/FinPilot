@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import "./TransactionsModule.css";
 
 export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {

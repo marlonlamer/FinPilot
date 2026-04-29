@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 

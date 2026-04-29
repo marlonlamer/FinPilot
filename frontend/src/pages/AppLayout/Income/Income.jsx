@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import "./IncomeModule.css";
 
 export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
