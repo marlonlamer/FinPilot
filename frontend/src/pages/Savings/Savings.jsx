@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
-import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
-import FormModal from "../../../components/FormModal/FormModal";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
@@ -99,7 +99,6 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(saved)); } catch {}
     }
 
-    // reset form
     setNewGoal({
       goalName: "",
       targetAmount: "",

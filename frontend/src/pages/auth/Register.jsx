@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { api } from "../../api";
-import "./AuthModule.css";
+import { api } from "../../services/api";
+import "../AuthLayout/AuthModule.css";
 
 export default function Register({ onAuthSuccess }) {
   const [email, setEmail] = useState("");
@@ -17,7 +17,6 @@ export default function Register({ onAuthSuccess }) {
     try {
       const res = await api.post("/auth/register", { email, password });
       setSuccess("Registered successfully. You can now log in.");
-      // auto-login if server returns token
       const token = res.token || res?.data?.token;
       if (token) {
         try { localStorage.setItem("token", token); } catch {}

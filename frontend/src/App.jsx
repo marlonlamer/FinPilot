@@ -1,17 +1,17 @@
 import React, { useEffect, useState, useRef } from "react";
-import { api } from "./api";
+import { api } from "./services/api";
 import "./App.css";
 
-import Dashboard from "./pages/AppLayout/Dashboard/Dashboard";
-import Transactions from "./pages/AppLayout/Transactions/Transactions";
-import Income from "./pages/AppLayout/Income/Income";
-import Expenses from "./pages/AppLayout/Expenses/Expenses";
-import Savings from "./pages/AppLayout/Savings/Savings";
-import Reports from "./pages/AppLayout/Reports/Reports";
-import Profile from "./pages/AppLayout/Profile/Profile";
-import Settings from "./pages/AppLayout/Settings/Settings";
-import Login from "./pages/AuthLayout/Login";
-import Register from "./pages/AuthLayout/Register";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import Transactions from "./pages/Transactions/Transactions";
+import Income from "./pages/Income/Income";
+import Expenses from "./pages/Expenses/Expenses";
+import Savings from "./pages/Savings/Savings";
+import Reports from "./pages/Reports/Reports";
+import Profile from "./pages/Profile/Profile";
+import Settings from "./pages/Settings/Settings";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
 
 function App() {
   const [expenses, setExpenses] = useState([]);

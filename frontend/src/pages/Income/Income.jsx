@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./IncomeModule.css";
 
 export default function Income({ incomes, incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
@@ -33,7 +33,7 @@ export default function Income({ incomes, incomeForm, setIncomeForm, handleIncom
       const key = it.source || (it.category ? `${it.category}` : "Unspecified");
       map[key] = (map[key] || 0) + (Number(it.amount) || 0);
     });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]); // [ [source, total], ... ]
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [incomes]);
 
   const recurring = useMemo(() => incomes.filter(i => i.recurring), [incomes]);

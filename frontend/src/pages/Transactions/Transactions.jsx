@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./TransactionsModule.css";
 
 export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
-  const [typeFilter, setTypeFilter] = useState("all"); // all | income | expense
-  const [dateFilter, setDateFilter] = useState("all"); // all | today | week | month | custom
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -57,13 +57,8 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
     return item.category === categoryFilter;
   }
 
-  const filteredIncomes = useMemo(() => {
-    return incomes.filter(i => inDateRange(i.date) && matchesCategory(i));
-  }, [incomes, dateFilter, customStart, customEnd, categoryFilter]);
-
-  const filteredExpenses = useMemo(() => {
-    return expenses.filter(e => inDateRange(e.date) && matchesCategory(e));
-  }, [expenses, dateFilter, customStart, customEnd, categoryFilter]);
+  const filteredIncomes = useMemo(() => incomes.filter(i => inDateRange(i.date) && matchesCategory(i)), [incomes, dateFilter, customStart, customEnd, categoryFilter]);
+  const filteredExpenses = useMemo(() => expenses.filter(e => inDateRange(e.date) && matchesCategory(e)), [expenses, dateFilter, customStart, customEnd, categoryFilter]);
 
   function matchesSearch(item) {
     if (!searchQuery) return true;
@@ -106,7 +101,6 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
     return copy;
   }
 
-  // Build the displayed list depending on type filter, apply search, sort, and compute running balance
   const displayedList = useMemo(() => {
     const mapIncome = (i) => ({ ...i, type: "income" });
     const mapExpense = (e) => ({ ...e, type: "expense" });
@@ -120,13 +114,9 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
       list = filteredExpenses.map(mapExpense);
     }
 
-    // apply search
     list = list.filter(matchesSearch);
-
-    // sort
     list = sortItems(list);
 
-    // compute running balance according to current sorted order
     let running = 0;
     const withBalance = list.map(item => {
       const amt = Number(item.amount) || 0;
@@ -136,8 +126,6 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
 
     return withBalance;
   }, [typeFilter, filteredIncomes, filteredExpenses, searchQuery, sortBy]);
-
-  
 
   return (
     <div className="transactions-root">
@@ -199,7 +187,6 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
         </div>
       </div>
       
-      {/* If viewing all types show merged list with running balance; otherwise show per-type lists */}
       {typeFilter === "all" ? (
         <>
           <h3>Transactions</h3>

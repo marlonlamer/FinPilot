@@ -1,0 +1,11 @@
+.settings-root {
+  padding: 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  color: #0b1220;
+}
+
+.settings-section { margin-top: 12px; }
+.settings-label { display:block; margin-bottom:8px; }
+.settings-select { padding:8px 10px; border-radius:8px; }
+.settings-preview { margin-top:10px; }

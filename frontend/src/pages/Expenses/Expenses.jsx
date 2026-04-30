@@ -1,10 +1,9 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
+import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
 export default function Expenses({ expenses, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
-  // budgets: optional object { categoryName: budgetAmount }
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -30,7 +29,7 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
       const key = it.category || "Uncategorized";
       map[key] = (map[key] || 0) + (Number(it.amount) || 0);
     });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]); // [ [category, total], ... ]
+    return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [expenses]);
 
   const pieData = useMemo(() => byCategory.map(([name, value]) => ({ name, value })), [byCategory]);
@@ -81,7 +80,6 @@ export default function Expenses({ expenses, form, setForm, handleSubmit, expens
         </div>
       </div>
 
-      {/* Mini analytics: 6-month trend + category pie */}
       <div className="analytics-row">
         <div className="card trend-card">
           <div className="card-label">6‑Month Expense Trend</div>
