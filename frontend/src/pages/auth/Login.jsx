@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { api } from "../../services/api";
-import "../AuthLayout/AuthModule.css";
+import "./AuthModule.css";
 
 export default function Login({ onAuthSuccess }) {
   const [email, setEmail] = useState("");
