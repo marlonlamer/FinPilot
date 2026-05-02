@@ -24,7 +24,11 @@ export default function Register({ onAuthSuccess }) {
         try { localStorage.setItem("token", token); } catch {}
         if (typeof onAuthSuccess === "function") onAuthSuccess(token);
       }
-      navigate("/login");
+      try {
+        navigate("/login", { replace: true });
+      } catch (e) {
+        setTimeout(() => { window.location.href = '/login'; }, 50);
+      }
     } catch (err) {
       setError(err?.response?.data?.error || err.message || "Registration failed");
     } finally {

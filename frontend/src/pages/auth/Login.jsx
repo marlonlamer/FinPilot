@@ -20,7 +20,11 @@ export default function Login({ onAuthSuccess }) {
       if (token) {
         try { localStorage.setItem("token", token); } catch {}
         if (typeof onAuthSuccess === "function") onAuthSuccess(token);
-        navigate("/");
+        try {
+          navigate("/", { replace: true });
+        } catch (e) {
+          setTimeout(() => { window.location.href = '/'; }, 50);
+        }
       } else {
         setError("No token returned from server");
       }
