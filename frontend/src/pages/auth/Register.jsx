@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import "./AuthModule.css";
 
 export default function Register({ onAuthSuccess }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,7 @@ export default function Register({ onAuthSuccess }) {
         try { localStorage.setItem("token", token); } catch {}
         if (typeof onAuthSuccess === "function") onAuthSuccess(token);
       }
+      navigate("/login");
     } catch (err) {
       setError(err?.response?.data?.error || err.message || "Registration failed");
     } finally {

@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import "./AuthModule.css";
 
 export default function Login({ onAuthSuccess }) {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,6 +20,7 @@ export default function Login({ onAuthSuccess }) {
       if (token) {
         try { localStorage.setItem("token", token); } catch {}
         if (typeof onAuthSuccess === "function") onAuthSuccess(token);
+        navigate("/");
       } else {
         setError("No token returned from server");
       }
