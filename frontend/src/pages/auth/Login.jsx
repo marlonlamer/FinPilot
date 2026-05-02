@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../services/api";
 import "./AuthModule.css";
 
@@ -41,6 +42,9 @@ export default function Login({ onAuthSuccess }) {
           <button className="btn btn-primary" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</button>
         </div>
       </form>
+      <div className="auth-footer">
+        Don't have an account? <Link to="/register">Register here</Link>
+      </div>
     </div>
   );
 }
