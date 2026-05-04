@@ -33,6 +33,16 @@ export default function Dashboard(props) {
 
   const { availableBalance } = props;
 
+  const toNumber = (v) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  const fmt = (v, digits = 2) => {
+    const n = toNumber(v);
+    return formatCurrency ? formatCurrency(n) : `${currencySymbol}${n.toFixed(digits)}`;
+  };
+
 
   return (
     <div className="dashboard-root">
@@ -40,20 +50,20 @@ export default function Dashboard(props) {
       <div className="dashboard-stats">
         <div className="stat-card">
           <div className="stat-label">Available Balance</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${availableBalance.toFixed(2)}`}</div>
+          <div className="stat-value">{fmt(availableBalance, 2)}</div>
           <div className="stat-sub" />
         </div>
         <div className="stat-card">
           <div className="stat-label">Total Savings</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(computedTotalSavings) : `${currencySymbol}${computedTotalSavings.toFixed(2)}`}</div>
+          <div className="stat-value">{fmt(computedTotalSavings, 2)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Monthly Income</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(monthlyIncomeTotal) : `${currencySymbol}${monthlyIncomeTotal.toFixed(2)}`}</div>
+          <div className="stat-value">{fmt(monthlyIncomeTotal, 2)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Monthly Expenses</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(monthlyExpenseTotal) : `${currencySymbol}${monthlyExpenseTotal.toFixed(2)}`}</div>
+          <div className="stat-value">{fmt(monthlyExpenseTotal, 2)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Total Net Worth</div>
@@ -84,8 +94,8 @@ export default function Dashboard(props) {
               <LineChart data={combinedLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
-                <YAxis tickFormatter={(v) => (formatCurrency ? formatCurrency(v) : `${currencySymbol}${v.toFixed(0)}`)} />
-                <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
+                <YAxis tickFormatter={(v) => (formatCurrency ? formatCurrency(toNumber(v)) : `${currencySymbol}${toNumber(v).toFixed(0)}`)} />
+                  <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(toNumber(value)) : `${currencySymbol}${toNumber(value).toFixed(2)}`)} />
                 <Legend />
                 <Line type="monotone" dataKey="expenses" name="Expenses" stroke="#FF6B6B" strokeWidth={2} dot={{ r: 3 }} />
                 <Line type="monotone" dataKey="incomes" name="Incomes" stroke="#00C49F" strokeWidth={2} dot={{ r: 3 }} />
@@ -117,14 +127,14 @@ export default function Dashboard(props) {
                 innerRadius={40}
                 outerRadius={80}
                 labelLine={false}
-                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+                  label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
                   const RAD = Math.PI / 180;
                   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
                   const x = cx + radius * Math.cos(-midAngle * RAD);
                   const y = cy + radius * Math.sin(-midAngle * RAD);
                   return (
                     <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central" className="pie-label">
-                      {`${(percent * 100).toFixed(0)}%`}
+                      {`${(toNumber(percent) * 100).toFixed(0)}%`}
                     </text>
                   );
                 }}
