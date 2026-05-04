@@ -43,6 +43,10 @@ export default function Dashboard(props) {
     return formatCurrency ? formatCurrency(n) : `${currencySymbol}${n.toFixed(digits)}`;
   };
 
+  const cld = Array.isArray(combinedLineData) ? combinedLineData : [];
+  const pd = Array.isArray(pieData) ? pieData : [];
+  const obc = Array.isArray(overBudgetCategories) ? overBudgetCategories : [];
+
 
   return (
     <div className="dashboard-root">
@@ -88,10 +92,10 @@ export default function Dashboard(props) {
 
       <div className="chart-section">
         <h2>Expenses vs Income Per Month</h2>
-        {combinedLineData.length > 0 ? (
+        {cld.length > 0 ? (
           <div className="chart-wrapper">
             <ResponsiveContainer>
-              <LineChart data={combinedLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <LineChart data={cld} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis tickFormatter={(v) => (formatCurrency ? formatCurrency(toNumber(v)) : `${currencySymbol}${toNumber(v).toFixed(0)}`)} />
@@ -108,18 +112,18 @@ export default function Dashboard(props) {
       </div>
 
       <h2 className="by-category">By Category</h2>
-      {overBudgetCategories.length > 0 && (
+      {obc.length > 0 && (
         <div className="budget-alert">
-          <strong>Budget Alert:</strong> You have exceeded the budget for {overBudgetCategories.map(c => c.category).join(", ")}.
+          <strong>Budget Alert:</strong> You have exceeded the budget for {obc.map(c => c.category).join(", ")}.
         </div>
       )}
 
-      {pieData.length > 0 ? (
+      {pd.length > 0 ? (
         <div className="pie-wrapper">
           <ResponsiveContainer>
             <PieChart>
               <Pie
-                data={pieData}
+                data={pd}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
@@ -139,11 +143,11 @@ export default function Dashboard(props) {
                   );
                 }}
               >
-                {pieData.map((entry, index) => (
+                {pd.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
+              <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(toNumber(value)) : `${currencySymbol}${toNumber(value).toFixed(2)}`)} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

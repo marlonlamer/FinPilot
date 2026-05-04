@@ -8,15 +8,21 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
     <div className="budget-overview">
       <div className="budget-card">
         <div className="card-label">Monthly Budget</div>
-        <div className="card-value">{monthlyBudget === null ? "Not set" : (formatCurrency ? formatCurrency(monthlyBudget) : `${currencySymbol}${Number(monthlyBudget).toFixed(2)}`)}</div>
+        <div className="card-value">{monthlyBudget === null ? "Not set" : (formatCurrency ? formatCurrency(monthlyBudget) :typeof monthlyBudget === "number"
+          ? `${currencySymbol}${monthlyBudget.toFixed(2)}`
+          : "Not set")}</div>
 
         <div className="budget-progress-block">
           <div className="progress-track">
             <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: budgetColor || "#60a5fa" }} />
           </div>
           <div className="progress-subtext">
-            {percentBudgetUsed !== null ? `${percentBudgetUsed.toFixed(1)}% used` : "Usage not available"}
-            {budgetRemaining !== null && ` — Remaining: ${formatCurrency ? formatCurrency(budgetRemaining) : `${currencySymbol}${Number(budgetRemaining).toFixed(2)}`}`}
+            {typeof percentBudgetUsed === "number"
+            ? `${percentBudgetUsed.toFixed(1)}% used`
+            : "Usage not available"}
+            {budgetRemaining !== null && ` — Remaining: ${formatCurrency ? formatCurrency(budgetRemaining) : typeof budgetRemaining === "number"
+              ? `${currencySymbol}${budgetRemaining.toFixed(2)}`
+              : "N/A"} `}
           </div>
         </div>
       </div>
@@ -27,7 +33,10 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
           <ul className="overbudget-list">
             {overBudgetCategories.slice(0, 5).map((c, i) => (
               <li key={c.category} className="overbudget-item" style={{ color: COLORS && COLORS[i % COLORS.length] ? COLORS[i % COLORS.length] : "#333" }}>
-                {c.category} — {formatCurrency ? formatCurrency(c.spent || c.value || 0) : `${currencySymbol}${Number(c.spent || c.value || 0).toFixed(2)}`}
+                {c.category} — {formatCurrency ? formatCurrency(c.spent || c.value || 0) : typeof (c.spent ?? c.value) === "number"
+                  ? `${currencySymbol}${(c.spent ?? c.value).toFixed(2)}`
+                  : `${currencySymbol}0.00`
+                }
               </li>
             ))}
           </ul>
