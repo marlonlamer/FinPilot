@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./TransactionsModule.css";
 
-export default function Transactions({ incomes, expenses, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
+export default function Transactions({ incomes = [], expenses = [], deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [customStart, setCustomStart] = useState("");
