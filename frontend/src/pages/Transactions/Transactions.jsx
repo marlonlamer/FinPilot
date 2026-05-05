@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./TransactionsModule.css";
 
@@ -19,7 +19,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
     return ["all", ...Array.from(set).sort()];
   }, [incomes, expenses]);
 
-  function inDateRange(itemDate) {
+  const inDateRange = useCallback((itemDate) => {
     if (!itemDate) return false;
     const d = new Date(itemDate);
     if (isNaN(d)) return false;
@@ -50,17 +50,17 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
       return true;
     }
     return true;
-  }
+  }, [dateFilter, customStart, customEnd]);
 
-  function matchesCategory(item) {
+  const matchesCategory = useCallback((item) => {
     if (categoryFilter === "all") return true;
     return item.category === categoryFilter;
-  }
+  }, [categoryFilter]);
 
-  const filteredIncomes = useMemo(() => incomes.filter(i => inDateRange(i.date) && matchesCategory(i)), [incomes, dateFilter, customStart, customEnd, categoryFilter]);
-  const filteredExpenses = useMemo(() => expenses.filter(e => inDateRange(e.date) && matchesCategory(e)), [expenses, dateFilter, customStart, customEnd, categoryFilter]);
+  const filteredIncomes = useMemo(() => incomes.filter(i => inDateRange(i.date) && matchesCategory(i)), [incomes, inDateRange, matchesCategory]);
+  const filteredExpenses = useMemo(() => expenses.filter(e => inDateRange(e.date) && matchesCategory(e)), [expenses, inDateRange, matchesCategory]);
 
-  function matchesSearch(item) {
+  const matchesSearch = useCallback((item) => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     const checks = [
@@ -71,9 +71,9 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
       String(item.amount)
     ];
     return checks.some(v => v && String(v).toLowerCase().includes(q));
-  }
+  }, [searchQuery]);
 
-  function sortItems(items) {
+  const sortItems = useCallback((items) => {
     const copy = [...items];
     copy.sort((a, b) => {
       const aDate = new Date(a.date || 0).getTime();
@@ -99,7 +99,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
       }
     });
     return copy;
-  }
+  }, [sortBy]);
 
   const displayedList = useMemo(() => {
     const mapIncome = (i) => ({ ...i, type: "income" });
@@ -125,7 +125,7 @@ export default function Transactions({ incomes, expenses, deleteIncome, deleteEx
     });
 
     return withBalance;
-  }, [typeFilter, filteredIncomes, filteredExpenses, searchQuery, sortBy]);
+  }, [typeFilter, filteredIncomes, filteredExpenses, matchesSearch, sortItems]);
 
   return (
     <div className="transactions-root">
