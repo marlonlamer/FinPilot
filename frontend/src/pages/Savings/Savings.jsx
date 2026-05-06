@@ -3,10 +3,9 @@ import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
 
-export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {} }) {
+export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("All Time");
-  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth());
 
   const [newGoal, setNewGoal] = useState({
     goalName: "",
@@ -161,14 +160,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     'January','February','March','April','May','June','July','August','September','October','November','December'
   ], []);
 
-  const now = useMemo(() => new Date(), []);
-
   const monthFilteredHistory = useMemo(() => {
     return allHistory.filter(h => {
       const d = new Date(h.date);
-      return d.getFullYear() === now.getFullYear() && d.getMonth() === Number(selectedMonth);
+      return d.getFullYear() === (Number(selectedYear) || new Date().getFullYear()) && d.getMonth() === Number(selectedMonth);
     });
-  }, [allHistory, selectedMonth, now]);
+  }, [allHistory, selectedMonth, selectedYear]);
 
   const computeTotals = (historyArray) => {
     const deposits = (historyArray || []).reduce((acc, h) => acc + (h.amount > 0 ? h.amount : 0), 0);
@@ -329,14 +326,14 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
       <div className="savings-list-container">
         {goals.length === 0 && <p>No saving goals yet.</p>}
-        {goals.map(goal => {
+          {goals.map(goal => {
           const t = parseFloat(goal.targetAmount) || 0;
           const s = parseFloat(goal.savedAmount) || 0;
           const pct = t > 0 ? Math.min(100, (s / t) * 100) : 0;
           const historyForDisplay = Array.isArray(goal.history) ? goal.history.filter(h => {
             if (activeTab !== 'Selected Month') return true;
             const d = new Date(h.date);
-            return d.getFullYear() === now.getFullYear() && d.getMonth() === Number(selectedMonth);
+            return d.getFullYear() === (Number(selectedYear) || new Date().getFullYear()) && d.getMonth() === Number(selectedMonth);
           }) : [];
           const remainingAmount = Math.max(0, t - s);
           const remainingTimeText = (() => {
