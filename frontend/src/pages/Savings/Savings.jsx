@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
+import { getCurrentUserId } from "../../services/api";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,10 +18,21 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     notes: ""
   });
 
+  const getUserKey = () => {
+    try {
+      const id = getCurrentUserId();
+      return id != null ? `user:${id}` : "guest";
+    } catch {
+      return "guest";
+    }
+  };
+  const userKey = getUserKey();
+
   const [goals, setGoals] = useState(() => {
     try {
-      const raw = localStorage.getItem("savingGoals");
-      return raw ? JSON.parse(raw) : [];
+      const raw = localStorage.getItem("savingGoalsMap");
+      const map = raw ? JSON.parse(raw) : {};
+      return map[userKey] || [];
     } catch {
       return [];
     }
@@ -28,9 +40,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
   useEffect(() => {
     try {
-      localStorage.setItem("savingGoals", JSON.stringify(goals));
+      const raw = localStorage.getItem("savingGoalsMap");
+      const map = raw ? JSON.parse(raw) : {};
+      map[userKey] = goals || [];
+      localStorage.setItem("savingGoalsMap", JSON.stringify(map));
     } catch {}
-  }, [goals]);
+  }, [goals, userKey]);
 
     const handleNewGoalChange = (e) => {
     setNewGoal({ ...newGoal, [e.target.name]: e.target.value });
@@ -89,7 +104,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       targetDate: newGoal.targetDate,
       monthlySuggestion: calculateMonthlySuggestion(),
       notes: newGoal.notes,
-      history: initialHistory
+      history: initialHistory,
+      userId: getCurrentUserId()
     };
 
     setGoals(prev => [...prev, newEntry]);

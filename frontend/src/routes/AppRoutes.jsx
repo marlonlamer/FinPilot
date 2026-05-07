@@ -16,7 +16,7 @@ import Savings from "../pages/Savings/Savings";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ProtectedRoute from "./ProtectedRoutes";
-import { api } from "../services/api";
+import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
 
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
@@ -52,7 +52,10 @@ function AppController() {
 	const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
 	const getUserKey = () => {
-		try { return localStorage.getItem("token") || "guest"; } catch { return "guest"; }
+		try {
+			const id = getCurrentUserId();
+			return id != null ? `user:${id}` : "guest";
+		} catch { return "guest"; }
 	};
 	const userKey = getUserKey();
 
@@ -131,7 +134,15 @@ function AppController() {
 		fetchIncomes();
 	}, []);
 
-	const [perCategoryBudgets, setPerCategoryBudgets] = useState({});
+	const [perCategoryBudgets, setPerCategoryBudgets] = useState(() => {
+		try {
+			const raw = localStorage.getItem("perCategoryBudgetsMap");
+			const map = raw ? JSON.parse(raw) : {};
+			return map[userKey] || {};
+		} catch {
+			return {};
+		}
+	});
 	const [newBudgetCategory, setNewBudgetCategory] = useState("");
 	const [newBudgetAmount, setNewBudgetAmount] = useState("");
 	const [tempMonthlyBudget, setTempMonthlyBudget] = useState(() => selectedMonthlyBudget);
@@ -193,6 +204,16 @@ function AppController() {
 		};
 	}, [budgetModalOpen, tempBudgets, tempMonthlyBudget]);
 
+	// persist per-category budgets per user
+	useEffect(() => {
+		try {
+			const raw = localStorage.getItem("perCategoryBudgetsMap");
+			const map = raw ? JSON.parse(raw) : {};
+			map[userKey] = perCategoryBudgets || {};
+			localStorage.setItem("perCategoryBudgetsMap", JSON.stringify(map));
+		} catch {}
+	}, [perCategoryBudgets, userKey]);
+
 	const [incomeModalOpen, setIncomeModalOpen] = useState(false);
 	const [expenseModalOpen, setExpenseModalOpen] = useState(false);
 	const [editingExpenseId, setEditingExpenseId] = useState(null);
@@ -226,7 +247,7 @@ function AppController() {
 		}
 
 		try {
-			const newExpense = await api.post("/expenses", {
+			const payload = {
 				amount: form.amount,
 				category: form.category,
 				description: form.description,
@@ -235,8 +256,11 @@ function AppController() {
 				notes: form.notes,
 				recurring: !!form.recurring,
 				recurrence: form.recurrence || undefined,
-				paymentMethod: form.paymentMethod || undefined
-			});
+				paymentMethod: form.paymentMethod || undefined,
+				userId: getCurrentUserId()
+			};
+
+			const newExpense = await api.post("/expenses", payload);
 
 			setExpenses(prev => [newExpense, ...prev]);
 
@@ -252,7 +276,8 @@ function AppController() {
 				notes: form.notes,
 				recurring: !!form.recurring,
 				recurrence: form.recurrence || undefined,
-				paymentMethod: form.paymentMethod || undefined
+				paymentMethod: form.paymentMethod || undefined,
+				userId: getCurrentUserId()
 			};
 			setExpenses(prev => [temp, ...prev]);
 		} finally {
@@ -293,15 +318,18 @@ function AppController() {
 		}
 
 		try {
-			const newIncome = await api.post("/incomes", {
+			const payload = {
 				amount: incomeForm.amount,
 				source: incomeForm.source,
 				date: incomeForm.date,
 				category: incomeForm.category,
 				notes: incomeForm.notes,
 				recurring: !!incomeForm.recurring,
-				recurrence: incomeForm.recurrence || undefined
-			});
+				recurrence: incomeForm.recurrence || undefined,
+				userId: getCurrentUserId()
+			};
+
+			const newIncome = await api.post("/incomes", payload);
 
 			setIncomes(prev => [newIncome, ...prev]);
 
@@ -315,7 +343,8 @@ function AppController() {
 				category: incomeForm.category,
 				notes: incomeForm.notes,
 				recurring: !!incomeForm.recurring,
-				recurrence: incomeForm.recurrence || undefined
+				recurrence: incomeForm.recurrence || undefined,
+				userId: getCurrentUserId()
 			};
 			setIncomes(prev => [temp, ...prev]);
 		} finally {
@@ -422,8 +451,10 @@ function AppController() {
 	try {
 		const rawGoals = localStorage.getItem("savingGoals");
 		const sg = rawGoals ? JSON.parse(rawGoals) : [];
-		const deposits = (sg || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
-		const withdrawals = (sg || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount < 0 ? Math.abs(h.amount) : 0), 0)), 0);
+		const uid = getCurrentUserId();
+		const userGoals = (sg || []).filter(g => g && g.userId != null && Number(g.userId) === Number(uid));
+		const deposits = (userGoals || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
+		const withdrawals = (userGoals || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount < 0 ? Math.abs(h.amount) : 0), 0)), 0);
 		computedTotalSavingsFromGoals = deposits - withdrawals;
 	} catch (e) {
 		computedTotalSavingsFromGoals = 0;
@@ -513,6 +544,7 @@ function AppController() {
 
 	const logout = () => {
 		try { localStorage.removeItem("token"); } catch {}
+		try { clearCurrentUser(); } catch {}
 		setAuthToken(null);
 	};
 

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { api } from "../../services/api";
+import { api, setCurrentUser } from "../../services/api";
 import "./AuthModule.css";
 
 export default function Login({ onAuthSuccess }) {
@@ -17,8 +17,10 @@ export default function Login({ onAuthSuccess }) {
     try {
       const res = await api.post("/auth/login", { email, password });
       const token = res.token || res?.data?.token;
+      const user = res.user || (res.id && res.email ? { id: res.id, email: res.email } : null);
       if (token) {
         try { localStorage.setItem("token", token); } catch {}
+        if (user) setCurrentUser(user);
         if (typeof onAuthSuccess === "function") onAuthSuccess(token);
         try {
           navigate("/", { replace: true });

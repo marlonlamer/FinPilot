@@ -5,6 +5,31 @@ const API_URL = rawApiUrl.replace(/\/$/, "") + "/api";
 
 const getToken = () => localStorage.getItem("token");
 
+const getCurrentUser = () => {
+  try {
+    const raw = localStorage.getItem("currentUser");
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const setCurrentUser = (user) => {
+  try {
+    if (user == null) return;
+    localStorage.setItem("currentUser", JSON.stringify(user));
+  } catch {}
+};
+
+const clearCurrentUser = () => {
+  try { localStorage.removeItem("currentUser"); } catch {}
+};
+
+const getCurrentUserId = () => {
+  const u = getCurrentUser();
+  return u && u.id != null ? u.id : null;
+};
+
 const apiClient = axios.create({
   baseURL: API_URL,
 });
@@ -26,3 +51,5 @@ export const api = {
     apiClient.defaults.baseURL = url;
   },
 };
+
+export { getCurrentUser, setCurrentUser, clearCurrentUser, getCurrentUserId };

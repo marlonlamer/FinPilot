@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { api } from "./services/api";
+import { api, getCurrentUserId, clearCurrentUser, getCurrentUser } from "./services/api";
 import "./App.css";
 
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -45,9 +45,14 @@ function App() {
   const [selectedMonth, setSelectedMonth] = useState(today.getMonth());
   const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  // derive a user key from token (fall back to guest) so budgets are per-user
+  // derive a user key from currentUser.id (fall back to guest) so budgets are per-user
   const getUserKey = () => {
-    try { return localStorage.getItem("token") || "guest"; } catch { return "guest"; }
+    try {
+      const id = getCurrentUserId();
+      return id != null ? `user:${id}` : "guest";
+    } catch {
+      return "guest";
+    }
   };
   const userKey = getUserKey();
 
@@ -143,7 +148,15 @@ function App() {
     }
   }, [selectedYear, selectedMonth]);
 
-  const [perCategoryBudgets, setPerCategoryBudgets] = useState({});
+  const [perCategoryBudgets, setPerCategoryBudgets] = useState(() => {
+    try {
+      const raw = localStorage.getItem("perCategoryBudgetsMap");
+      const map = raw ? JSON.parse(raw) : {};
+      return map[userKey] || {};
+    } catch {
+      return {};
+    }
+  });
   const [newBudgetCategory, setNewBudgetCategory] = useState("");
   const [newBudgetAmount, setNewBudgetAmount] = useState("");
   const [tempMonthlyBudget, setTempMonthlyBudget] = useState(() => selectedMonthlyBudget);
@@ -205,7 +218,17 @@ function App() {
         autosaveTimerRef.current = null;
       }
     };
-  },);
+  }, [budgetModalOpen, tempBudgets, tempMonthlyBudget]);
+
+  // persist per-category budgets per user
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("perCategoryBudgetsMap");
+      const map = raw ? JSON.parse(raw) : {};
+      map[userKey] = perCategoryBudgets || {};
+      localStorage.setItem("perCategoryBudgetsMap", JSON.stringify(map));
+    } catch {}
+  }, [perCategoryBudgets, userKey]);
 
   // Add Income/Expense modal state
   const [incomeModalOpen, setIncomeModalOpen] = useState(false);
@@ -243,7 +266,7 @@ function App() {
 
     // create new expense
     try {
-      const newExpense = await api.post("/expenses", {
+      const payload = {
         amount: form.amount,
         category: form.category,
         description: form.description,
@@ -252,8 +275,11 @@ function App() {
         notes: form.notes,
         recurring: !!form.recurring,
         recurrence: form.recurrence || undefined,
-        paymentMethod: form.paymentMethod || undefined
-      });
+        paymentMethod: form.paymentMethod || undefined,
+        userId: getCurrentUserId()
+      };
+
+      const newExpense = await api.post("/expenses", payload);
 
       setExpenses(prev => [newExpense, ...prev]);
 
@@ -269,7 +295,8 @@ function App() {
         notes: form.notes,
         recurring: !!form.recurring,
         recurrence: form.recurrence || undefined,
-        paymentMethod: form.paymentMethod || undefined
+        paymentMethod: form.paymentMethod || undefined,
+        userId: getCurrentUserId()
       };
       setExpenses(prev => [temp, ...prev]);
     } finally {
@@ -310,15 +337,18 @@ function App() {
     }
 
     try {
-      const newIncome = await api.post("/incomes", {
+      const payload = {
         amount: incomeForm.amount,
         source: incomeForm.source,
         date: incomeForm.date,
         category: incomeForm.category,
         notes: incomeForm.notes,
         recurring: !!incomeForm.recurring,
-        recurrence: incomeForm.recurrence || undefined
-      });
+        recurrence: incomeForm.recurrence || undefined,
+        userId: getCurrentUserId()
+      };
+
+      const newIncome = await api.post("/incomes", payload);
 
       setIncomes(prev => [newIncome, ...prev]);
 
@@ -332,7 +362,8 @@ function App() {
         category: incomeForm.category,
         notes: incomeForm.notes,
         recurring: !!incomeForm.recurring,
-        recurrence: incomeForm.recurrence || undefined
+        recurrence: incomeForm.recurrence || undefined,
+        userId: getCurrentUserId()
       };
       setIncomes(prev => [temp, ...prev]);
     } finally {
@@ -458,8 +489,10 @@ function App() {
   try {
     const rawGoals = localStorage.getItem("savingGoals");
     const sg = rawGoals ? JSON.parse(rawGoals) : [];
-    const deposits = (sg || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
-    const withdrawals = (sg || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount < 0 ? Math.abs(h.amount) : 0), 0)), 0);
+    const uid = getCurrentUserId();
+    const userGoals = (sg || []).filter(g => g && g.userId != null && Number(g.userId) === Number(uid));
+    const deposits = (userGoals || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount > 0 ? h.amount : 0), 0)), 0);
+    const withdrawals = (userGoals || []).reduce((acc, g) => acc + ((g.history || []).reduce((a, h) => a + (h.amount < 0 ? Math.abs(h.amount) : 0), 0)), 0);
     computedTotalSavingsFromGoals = deposits - withdrawals;
   } catch (e) {
     computedTotalSavingsFromGoals = 0;
@@ -551,6 +584,7 @@ function App() {
 
   const logout = () => {
     try { localStorage.removeItem("token"); } catch {}
+    try { clearCurrentUser(); } catch {}
     setAuthToken(null);
     setPage("dashboard");
   };

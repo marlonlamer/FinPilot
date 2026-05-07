@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "../../services/api";
+import { api, setCurrentUser } from "../../services/api";
 import "./AuthModule.css";
 
 export default function Register({ onAuthSuccess }) {
@@ -18,12 +18,22 @@ export default function Register({ onAuthSuccess }) {
     setSuccess(null);
     try {
       const res = await api.post("/auth/register", { email, password });
-      setSuccess("Registered successfully. You can now log in.");
       const token = res.token || res?.data?.token;
+      const user = res.user || (res.id && res.email ? { id: res.id, email: res.email } : null);
       if (token) {
         try { localStorage.setItem("token", token); } catch {}
+        if (user) setCurrentUser(user);
         if (typeof onAuthSuccess === "function") onAuthSuccess(token);
+        try {
+          navigate("/", { replace: true });
+        } catch (e) {
+          setTimeout(() => { window.location.href = '/'; }, 50);
+        }
+        return;
       }
+
+      // fallback: no token returned — show message and go to login
+      setSuccess("Registered successfully. You can now log in.");
       try {
         navigate("/login", { replace: true });
       } catch (e) {
