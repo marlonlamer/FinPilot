@@ -552,7 +552,7 @@ function AppController() {
 	const layoutProps = { monthNames, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, dateFilter, setDateFilter, authToken, logout };
 
 	return (
-		<BrowserRouter>
+		<BrowserRouter future={{ v7_startTransition: true }}>
 			<Routes>
 				<Route element={<AuthLayout />}>
 					<Route path="/login" element={<Login onAuthSuccess={(t) => onAuthSuccess(t)} />} />

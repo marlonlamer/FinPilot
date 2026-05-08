@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { api, getCurrentUserId, clearCurrentUser, getCurrentUser } from "./services/api";
+import { api, getCurrentUserId, clearCurrentUser, } from "./services/api";
 import "./App.css";
 
 import Dashboard from "./pages/Dashboard/Dashboard";

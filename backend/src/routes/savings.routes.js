@@ -4,9 +4,9 @@ const authMiddleware = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
-router.get("/savings", authMiddleware, getSavings);
-router.post("/savings", authMiddleware, createSavings);
-router.delete("/savings/:id", authMiddleware, deleteSavings);
-router.put("/savings/:id", authMiddleware, updateSavings);
+router.get("/", authMiddleware, getSavings);
+router.post("/", authMiddleware, createSavings);
+router.delete("/:id", authMiddleware, deleteSavings);
+router.put("/:id", authMiddleware, updateSavings);
 
 module.exports = router;

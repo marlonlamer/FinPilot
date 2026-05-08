@@ -12,9 +12,9 @@ const { updateExpense } = require("../controllers/expense.controller");
 
 const authMiddleware = require("../middleware/auth.middleware");
 
-router.get("/expenses", authMiddleware, getExpenses);
-router.post("/expenses", authMiddleware, createExpense);
-router.delete("/expenses/:id", authMiddleware, deleteExpense);
-router.put("/expenses/:id", authMiddleware, updateExpense);
+router.get("/", authMiddleware, getExpenses);
+router.post("/", authMiddleware, createExpense);
+router.delete("/:id", authMiddleware, deleteExpense);
+router.put("/:id", authMiddleware, updateExpense);
 
 module.exports = router;

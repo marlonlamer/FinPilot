@@ -19,7 +19,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
-app.use("/api/income", incomeRoutes);
+app.use("/api/incomes", incomeRoutes);
 app.use("/api/savings", savingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportsRoutes);
