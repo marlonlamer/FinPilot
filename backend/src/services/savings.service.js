@@ -28,12 +28,9 @@ const createSavings = async ({
 };
 
 const deleteSavings = async (id, userId) => {
-  return prisma.savings.delete({
-    where: {
-      id: Number(id),
-      userId
-    }
-  });
+  const result = await prisma.savings.deleteMany({ where: { id: Number(id), userId } });
+  if (result.count === 0) throw new Error("Savings not found or not permitted");
+  return;
 };
 
 const updateSavings = async (id, data, userId) => {

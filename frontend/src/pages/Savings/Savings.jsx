@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
-import { getCurrentUserId } from "../../services/api";
+import { api, getCurrentUserId } from "../../services/api";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -37,6 +37,33 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       return [];
     }
   });
+
+  useEffect(() => {
+    const uid = getCurrentUserId();
+    if (!uid) return;
+    let mounted = true;
+    api.get('/savings')
+      .then(data => {
+        if (!mounted || !Array.isArray(data)) return;
+        const mapped = data.map(s => ({
+          id: s.id,
+          goalName: s.name,
+          targetAmount: s.targetAmount,
+          savedAmount: s.currentAmount,
+          startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0,10) : '',
+          targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : '',
+          monthlySuggestion: '',
+          notes: '',
+          history: [],
+          userId: uid
+        }));
+        setGoals(mapped);
+      })
+      .catch(() => {
+        // ignore - fallback to localStorage
+      });
+    return () => { mounted = false; };
+  }, [userKey]);
 
   useEffect(() => {
     try {
@@ -95,20 +122,60 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
     const initialHistory = saved > 0 ? [{ id: Date.now() + 1, date: startDateVal, amount: Number(saved), note: "Initial deposit" }] : [];
 
-    const newEntry = {
-      id: Date.now(),
-      goalName: newGoal.goalName,
-      targetAmount: target,
-      savedAmount: saved,
-      startDate: startDateVal,
-      targetDate: newGoal.targetDate,
-      monthlySuggestion: calculateMonthlySuggestion(),
-      notes: newGoal.notes,
-      history: initialHistory,
-      userId: getCurrentUserId()
-    };
+    const uid = getCurrentUserId();
 
-    setGoals(prev => [...prev, newEntry]);
+    if (uid) {
+      api.post('/savings', {
+        name: newGoal.goalName,
+        targetAmount: target,
+        currentAmount: saved,
+        startDate: startDateVal,
+        targetDate: newGoal.targetDate
+      }).then(s => {
+        const newEntry = {
+          id: s.id,
+          goalName: s.name,
+          targetAmount: s.targetAmount,
+          savedAmount: s.currentAmount,
+          startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0,10) : startDateVal,
+          targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : newGoal.targetDate,
+          monthlySuggestion: calculateMonthlySuggestion(),
+          notes: newGoal.notes,
+          history: initialHistory,
+          userId: uid
+        };
+        setGoals(prev => [...prev, newEntry]);
+      }).catch(() => {
+        // fallback to local storage behavior
+        const newEntry = {
+          id: Date.now(),
+          goalName: newGoal.goalName,
+          targetAmount: target,
+          savedAmount: saved,
+          startDate: startDateVal,
+          targetDate: newGoal.targetDate,
+          monthlySuggestion: calculateMonthlySuggestion(),
+          notes: newGoal.notes,
+          history: initialHistory,
+          userId: uid
+        };
+        setGoals(prev => [...prev, newEntry]);
+      });
+    } else {
+      const newEntry = {
+        id: Date.now(),
+        goalName: newGoal.goalName,
+        targetAmount: target,
+        savedAmount: saved,
+        startDate: startDateVal,
+        targetDate: newGoal.targetDate,
+        monthlySuggestion: calculateMonthlySuggestion(),
+        notes: newGoal.notes,
+        history: initialHistory,
+        userId: null
+      };
+      setGoals(prev => [...prev, newEntry]);
+    }
 
     if (saved > 0) {
       try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(saved)); } catch {}
@@ -128,11 +195,15 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   };
 
   const addHistoryEntry = (goalId, amount, note) => {
+    const uid = getCurrentUserId();
     setGoals(prev => prev.map(g => {
       if (g.id !== goalId) return g;
       const history = Array.isArray(g.history) ? [...g.history] : [];
       const entry = { id: Date.now() + Math.floor(Math.random() * 1000), date: new Date().toISOString().slice(0, 10), amount: Number(amount), note: note || "" };
       const nextSaved = Number(g.savedAmount || 0) + Number(amount);
+      if (uid && g.id) {
+        api.put(`/savings/${g.id}`, { currentAmount: nextSaved }).catch(() => {});
+      }
       return { ...g, history: [...history, entry], savedAmount: nextSaved };
     }));
   };
@@ -160,12 +231,27 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   };
 
   const handleEditConfirm = ({ goalName, targetAmount, targetDate }) => {
-    setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, targetAmount: Number(targetAmount) || g.targetAmount, targetDate: targetDate || g.targetDate } : g));
-    setModalState({ open: false, mode: null, goalId: null, initial: {} });
+    const uid = getCurrentUserId();
+    const data = { name: goalName, targetAmount: Number(targetAmount), targetDate };
+    if (uid) {
+      api.put(`/savings/${modalState.goalId}`, data).then(updated => {
+        setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: updated.name, targetAmount: updated.targetAmount, targetDate: updated.targetDate ? new Date(updated.targetDate).toISOString().slice(0,10) : g.targetDate } : g));
+      }).catch(() => {
+        setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, targetAmount: Number(targetAmount) || g.targetAmount, targetDate: targetDate || g.targetDate } : g));
+      }).finally(() => setModalState({ open: false, mode: null, goalId: null, initial: {} }));
+    } else {
+      setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, targetAmount: Number(targetAmount) || g.targetAmount, targetDate: targetDate || g.targetDate } : g));
+      setModalState({ open: false, mode: null, goalId: null, initial: {} });
+    }
   };
 
   const handleDelete = (goalId) => {
-    setGoals(prev => prev.filter(g => g.id !== goalId));
+    const uid = getCurrentUserId();
+    if (uid) {
+      api.delete(`/savings/${goalId}`).then(() => setGoals(prev => prev.filter(g => g.id !== goalId))).catch(() => setGoals(prev => prev.filter(g => g.id !== goalId)));
+    } else {
+      setGoals(prev => prev.filter(g => g.id !== goalId));
+    }
   };
 
   const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });

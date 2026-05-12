@@ -5,6 +5,7 @@ const getSavings = async (req, res) => {
     const savings = await savingsService.getAllSavings(req.userId);
     res.json(savings);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to fetch savings" });
   }
 };
@@ -27,6 +28,7 @@ const createSavings = async (req, res) => {
     });
     res.status(201).json(savings);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to create savings" });
   }
 };
@@ -36,6 +38,7 @@ const deleteSavings = async (req, res) => {
     await savingsService.deleteSavings(req.params.id, req.userId);
     res.json({ message: "Savings deleted" });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to delete savings" });
   }
 };
@@ -52,6 +55,7 @@ const updateSavings = async (req, res) => {
     }, req.userId);
     res.json(updated);
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Failed to update savings" });
   }
 };
