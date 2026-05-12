@@ -131,6 +131,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         currentAmount: saved,
         startDate: startDateVal,
         targetDate: newGoal.targetDate
+      })
       .then(s => {
         const newEntry = {
           id: s.id,
