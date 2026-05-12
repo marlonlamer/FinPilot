@@ -54,7 +54,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : '',
           monthlySuggestion: '',
           notes: '',
-          history: [],
+          history: Array.isArray(s.history) ? s.history : [],
           userId: uid
         }));
         setGoals(mapped);
@@ -131,7 +131,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         currentAmount: saved,
         startDate: startDateVal,
         targetDate: newGoal.targetDate
-      }).then(s => {
+      .then(s => {
         const newEntry = {
           id: s.id,
           goalName: s.name,
@@ -141,10 +141,15 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : newGoal.targetDate,
           monthlySuggestion: calculateMonthlySuggestion(),
           notes: newGoal.notes,
-          history: initialHistory,
+          history: Array.isArray(s.history) ? s.history : initialHistory,
           userId: uid
         };
         setGoals(prev => [...prev, newEntry]);
+        // persist initial deposit as history entry if provided
+        if (initialHistory.length > 0) {
+          const entry = initialHistory[0];
+          api.put(`/savings/${s.id}`, { currentAmount: s.currentAmount, historyEntry: entry }).catch(() => {});
+        }
       }).catch(() => {
         // fallback to local storage behavior
         const newEntry = {
@@ -202,7 +207,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       const entry = { id: Date.now() + Math.floor(Math.random() * 1000), date: new Date().toISOString().slice(0, 10), amount: Number(amount), note: note || "" };
       const nextSaved = Number(g.savedAmount || 0) + Number(amount);
       if (uid && g.id) {
-        api.put(`/savings/${g.id}`, { currentAmount: nextSaved }).catch(() => {});
+        api.put(`/savings/${g.id}`, { currentAmount: nextSaved, historyEntry: entry }).catch(() => {});
       }
       return { ...g, history: [...history, entry], savedAmount: nextSaved };
     }));

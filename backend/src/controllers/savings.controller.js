@@ -44,8 +44,13 @@ const deleteSavings = async (req, res) => {
 };
 
 const updateSavings = async (req, res) => {
-  const { name, targetAmount, currentAmount, startDate, targetDate } = req.body;
+  const { name, targetAmount, currentAmount, startDate, targetDate, historyEntry } = req.body;
   try {
+    if (historyEntry) {
+      const updated = await savingsService.updateSavings(req.params.id, { historyEntry, currentAmount }, req.userId);
+      return res.json(updated);
+    }
+
     const updated = await savingsService.updateSavings(req.params.id, {
       name: name || undefined,
       targetAmount,

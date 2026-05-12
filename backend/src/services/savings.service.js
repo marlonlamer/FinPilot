@@ -22,6 +22,7 @@ const createSavings = async ({
       currentAmount: currentAmount != null ? Number(currentAmount) : 0,
       startDate: startDate ? new Date(startDate) : undefined,
       targetDate: targetDate ? new Date(targetDate) : undefined,
+      history: [],
       userId
     }
   });
@@ -34,6 +35,22 @@ const deleteSavings = async (id, userId) => {
 };
 
 const updateSavings = async (id, data, userId) => {
+  // support adding a history entry atomically
+  if (data.historyEntry) {
+    const existing = await prisma.savings.findUnique({ where: { id: Number(id) } });
+    if (!existing || existing.userId !== userId) throw new Error("Savings not found or not permitted");
+    const nextHistory = Array.isArray(existing.history) ? [...existing.history, data.historyEntry] : [data.historyEntry];
+    const result = await prisma.savings.updateMany({
+      where: { id: Number(id), userId },
+      data: {
+        currentAmount: data.currentAmount != null ? Number(data.currentAmount) : undefined,
+        history: nextHistory
+      }
+    });
+    if (result.count === 0) throw new Error("Savings not found or not permitted");
+    return prisma.savings.findUnique({ where: { id: Number(id) } });
+  }
+
   const result = await prisma.savings.updateMany({
     where: { id: Number(id), userId },
     data: {
@@ -48,6 +65,16 @@ const updateSavings = async (id, data, userId) => {
   return prisma.savings.findUnique({ where: { id: Number(id) } });
 };
 
+const addHistoryEntry = async (id, entry, userId) => {
+  const existing = await prisma.savings.findUnique({ where: { id: Number(id) } });
+  if (!existing || existing.userId !== userId) throw new Error("Savings not found or not permitted");
+  const nextHistory = Array.isArray(existing.history) ? [...existing.history, entry] : [entry];
+  const nextAmount = (Number(existing.currentAmount || 0) + Number(entry.amount || 0));
+  const result = await prisma.savings.updateMany({ where: { id: Number(id), userId }, data: { history: nextHistory, currentAmount: nextAmount } });
+  if (result.count === 0) throw new Error("Savings not found or not permitted");
+  return prisma.savings.findUnique({ where: { id: Number(id) } });
+};
+
 module.exports = {
   getAllSavings,
   createSavings,
@@ -55,3 +82,4 @@ module.exports = {
 };
 
 module.exports.updateSavings = updateSavings;
+module.exports.addHistoryEntry = addHistoryEntry;

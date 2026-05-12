@@ -39,6 +39,7 @@ model Savings {
 
   userId       Int
   user         User     @relation(fields: [userId], references: [id])
+  history      Json?
 }
 
 model User {
