@@ -22,7 +22,7 @@ const createSavings = async ({
       currentAmount: currentAmount != null ? Number(currentAmount) : 0,
       startDate: startDate ? new Date(startDate) : undefined,
       targetDate: targetDate ? new Date(targetDate) : undefined,
-      history: [],
+      history: JSON.stringify([]),
       userId
     }
   });
@@ -39,12 +39,13 @@ const updateSavings = async (id, data, userId) => {
   if (data.historyEntry) {
     const existing = await prisma.savings.findUnique({ where: { id: Number(id) } });
     if (!existing || existing.userId !== userId) throw new Error("Savings not found or not permitted");
-    const nextHistory = Array.isArray(existing.history) ? [...existing.history, data.historyEntry] : [data.historyEntry];
+    const existingHistory = Array.isArray(existing.history) ? existing.history : (existing.history ? JSON.parse(existing.history) : []);
+    const nextHistory = [...existingHistory, data.historyEntry];
     const result = await prisma.savings.updateMany({
       where: { id: Number(id), userId },
       data: {
         currentAmount: data.currentAmount != null ? Number(data.currentAmount) : undefined,
-        history: nextHistory
+        history: JSON.stringify(nextHistory)
       }
     });
     if (result.count === 0) throw new Error("Savings not found or not permitted");
@@ -68,9 +69,10 @@ const updateSavings = async (id, data, userId) => {
 const addHistoryEntry = async (id, entry, userId) => {
   const existing = await prisma.savings.findUnique({ where: { id: Number(id) } });
   if (!existing || existing.userId !== userId) throw new Error("Savings not found or not permitted");
-  const nextHistory = Array.isArray(existing.history) ? [...existing.history, entry] : [entry];
+  const existingHistory = Array.isArray(existing.history) ? existing.history : (existing.history ? JSON.parse(existing.history) : []);
+  const nextHistory = [...existingHistory, entry];
   const nextAmount = (Number(existing.currentAmount || 0) + Number(entry.amount || 0));
-  const result = await prisma.savings.updateMany({ where: { id: Number(id), userId }, data: { history: nextHistory, currentAmount: nextAmount } });
+  const result = await prisma.savings.updateMany({ where: { id: Number(id), userId }, data: { history: JSON.stringify(nextHistory), currentAmount: nextAmount } });
   if (result.count === 0) throw new Error("Savings not found or not permitted");
   return prisma.savings.findUnique({ where: { id: Number(id) } });
 };

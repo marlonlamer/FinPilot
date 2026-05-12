@@ -3,7 +3,11 @@ const savingsService = require("../services/savings.service");
 const getSavings = async (req, res) => {
   try {
     const savings = await savingsService.getAllSavings(req.userId);
-    res.json(savings);
+    const parsed = (savings || []).map(s => ({
+      ...s,
+      history: typeof s.history === 'string' ? (s.history ? JSON.parse(s.history) : []) : (s.history || [])
+    }));
+    res.json(parsed);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch savings" });
@@ -26,7 +30,8 @@ const createSavings = async (req, res) => {
       targetDate: targetDate || undefined,
       userId: req.userId
     });
-    res.status(201).json(savings);
+    const parsed = { ...savings, history: typeof savings.history === 'string' ? (savings.history ? JSON.parse(savings.history) : []) : (savings.history || []) };
+    res.status(201).json(parsed);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to create savings" });
@@ -48,7 +53,8 @@ const updateSavings = async (req, res) => {
   try {
     if (historyEntry) {
       const updated = await savingsService.updateSavings(req.params.id, { historyEntry, currentAmount }, req.userId);
-      return res.json(updated);
+      const parsed = { ...updated, history: typeof updated.history === 'string' ? (updated.history ? JSON.parse(updated.history) : []) : (updated.history || []) };
+      return res.json(parsed);
     }
 
     const updated = await savingsService.updateSavings(req.params.id, {
@@ -58,7 +64,8 @@ const updateSavings = async (req, res) => {
       startDate,
       targetDate
     }, req.userId);
-    res.json(updated);
+    const parsed = { ...updated, history: typeof updated.history === 'string' ? (updated.history ? JSON.parse(updated.history) : []) : (updated.history || []) };
+    res.json(parsed);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to update savings" });
