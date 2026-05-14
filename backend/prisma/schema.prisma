@@ -42,6 +42,21 @@ model Savings {
   history      String?
 }
 
+model SavingsTransaction {
+  id         Int      @id @default(autoincrement())
+  savingsId  Int?
+  savings    Savings? @relation(fields: [savingsId], references: [id])
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
+  amount     Float
+  type       String   // 'deposit' | 'withdraw'
+  note       String?
+  date       DateTime @default(now())
+
+  @@index([userId])
+  @@index([savingsId])
+}
+
 model User {
   id        Int       @id @default(autoincrement())
   email     String    @unique

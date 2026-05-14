@@ -18,61 +18,53 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     notes: ""
   });
 
-  const getUserKey = () => {
-    try {
-      const id = getCurrentUserId();
-      return id != null ? `user:${id}` : "guest";
-    } catch {
-      return "guest";
-    }
-  };
-  const userKey = getUserKey();
+  const [goals, setGoals] = useState([]);
 
-  const [goals, setGoals] = useState(() => {
-    try {
-      const raw = localStorage.getItem("savingGoalsMap");
-      const map = raw ? JSON.parse(raw) : {};
-      return map[userKey] || [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
+  const fetchSavings = async () => {
     const uid = getCurrentUserId();
     if (!uid) return;
-    let mounted = true;
-    api.get('/savings')
-      .then(data => {
-        if (!mounted || !Array.isArray(data)) return;
-        const mapped = data.map(s => ({
-          id: s.id,
-          goalName: s.name,
-          targetAmount: s.targetAmount,
-          savedAmount: s.currentAmount,
-          startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0,10) : '',
-          targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : '',
-          monthlySuggestion: '',
-          notes: '',
-          history: Array.isArray(s.history) ? s.history : [],
-          userId: uid
-        }));
-        setGoals(mapped);
-      })
-      .catch(() => {
-        // ignore - fallback to localStorage
-      });
-    return () => { mounted = false; };
-  }, [userKey]);
+    try {
+      const data = await api.get('/savings');
+      if (!Array.isArray(data)) return;
+      const mapped = data.map(s => ({
+        id: s.id,
+        goalName: s.name,
+        targetAmount: s.targetAmount,
+        savedAmount: s.currentAmount,
+        startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0,10) : '',
+        targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : '',
+        monthlySuggestion: '',
+        notes: '',
+        history: Array.isArray(s.history) ? s.history : [],
+        userId: uid
+      }));
+      setGoals(mapped);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchSavingsBalance = async () => {
+    const uid = getCurrentUserId();
+    if (!uid) return null;
+    try {
+      const data = await api.get(`/savings/balance/${uid}`);
+      // returns { total, perSavings: [{ savingsId, balance }] }
+      return data;
+    } catch (e) {
+      console.error('Failed to fetch savings balance', e);
+      return null;
+    }
+  };
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("savingGoalsMap");
-      const map = raw ? JSON.parse(raw) : {};
-      map[userKey] = goals || [];
-      localStorage.setItem("savingGoalsMap", JSON.stringify(map));
-    } catch {}
-  }, [goals, userKey]);
+    let mounted = true;
+    const load = async () => { if (!mounted) return; await fetchSavings(); };
+    load();
+    return () => { mounted = false; };
+  }, []);
+
+  // no localStorage persistence: server is the source of truth
 
     const handleNewGoalChange = (e) => {
     setNewGoal({ ...newGoal, [e.target.name]: e.target.value });
@@ -151,8 +143,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           const entry = initialHistory[0];
           api.put(`/savings/${s.id}`, { currentAmount: s.currentAmount, historyEntry: entry }).catch(() => {});
         }
-      }).catch(() => {
-        // fallback to local storage behavior
+      }).catch((err) => {
+        console.error('Failed to create saving on server, falling back to local state', err);
         const newEntry = {
           id: Date.now(),
           goalName: newGoal.goalName,
@@ -184,7 +176,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     }
 
     if (saved > 0) {
-      try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(saved)); } catch {}
+      try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(saved)); } catch (err) { console.error(err); }
     }
 
     setNewGoal({
@@ -200,18 +192,36 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     setIsModalOpen(false);
   };
 
-  const addHistoryEntry = (goalId, amount, note) => {
+  const addHistoryEntry = async (goalId, amount, note) => {
     const uid = getCurrentUserId();
-    setGoals(prev => prev.map(g => {
-      if (g.id !== goalId) return g;
-      const history = Array.isArray(g.history) ? [...g.history] : [];
-      const entry = { id: Date.now() + Math.floor(Math.random() * 1000), date: new Date().toISOString().slice(0, 10), amount: Number(amount), note: note || "" };
-      const nextSaved = Number(g.savedAmount || 0) + Number(amount);
-      if (uid && g.id) {
-        api.put(`/savings/${g.id}`, { currentAmount: nextSaved, historyEntry: entry }).catch(() => {});
+    const isDeposit = Number(amount) > 0;
+    if (!uid) {
+      // guest fallback: update local state only
+      setGoals(prev => prev.map(g => {
+        if (g.id !== goalId) return g;
+        const history = Array.isArray(g.history) ? [...g.history] : [];
+        const entry = { id: Date.now() + Math.floor(Math.random() * 1000), date: new Date().toISOString().slice(0, 10), amount: Number(amount), note: note || "" };
+        const nextSaved = Number(g.savedAmount || 0) + Number(amount);
+        return { ...g, history: [...history, entry], savedAmount: nextSaved };
+      }));
+      return;
+    }
+
+    try {
+      const body = { savingsId: goalId, amount: Math.abs(Number(amount)), note };
+      if (isDeposit) {
+        await api.post('/savings/deposit', body);
+      } else {
+        await api.post('/savings/withdraw', body);
       }
-      return { ...g, history: [...history, entry], savedAmount: nextSaved };
-    }));
+      // refetch authoritative data from server
+      await fetchSavings();
+      const bal = await fetchSavingsBalance();
+      console.debug('Updated savings balance from server', bal);
+    } catch (e) {
+      // if server fails, do not rely on local-only mutations
+      console.error('Failed to persist transaction', e);
+    }
   };
   const [modalState, setModalState] = useState({ open: false, mode: null, goalId: null, initial: {} });
 
@@ -220,8 +230,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const avail = Number(availableBalance || 0);
     if (amt > avail) return window.alert("Insufficient available balance for this deposit.");
-    addHistoryEntry(modalState.goalId, Math.abs(amt), note || "");
-    try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(amt)); } catch {}
+    addHistoryEntry(modalState.goalId, Math.abs(amt), note || "").then(() => {
+      try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(amt)); } catch (err) { console.error(err); }
+    });
     setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 
@@ -231,8 +242,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const currentSaved = Number(goal?.savedAmount || 0);
     if (amt > currentSaved) return window.alert("Insufficient saved amount for this withdrawal.");
-    addHistoryEntry(modalState.goalId, -Math.abs(amt), note || "");
-    try { adjustAvailableBalance && adjustAvailableBalance(Math.abs(amt)); } catch {}
+    addHistoryEntry(modalState.goalId, -Math.abs(amt), note || "").then(() => {
+      try { adjustAvailableBalance && adjustAvailableBalance(Math.abs(amt)); } catch (err) { console.error(err); }
+    });
     setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 

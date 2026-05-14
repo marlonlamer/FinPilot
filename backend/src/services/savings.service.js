@@ -1,10 +1,13 @@
 const prisma = require("../prisma/client");
 
 const getAllSavings = async (userId) => {
-  return prisma.savings.findMany({
-    where: { userId },
-    orderBy: { startDate: "desc" }
-  });
+  const list = await prisma.savings.findMany({ where: { userId }, orderBy: { startDate: "desc" } });
+  // Recalculate currentAmount from transactions (single source of truth)
+  const results = await Promise.all(list.map(async (s) => {
+    const sum = await getSavingsBalance(userId, s.id);
+    return { ...s, currentAmount: sum };
+  }));
+  return results;
 };
 
 const createSavings = async ({
@@ -19,6 +22,7 @@ const createSavings = async ({
     data: {
       name,
       targetAmount: Number(targetAmount),
+      // initial currentAmount kept for backward compatibility but authoritative balance comes from transactions
       currentAmount: currentAmount != null ? Number(currentAmount) : 0,
       startDate: startDate ? new Date(startDate) : undefined,
       targetDate: targetDate ? new Date(targetDate) : undefined,
@@ -77,6 +81,22 @@ const addHistoryEntry = async (id, entry, userId) => {
   return prisma.savings.findUnique({ where: { id: Number(id) } });
 };
 
+// New: create a transaction record (deposit/withdraw) and keep transactions as source of truth
+const addTransaction = async ({ savingsId, type, amount, note, userId }) => {
+  if (!['deposit', 'withdraw'].includes(type)) throw new Error('Invalid transaction type');
+  if (!userId) throw new Error('userId required');
+  const signed = type === 'deposit' ? Number(amount) : -Math.abs(Number(amount));
+  return prisma.savingsTransaction.create({ data: { savingsId: savingsId ? Number(savingsId) : undefined, userId: Number(userId), amount: Number(signed), type, note } });
+};
+
+// Sum transactions to compute balance. If savingsId omitted, compute total for user.
+const getSavingsBalance = async (userId, savingsId) => {
+  const where = { userId: Number(userId) };
+  if (savingsId != null) where.savingsId = Number(savingsId);
+  const agg = await prisma.savingsTransaction.aggregate({ _sum: { amount: true }, where });
+  return (agg && agg._sum && agg._sum.amount) ? Number(agg._sum.amount) : 0;
+};
+
 module.exports = {
   getAllSavings,
   createSavings,
@@ -85,3 +105,5 @@ module.exports = {
 
 module.exports.updateSavings = updateSavings;
 module.exports.addHistoryEntry = addHistoryEntry;
+module.exports.addTransaction = addTransaction;
+module.exports.getSavingsBalance = getSavingsBalance;

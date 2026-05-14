@@ -14,6 +14,58 @@ const getSavings = async (req, res) => {
   }
 };
 
+const deposit = async (req, res) => {
+  try {
+    const { savingsId, amount, note } = req.body;
+    if (amount == null) return res.status(400).json({ error: 'Amount is required' });
+    await savingsService.addTransaction({ savingsId, type: 'deposit', amount: Number(amount), note: note || null, userId: req.userId });
+    const balance = await savingsService.getSavingsBalance(req.userId, savingsId);
+    res.json({ balance, savingsId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to deposit' });
+  }
+};
+
+const withdraw = async (req, res) => {
+  try {
+    const { savingsId, amount, note } = req.body;
+    if (amount == null) return res.status(400).json({ error: 'Amount is required' });
+    // ensure user has sufficient balance for this savings if savingsId provided
+    if (savingsId) {
+      const current = await savingsService.getSavingsBalance(req.userId, savingsId);
+      if (Number(amount) > Number(current)) return res.status(400).json({ error: 'Insufficient saved amount' });
+    }
+    await savingsService.addTransaction({ savingsId, type: 'withdraw', amount: Number(amount), note: note || null, userId: req.userId });
+    const balance = await savingsService.getSavingsBalance(req.userId, savingsId);
+    res.json({ balance, savingsId });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to withdraw' });
+  }
+};
+
+const getBalance = async (req, res) => {
+  try {
+    const paramUserId = Number(req.params.userId);
+    if (paramUserId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+    // Optionally support query ?savingsId=...
+    const savingsId = req.query.savingsId ? Number(req.query.savingsId) : undefined;
+    if (savingsId) {
+      const balance = await savingsService.getSavingsBalance(req.userId, savingsId);
+      return res.json({ total: balance, perSavings: [{ savingsId, balance }] });
+    }
+    // return total and per-savings breakdown
+    const savingsList = await savingsService.getAllSavings(req.userId);
+    const per = await Promise.all(savingsList.map(async (s) => ({ savingsId: s.id, balance: await savingsService.getSavingsBalance(req.userId, s.id) })));
+    const total = per.reduce((acc, p) => acc + Number(p.balance || 0), 0);
+    res.json({ total, perSavings: per });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch balance' });
+  }
+};
+
 const createSavings = async (req, res) => {
   const { name, targetAmount, currentAmount, startDate, targetDate } = req.body;
 
@@ -78,3 +130,7 @@ module.exports = {
   deleteSavings,
   updateSavings
 };
+
+module.exports.deposit = deposit;
+module.exports.withdraw = withdraw;
+module.exports.getBalance = getBalance;
