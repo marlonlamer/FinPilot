@@ -24,18 +24,22 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     const uid = getCurrentUserId();
     if (!uid) return;
     try {
-      const data = await api.get('/savings');
-      if (!Array.isArray(data)) return;
-      const mapped = data.map(s => ({
+      // fetch savings list and authoritative transactions, then reconcile
+      const [sList, txList] = await Promise.all([
+        api.get('/savings'),
+        api.get(`/savings/history/${uid}`)
+      ]);
+      if (!Array.isArray(sList)) return;
+      const mapped = sList.map(s => ({
         id: s.id,
         goalName: s.name,
         targetAmount: s.targetAmount,
-        savedAmount: s.currentAmount,
+        savedAmount: s.currentAmount, // server-calculated from transactions
         startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0,10) : '',
         targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : '',
         monthlySuggestion: '',
         notes: '',
-        history: Array.isArray(s.history) ? s.history : [],
+        history: Array.isArray(txList) ? txList.filter(t => Number(t.savingsId) === Number(s.id)) : [],
         userId: uid
       }));
       setGoals(mapped);
@@ -134,14 +138,16 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : newGoal.targetDate,
           monthlySuggestion: calculateMonthlySuggestion(),
           notes: newGoal.notes,
-          history: Array.isArray(s.history) ? s.history : initialHistory,
+          history: [],
           userId: uid
         };
+        // add to local list then reconcile with server
         setGoals(prev => [...prev, newEntry]);
-        // persist initial deposit as history entry if provided
         if (initialHistory.length > 0) {
           const entry = initialHistory[0];
-          api.put(`/savings/${s.id}`, { currentAmount: s.currentAmount, historyEntry: entry }).catch(() => {});
+          api.post('/savings/deposit', { savingsId: s.id, amount: entry.amount, note: entry.note }).then(() => fetchSavings()).catch(() => fetchSavings());
+        } else {
+          fetchSavings();
         }
       }).catch((err) => {
         console.error('Failed to create saving on server, falling back to local state', err);
@@ -176,7 +182,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     }
 
     if (saved > 0) {
-      try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(saved)); } catch (err) { console.error(err); }
+      // available balance is authoritative elsewhere; avoid optimistic local mutation
     }
 
     setNewGoal({
@@ -214,10 +220,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       } else {
         await api.post('/savings/withdraw', body);
       }
-      // refetch authoritative data from server
-      await fetchSavings();
-      const bal = await fetchSavingsBalance();
-      console.debug('Updated savings balance from server', bal);
+      // refetch authoritative data from server (balance and history)
+      await Promise.all([fetchSavings(), fetchSavingsBalance()]);
+      console.debug('Refetched savings and balances from server');
     } catch (e) {
       // if server fails, do not rely on local-only mutations
       console.error('Failed to persist transaction', e);
@@ -230,9 +235,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const avail = Number(availableBalance || 0);
     if (amt > avail) return window.alert("Insufficient available balance for this deposit.");
-    addHistoryEntry(modalState.goalId, Math.abs(amt), note || "").then(() => {
-      try { adjustAvailableBalance && adjustAvailableBalance(-Math.abs(amt)); } catch (err) { console.error(err); }
-    });
+    addHistoryEntry(modalState.goalId, Math.abs(amt), note || "");
     setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 
@@ -242,9 +245,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const currentSaved = Number(goal?.savedAmount || 0);
     if (amt > currentSaved) return window.alert("Insufficient saved amount for this withdrawal.");
-    addHistoryEntry(modalState.goalId, -Math.abs(amt), note || "").then(() => {
-      try { adjustAvailableBalance && adjustAvailableBalance(Math.abs(amt)); } catch (err) { console.error(err); }
-    });
+    addHistoryEntry(modalState.goalId, -Math.abs(amt), note || "");
     setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 

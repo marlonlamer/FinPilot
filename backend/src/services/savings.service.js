@@ -97,6 +97,14 @@ const getSavingsBalance = async (userId, savingsId) => {
   return (agg && agg._sum && agg._sum.amount) ? Number(agg._sum.amount) : 0;
 };
 
+// fetch transactions (history) for a user, optionally filtered by savingsId
+const getTransactions = async (userId, savingsId) => {
+  const where = { userId: Number(userId) };
+  if (savingsId != null) where.savingsId = Number(savingsId);
+  const list = await prisma.savingsTransaction.findMany({ where, orderBy: { date: 'desc' } });
+  return list.map(t => ({ ...t, date: t.date ? t.date.toISOString() : null }));
+};
+
 module.exports = {
   getAllSavings,
   createSavings,
@@ -107,3 +115,4 @@ module.exports.updateSavings = updateSavings;
 module.exports.addHistoryEntry = addHistoryEntry;
 module.exports.addTransaction = addTransaction;
 module.exports.getSavingsBalance = getSavingsBalance;
+module.exports.getTransactions = getTransactions;

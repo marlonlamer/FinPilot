@@ -66,6 +66,19 @@ const getBalance = async (req, res) => {
   }
 };
 
+const getHistory = async (req, res) => {
+  try {
+    const paramUserId = Number(req.params.userId);
+    if (paramUserId !== req.userId) return res.status(403).json({ error: 'Forbidden' });
+    const savingsId = req.query.savingsId ? Number(req.query.savingsId) : undefined;
+    const list = await savingsService.getTransactions(req.userId, savingsId);
+    res.json(list);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch savings history' });
+  }
+};
+
 const createSavings = async (req, res) => {
   const { name, targetAmount, currentAmount, startDate, targetDate } = req.body;
 
@@ -134,3 +147,4 @@ module.exports = {
 module.exports.deposit = deposit;
 module.exports.withdraw = withdraw;
 module.exports.getBalance = getBalance;
+module.exports.getHistory = getHistory;

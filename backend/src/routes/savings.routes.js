@@ -11,5 +11,6 @@ router.put("/:id", authMiddleware, updateSavings);
 router.post("/deposit", authMiddleware, deposit);
 router.post("/withdraw", authMiddleware, withdraw);
 router.get("/balance/:userId", authMiddleware, getBalance);
+router.get("/history/:userId", authMiddleware, getHistory);
 
 module.exports = router;
