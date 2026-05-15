@@ -1,5 +1,5 @@
 const express = require("express");
-const { getSavings, createSavings, deleteSavings, updateSavings, deposit, withdraw, getBalance } = require("../controllers/savings.controller");
+const { getSavings, createSavings, deleteSavings, updateSavings, deposit, withdraw, getBalance, getHistory } = require("../controllers/savings.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
 const router = express.Router();
