@@ -145,7 +145,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         setGoals(prev => [...prev, newEntry]);
         if (initialHistory.length > 0) {
           const entry = initialHistory[0];
-          api.post('/savings/deposit', { savingsId: s.id, amount: entry.amount, note: entry.note }).then(() => fetchSavings()).catch(() => fetchSavings());
+          api.post('/savings/deposit', { savingsId: s.id, amount: entry.amount, note: entry.note })
+            .then(() => { fetchSavings(); try { adjustAvailableBalance && adjustAvailableBalance(-entry.amount); } catch (e) { console.warn('adjustAvailableBalance failed', e); } })
+            .catch(() => fetchSavings());
         } else {
           fetchSavings();
         }
@@ -179,6 +181,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         userId: null
       };
       setGoals(prev => [...prev, newEntry]);
+      if (saved > 0) {
+        try { adjustAvailableBalance && adjustAvailableBalance(-Number(saved)); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
+      }
     }
 
     if (saved > 0) {
@@ -210,6 +215,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         const nextSaved = Number(g.savedAmount || 0) + Number(amount);
         return { ...g, history: [...history, entry], savedAmount: nextSaved };
       }));
+      // adjust available balance in parent (deposit reduces available, withdraw increases it)
+      try { adjustAvailableBalance && adjustAvailableBalance(-Number(amount)); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
       return;
     }
 
@@ -222,6 +229,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       }
       // refetch authoritative data from server (balance and history)
       await Promise.all([fetchSavings(), fetchSavingsBalance()]);
+      // update available balance after successful transaction
+      try { adjustAvailableBalance && adjustAvailableBalance(-Number(amount)); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
       console.debug('Refetched savings and balances from server');
     } catch (e) {
       // if server fails, do not rely on local-only mutations

@@ -10,7 +10,9 @@ const getDashboard = async (userId) => {
 
   const totalExpenses = (totalExpensesAgg._sum && totalExpensesAgg._sum.amount) || 0;
   const totalIncome = (totalIncomeAgg._sum && totalIncomeAgg._sum.amount) || 0;
-  const totalSavings = savingsList.reduce((s, x) => s + (x.currentAmount || 0), 0);
+  // derive total savings from transactions (source of truth) to avoid stale stored `currentAmount`
+  const savingsAgg = await prisma.savingsTransaction.aggregate({ where: { userId }, _sum: { amount: true } });
+  const totalSavings = (savingsAgg && savingsAgg._sum && savingsAgg._sum.amount) ? Number(savingsAgg._sum.amount) : 0;
 
   // Monthly summary for last 6 months
   const now = new Date();
