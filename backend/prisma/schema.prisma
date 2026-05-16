@@ -60,7 +60,7 @@ model SavingsTransaction {
 
 model User {
   id        Int       @id @default(autoincrement())
-  name      String
+  name      String   @default("")
   email     String    @unique
   password  String
   date      DateTime  @default(now())
