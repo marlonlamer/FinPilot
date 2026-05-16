@@ -6,6 +6,7 @@ import "./AuthModule.css";
 export default function Register({ onAuthSuccess }) {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -17,9 +18,9 @@ export default function Register({ onAuthSuccess }) {
     setError(null);
     setSuccess(null);
     try {
-      const res = await api.post("/auth/register", { email, password });
+      const res = await api.post("/auth/register", { name, email, password });
       const token = res.token || res?.data?.token;
-      const user = res.user || (res.id && res.email ? { id: res.id, email: res.email } : null);
+      const user = res.user || (res.id && res.email ? { id: res.id, email: res.email, name: res.name } : null);
       if (token) {
         try { localStorage.setItem("token", token); } catch {}
         if (user) setCurrentUser(user);
@@ -50,6 +51,8 @@ export default function Register({ onAuthSuccess }) {
     <div className="auth-root">
       <h2>Register</h2>
       <form className="auth-form" onSubmit={submit}>
+        <label>Name</label>
+        <input type="text" value={name} onChange={e => setName(e.target.value)} required />
         <label>Email</label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
         <label>Password</label>

@@ -12,6 +12,7 @@ import {
   Cell
 } from "recharts";
 import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
+import { getCurrentUser } from "../../services/api";
 import "./DashboardModule.css";
 
 export default function Dashboard(props) {
@@ -33,6 +34,9 @@ export default function Dashboard(props) {
 
   const { availableBalance } = props;
 
+  const user = getCurrentUser() || {};
+  const displayName = user.name || user.email || "";
+
   const toNumber = (v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
@@ -50,6 +54,7 @@ export default function Dashboard(props) {
 
   return (
     <div className="dashboard-root">
+      {displayName && <h1 style={{ marginBottom: 12 }}>Welcome, {displayName}</h1>}
   
       <div className="dashboard-stats">
         <div className="stat-card">

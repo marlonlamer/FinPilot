@@ -3,23 +3,25 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 const register = async (req, res) => {
-  const { email, password } = req.body;
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: "Name, email and password are required" });
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
       data: {
+        name: String(name).trim(),
         email,
         password: hashedPassword
       }
     });
 
-    res.status(201).json({
-      id: user.id,
-      email: user.email
-    });
+    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+    res.status(201).json({ token, id: user.id, email: user.email, name: user.name });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "User already exists or failed to register" });
   }
 };
@@ -52,7 +54,7 @@ const login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ token, id: user.id, email: user.email });
+    res.json({ token, id: user.id, email: user.email, name: user.name });
   } catch (error) {
     res.status(500).json({error: "Failed to Login"});
   }
