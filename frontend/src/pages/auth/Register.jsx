@@ -20,7 +20,7 @@ export default function Register({ onAuthSuccess }) {
     try {
       const res = await api.post("/auth/register", { name, email, password });
       const token = res.token || res?.data?.token;
-      const user = res.user || (res.id && res.email ? { id: res.id, email: res.email, name: res.name } : null);
+      const user = res.user || (res.id && res.email ? { id: res.id, email: res.email, name: res.name, availableBalance: res.availableBalance || 0, monthlyBudget: res.monthlyBudget || 0, monthlySpent: res.monthlySpent || 0 } : null);
       if (token) {
         try { localStorage.setItem("token", token); } catch {}
         if (user) setCurrentUser(user);

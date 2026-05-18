@@ -17,37 +17,29 @@ const createIncome = async ({
     throw new Error("User ID is required");
   }
 
-  return prisma.income.create({
-    data: {
-      title,
-      amount: Number(amount),
-      source,
-      userId
-    }
-  });
+  const created = await prisma.income.create({ data: { title, amount: Number(amount), source, userId } });
+  // Increase user's available balance by income amount
+  await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(amount) } } });
+  return created;
 };
 
 const deleteIncome = async (id, userId) => {
-  return prisma.income.delete({
-    where: {
-      id: Number(id),
-      userId 
-    }
-  });
+  // delete returns the deleted record so we can adjust availableBalance
+  const deleted = await prisma.income.delete({ where: { id: Number(id), userId } });
+  await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: -Number(deleted.amount) } } });
+  return deleted;
 };
 
 const updateIncome = async (id, data, userId) => {
-  const result = await prisma.income.updateMany({
-    where: { id: Number(id), userId },
-    data: {
-      title: data.title,
-      amount: data.amount != null ? Number(data.amount) : undefined,
-      source: data.source,
-      date: data.date ? new Date(data.date) : undefined
-    }
-  });
-  if (result.count === 0) throw new Error("Income not found or not permitted");
-  return prisma.income.findUnique({ where: { id: Number(id) } });
+  const existing = await prisma.income.findUnique({ where: { id: Number(id) } });
+  if (!existing || existing.userId !== Number(userId)) throw new Error('Income not found or not permitted');
+  const result = await prisma.income.updateMany({ where: { id: Number(id), userId }, data: { title: data.title, amount: data.amount != null ? Number(data.amount) : undefined, source: data.source, date: data.date ? new Date(data.date) : undefined } });
+  if (result.count === 0) throw new Error('Income not found or not permitted');
+  const updated = await prisma.income.findUnique({ where: { id: Number(id) } });
+  // adjust user's available balance by delta (new - old)
+  const delta = Number(updated.amount || 0) - Number(existing.amount || 0);
+  if (delta !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(delta) } } });
+  return updated;
 };
 
 module.exports = { getAllIncomes, createIncome, deleteIncome };

@@ -65,6 +65,11 @@ model User {
   password  String
   date      DateTime  @default(now())
 
+  // new fields for budgets and available balance
+  availableBalance Float @default(0)
+  monthlyBudget Float @default(0)
+  monthlySpent Float @default(0)
+
   expenses  Expense[]
   income    Income[]
   savings   Savings[]

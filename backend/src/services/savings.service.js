@@ -86,7 +86,16 @@ const addTransaction = async ({ savingsId, type, amount, note, userId }) => {
   if (!['deposit', 'withdraw'].includes(type)) throw new Error('Invalid transaction type');
   if (!userId) throw new Error('userId required');
   const signed = type === 'deposit' ? Number(amount) : -Math.abs(Number(amount));
-  return prisma.savingsTransaction.create({ data: { savingsId: savingsId ? Number(savingsId) : undefined, userId: Number(userId), amount: Number(signed), type, note } });
+  const created = await prisma.savingsTransaction.create({ data: { savingsId: savingsId ? Number(savingsId) : undefined, userId: Number(userId), amount: Number(signed), type, note } });
+  // update savings currentAmount and user's available balance
+  if (created.savingsId) {
+    const balance = await getSavingsBalance(userId, created.savingsId);
+    await prisma.savings.updateMany({ where: { id: Number(created.savingsId), userId: Number(userId) }, data: { currentAmount: balance } });
+  }
+  // availableBalance: deposit reduces available, withdraw increases it
+  const deltaAvail = type === 'deposit' ? -Math.abs(Number(amount)) : Math.abs(Number(amount));
+  await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(deltaAvail) } } });
+  return created;
 };
 
 // Sum transactions to compute balance. If savingsId omitted, compute total for user.
@@ -131,6 +140,11 @@ const updateTransaction = async (transactionId, { amount, note }, userId) => {
     const balance = await getSavingsBalance(userId, updated.savingsId);
     await prisma.savings.updateMany({ where: { id: Number(updated.savingsId), userId: Number(userId) }, data: { currentAmount: balance } });
   }
+  // adjust user's availableBalance by delta: -(newSigned - oldSigned)
+  const oldSigned = Number(existing.amount || 0);
+  const newSigned = Number(updated.amount || 0);
+  const deltaAvail = -(newSigned - oldSigned);
+  if (deltaAvail !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(deltaAvail) } } });
   return updated;
 };
 
@@ -143,6 +157,9 @@ const deleteTransaction = async (transactionId, userId) => {
     const balance = await getSavingsBalance(userId, deleted.savingsId);
     await prisma.savings.updateMany({ where: { id: Number(deleted.savingsId), userId: Number(userId) }, data: { currentAmount: balance } });
   }
+  // when deleted, previous signed amount should be reversed to availableBalance
+  const oldSigned = Number(existing.amount || 0);
+  if (oldSigned !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(oldSigned) } } });
   return deleted;
 };
 

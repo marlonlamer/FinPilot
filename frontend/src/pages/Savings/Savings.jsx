@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
-import { api, getCurrentUserId } from "../../services/api";
+import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -229,7 +229,11 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       }
       // refetch authoritative data from server (balance and history)
       await Promise.all([fetchSavings(), fetchSavingsBalance()]);
-      // update available balance after successful transaction
+      try {
+        const u = await api.get('/user/me');
+        try { setCurrentUser(u); } catch (e) {}
+      } catch (e) { /* ignore */ }
+      // update available balance after successful transaction (local adjustment fallback)
       try { adjustAvailableBalance && adjustAvailableBalance(-Number(amount)); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
       console.debug('Refetched savings and balances from server');
     } catch (e) {
@@ -319,6 +323,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       const deltaAvail = -(newSigned - oldSigned);
       try { adjustAvailableBalance && adjustAvailableBalance(deltaAvail); } catch (err) { console.warn('adjustAvailableBalance failed', err); }
       await Promise.all([fetchSavings(), fetchSavingsBalance()]);
+      try { const u = await api.get('/user/me'); try { setCurrentUser(u); } catch (e) {} } catch (e) {}
     } catch (err) {
       console.error('Failed to edit transaction', err);
     } finally {
@@ -340,6 +345,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         const oldSigned = Number(entry.amount || 0);
         try { adjustAvailableBalance && adjustAvailableBalance(oldSigned); } catch (err) { console.warn('adjustAvailableBalance failed', err); }
         await Promise.all([fetchSavings(), fetchSavingsBalance()]);
+        try { const u = await api.get('/user/me'); try { setCurrentUser(u); } catch (e) {} } catch (e) {}
       } catch (err) {
         console.error('Failed to delete transaction', err);
       }

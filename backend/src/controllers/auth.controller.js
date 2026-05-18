@@ -19,7 +19,7 @@ const register = async (req, res) => {
 
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-    res.status(201).json({ token, id: user.id, email: user.email, name: user.name });
+    res.status(201).json({ token, id: user.id, email: user.email, name: user.name, availableBalance: user.availableBalance || 0, monthlyBudget: user.monthlyBudget || 0, monthlySpent: user.monthlySpent || 0 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "User already exists or failed to register" });
@@ -54,7 +54,7 @@ const login = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ token, id: user.id, email: user.email, name: user.name });
+    res.json({ token, id: user.id, email: user.email, name: user.name, availableBalance: user.availableBalance || 0, monthlyBudget: user.monthlyBudget || 0, monthlySpent: user.monthlySpent || 0 });
   } catch (error) {
     res.status(500).json({error: "Failed to Login"});
   }

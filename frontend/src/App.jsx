@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { api, getCurrentUserId, clearCurrentUser, } from "./services/api";
+import { api, getCurrentUserId, clearCurrentUser, getCurrentUser, setCurrentUser } from "./services/api";
 import "./App.css";
 
 import Dashboard from "./pages/Dashboard/Dashboard";
@@ -131,9 +131,20 @@ function App() {
     }
   };
 
+  const fetchCurrentUser = async () => {
+    try {
+      const u = await api.get('/user/me');
+      setServerUser(u);
+      try { setCurrentUser(u); } catch (e) { }
+    } catch (e) {
+      // ignore
+    }
+  };
+
   useEffect(() => {
     fetchExpenses();
     fetchIncomes();
+    if (localStorage.getItem('token')) fetchCurrentUser();
   }, []);
 
   // When the selected month/year changes, clear add-form amounts (so amount isn't copied between months)
@@ -253,6 +264,7 @@ function App() {
           paymentMethod: form.paymentMethod || undefined
         });
         setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? updated : p)));
+        try { fetchCurrentUser(); } catch (e) {}
       } catch (e) {
         console.warn("Update expense failed, applying locally", e);
         setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? { ...p, ...form, amount: Number(form.amount) } : p)));
@@ -282,6 +294,7 @@ function App() {
       const newExpense = await api.post("/expenses", payload);
 
       setExpenses(prev => [newExpense, ...prev]);
+      try { fetchCurrentUser(); } catch (e) {}
 
     } catch (e) {
       console.warn("Create expense failed, adding locally", e);
@@ -308,7 +321,8 @@ function App() {
   const deleteExpense = async (id) => {
     setExpenses(prev => prev.filter(e => e.id !== id));
     await api.delete(`/expenses/${id}`);
-    fetchExpenses();
+    await fetchExpenses();
+    try { fetchCurrentUser(); } catch (e) {}
   };
 
   const handleIncomeSubmit = async (e) => {
@@ -325,6 +339,7 @@ function App() {
           recurrence: incomeForm.recurrence || undefined
         });
         setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? updated : p)));
+        try { fetchCurrentUser(); } catch (e) {}
       } catch (e) {
         console.warn("Update income failed, applying locally", e);
         setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? { ...p, ...incomeForm, amount: Number(incomeForm.amount) } : p)));
@@ -351,6 +366,7 @@ function App() {
       const newIncome = await api.post("/incomes", payload);
 
       setIncomes(prev => [newIncome, ...prev]);
+      try { fetchCurrentUser(); } catch (e) {}
 
     } catch (e) {
       console.warn("Create income failed, adding locally", e);
@@ -417,7 +433,8 @@ function App() {
   const deleteIncome = async (id) => {
     setIncomes(prev => prev.filter(i => i.id !== id));
     await api.delete(`/incomes/${id}`);
-    fetchIncomes();
+    await fetchIncomes();
+    try { fetchCurrentUser(); } catch (e) {}
   };
 
   const editCategoryBudget = (category) => {
@@ -566,11 +583,13 @@ function App() {
     return sum + (d && isWithinMonth(d) ? Number(expense.amount || 0) : 0);
   }, 0);
 
-  const availableBalance = monthlyIncomeTotal - monthlyExpenseTotal;
+  const computedAvailableBalance = monthlyIncomeTotal - monthlyExpenseTotal;
+  const availableBalance = (serverUser && serverUser.availableBalance != null) ? Number(serverUser.availableBalance) : (computedAvailableBalance + (savingsBalanceAdjustment || 0));
   const totalNetWorth = totalIncomes - totalExpenses;
 
   const [page, setPage] = useState("dashboard");
   const [savingsBalanceAdjustment, setSavingsBalanceAdjustment] = useState(0);
+  const [serverUser, setServerUser] = useState(null);
   const [authToken, setAuthToken] = useState(() => {
     try { return localStorage.getItem("token"); } catch { return null; }
   });
@@ -579,6 +598,7 @@ function App() {
     setAuthToken(token);
     fetchExpenses();
     fetchIncomes();
+    fetchCurrentUser();
     setPage("dashboard");
   };
 
@@ -593,7 +613,7 @@ function App() {
     if (page === "dashboard") {
       return (
         <Dashboard
-          availableBalance={availableBalance + (savingsBalanceAdjustment || 0)}
+          availableBalance={availableBalance}
           totalSavings={totalSavings}
           computedTotalSavings={computedTotalSavingsFromGoals}
           monthlyIncomeTotal={monthlyIncomeTotal}
@@ -605,7 +625,7 @@ function App() {
           savingsRate={savingsRate}
           dateFilter={dateFilter}
           setDateFilter={setDateFilter}
-          monthlyBudget={selectedMonthlyBudget}
+          monthlyBudget={(serverUser && serverUser.monthlyBudget != null) ? Number(serverUser.monthlyBudget) : selectedMonthlyBudget}
           setMonthlyBudget={setMonthlyBudgetForCurrentMonth}
           combinedLineData={combinedLineData}
           pieData={pieData}
@@ -657,7 +677,7 @@ function App() {
         formatCurrency={formatCurrency}
       />
     );
-    if (page === "savings") return <Savings availableBalance={availableBalance + (savingsBalanceAdjustment || 0)} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
+    if (page === "savings") return <Savings availableBalance={availableBalance} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "reports") return <Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "profile") return <Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
     if (page === "settings") return <Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />;
