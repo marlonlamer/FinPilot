@@ -1,5 +1,5 @@
 const express = require("express");
-const { getSavings, createSavings, deleteSavings, updateSavings, deposit, withdraw, getBalance, getHistory } = require("../controllers/savings.controller");
+const { getSavings, createSavings, deleteSavings, updateSavings, deposit, withdraw, getBalance, getHistory, updateTransaction, deleteTransaction } = require("../controllers/savings.controller");
 const authMiddleware = require("../middleware/auth.middleware");
 
 const router = express.Router();
@@ -12,5 +12,7 @@ router.post("/deposit", authMiddleware, deposit);
 router.post("/withdraw", authMiddleware, withdraw);
 router.get("/balance/:userId", authMiddleware, getBalance);
 router.get("/history/:userId", authMiddleware, getHistory);
+router.put('/history/:id', authMiddleware, updateTransaction);
+router.delete('/history/:id', authMiddleware, deleteTransaction);
 
 module.exports = router;

@@ -284,6 +284,68 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
   const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
+  const [editEntryModal, setEditEntryModal] = useState({ open: false, goalId: null, entry: null });
+
+  const openEditEntry = (goalId, entry) => {
+    setEditEntryModal({ open: true, goalId, entry: { ...entry, amount: Math.abs(Number(entry.amount || 0)), note: entry.note || '', _originalAmount: Number(entry.amount || 0), _type: entry.type } });
+  };
+
+  const handleEditEntryConfirm = async ({ amount, note }) => {
+    const e = editEntryModal.entry;
+    if (!e) return setEditEntryModal({ open: false, goalId: null, entry: null });
+    const amt = Number(amount || 0);
+    if (isNaN(amt) || amt <= 0) return window.alert('Please enter a positive number.');
+    const uid = getCurrentUserId();
+    const oldSigned = Number(e.amount) * (Number(e.amount) === Math.abs(Number(e.amount)) ? (e.amount >= 0 ? 1 : -1) : 1); // preserve sign
+    // However e.amount stored here is the absolute value we set earlier; get original signed from original entry
+    const originalSigned = Number(editEntryModal.entry ? (editEntryModal.entry._originalAmount ?? editEntryModal.entry.amount) : 0);
+    try {
+      if (!uid) {
+        // local-only: update state
+        setGoals(prev => prev.map(g => {
+          if (g.id !== editEntryModal.goalId) return g;
+          const history = (g.history || []).map(h => h.id === e.id ? { ...h, amount: (h.amount > 0 ? amt : -Math.abs(amt)), note: note || '' } : h);
+          const saved = history.reduce((acc, h) => acc + Number(h.amount || 0), 0);
+          return { ...g, history, savedAmount: saved };
+        }));
+        setEditEntryModal({ open: false, goalId: null, entry: null });
+        return;
+      }
+
+      const oldSigned = Number(e._originalAmount || Number(e.amount || 0));
+      const newSigned = (e._type === 'deposit') ? Number(amt) : -Math.abs(Number(amt));
+      await api.put(`/savings/history/${e.id}`, { amount: Math.abs(amt), note });
+      // compute delta for available balance: delta = -(newSigned - oldSigned)
+      const deltaAvail = -(newSigned - oldSigned);
+      try { adjustAvailableBalance && adjustAvailableBalance(deltaAvail); } catch (err) { console.warn('adjustAvailableBalance failed', err); }
+      await Promise.all([fetchSavings(), fetchSavingsBalance()]);
+    } catch (err) {
+      console.error('Failed to edit transaction', err);
+    } finally {
+      setEditEntryModal({ open: false, goalId: null, entry: null });
+    }
+  };
+
+  const handleDeleteEntry = (goalId, entry) => {
+    const uid = getCurrentUserId();
+    if (!uid) {
+      // local-only
+      setGoals(prev => prev.map(g => g.id === goalId ? { ...g, history: (g.history || []).filter(h => h.id !== entry.id), savedAmount: ( (g.history || []).filter(h => h.id !== entry.id).reduce((acc,h) => acc + Number(h.amount||0), 0) ) } : g));
+      return;
+    }
+    setConfirm({ open: true, message: 'Delete this transaction? This cannot be undone.', onConfirm: async () => {
+      try {
+        await api.delete(`/savings/history/${entry.id}`);
+        // deltaAvailable = oldSigned (since new becomes 0): oldSigned is entry.amount
+        const oldSigned = Number(entry.amount || 0);
+        try { adjustAvailableBalance && adjustAvailableBalance(oldSigned); } catch (err) { console.warn('adjustAvailableBalance failed', err); }
+        await Promise.all([fetchSavings(), fetchSavingsBalance()]);
+      } catch (err) {
+        console.error('Failed to delete transaction', err);
+      }
+    } });
+  };
+
   const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
 
   const months = useMemo(() => [
@@ -521,7 +583,11 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                         return (
                           <li key={entry.id} className="savings-history-item">
                             {new Date(entry.date).toLocaleDateString()} — <span className={isDeposit ? 'savings-deposit' : 'savings-withdraw'}>{label}</span> {amountDisplay}{entry.note ? ` (${entry.note})` : ""}
-                          </li>
+                              <div className="savings-history-actions">
+                                <button className="btn-small" onClick={() => openEditEntry(goal.id, entry)}>Edit</button>
+                                <button className="btn-small" onClick={() => handleDeleteEntry(goal.id, entry)}>Delete</button>
+                              </div>
+                            </li>
                         );
                       })}
                     </ul>
@@ -566,6 +632,18 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           return handleEditConfirm(values);
         }}
         submitLabel={modalState.mode === 'withdraw' ? 'Withdraw' : modalState.mode === 'deposit' ? 'Deposit' : 'Save'}
+      />
+      <FormModal
+        open={editEntryModal.open}
+        title={editEntryModal.entry ? `Edit Transaction` : 'Edit Transaction'}
+        initialValues={editEntryModal.entry ? { amount: editEntryModal.entry.amount, note: editEntryModal.entry.note } : { amount: '', note: '' }}
+        fields={[
+          { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
+          { name: 'note', label: 'Note (optional)', type: 'textarea', placeholder: 'Note' }
+        ]}
+        onCancel={() => setEditEntryModal({ open: false, goalId: null, entry: null })}
+        onSubmit={(values) => handleEditEntryConfirm(values)}
+        submitLabel={'Save'}
       />
     </div>
   );

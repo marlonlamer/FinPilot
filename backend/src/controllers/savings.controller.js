@@ -79,6 +79,31 @@ const getHistory = async (req, res) => {
   }
 };
 
+const updateTransaction = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    const { amount, note } = req.body;
+    if (amount == null) return res.status(400).json({ error: 'Amount is required' });
+    if (Number(amount) < 0) return res.status(400).json({ error: 'Amount cannot be negative' });
+    const updated = await savingsService.updateTransaction(id, { amount: Number(amount), note: note || null }, req.userId);
+    res.json(updated);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to update transaction' });
+  }
+};
+
+const deleteTransaction = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    await savingsService.deleteTransaction(id, req.userId);
+    res.json({ message: 'Transaction deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete transaction' });
+  }
+};
+
 const createSavings = async (req, res) => {
   const { name, targetAmount, currentAmount, startDate, targetDate } = req.body;
 
@@ -148,3 +173,5 @@ module.exports.deposit = deposit;
 module.exports.withdraw = withdraw;
 module.exports.getBalance = getBalance;
 module.exports.getHistory = getHistory;
+module.exports.updateTransaction = updateTransaction;
+module.exports.deleteTransaction = deleteTransaction;

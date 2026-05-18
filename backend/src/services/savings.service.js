@@ -116,3 +116,35 @@ module.exports.addHistoryEntry = addHistoryEntry;
 module.exports.addTransaction = addTransaction;
 module.exports.getSavingsBalance = getSavingsBalance;
 module.exports.getTransactions = getTransactions;
+
+// Update a transaction's amount and note. `amount` should be a positive number
+// representing the magnitude; we'll preserve the transaction `type` sign.
+const updateTransaction = async (transactionId, { amount, note }, userId) => {
+  const existing = await prisma.savingsTransaction.findUnique({ where: { id: Number(transactionId) } });
+  if (!existing || existing.userId !== Number(userId)) throw new Error('Transaction not found or not permitted');
+  if (amount == null) throw new Error('Amount is required');
+  if (Number(amount) < 0) throw new Error('Amount cannot be negative');
+  const signed = existing.type === 'deposit' ? Number(amount) : -Math.abs(Number(amount));
+  const updated = await prisma.savingsTransaction.update({ where: { id: Number(transactionId) }, data: { amount: Number(signed), note: note || null } });
+  // refresh aggregate currentAmount on related savings (if any)
+  if (updated.savingsId) {
+    const balance = await getSavingsBalance(userId, updated.savingsId);
+    await prisma.savings.updateMany({ where: { id: Number(updated.savingsId), userId: Number(userId) }, data: { currentAmount: balance } });
+  }
+  return updated;
+};
+
+// Delete a transaction and refresh related savings currentAmount
+const deleteTransaction = async (transactionId, userId) => {
+  const existing = await prisma.savingsTransaction.findUnique({ where: { id: Number(transactionId) } });
+  if (!existing || existing.userId !== Number(userId)) throw new Error('Transaction not found or not permitted');
+  const deleted = await prisma.savingsTransaction.delete({ where: { id: Number(transactionId) } });
+  if (deleted.savingsId) {
+    const balance = await getSavingsBalance(userId, deleted.savingsId);
+    await prisma.savings.updateMany({ where: { id: Number(deleted.savingsId), userId: Number(userId) }, data: { currentAmount: balance } });
+  }
+  return deleted;
+};
+
+module.exports.updateTransaction = updateTransaction;
+module.exports.deleteTransaction = deleteTransaction;
