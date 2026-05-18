@@ -38,4 +38,4 @@ const updateBudget = async (req, res) => {
   }
 };
 
-module.exports = { updateProfile };
+module.exports = { updateProfile, getUser, updateBudget };
