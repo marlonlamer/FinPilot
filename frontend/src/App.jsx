@@ -207,6 +207,15 @@ function App() {
     setSaving(true);
     setPerCategoryBudgets({ ...tempBudgets });
     setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
+    // persist to server if logged in
+    const uid = getCurrentUserId();
+    if (uid != null) {
+      api.put('/user/budget', { monthlyBudget: tempMonthlyBudget }).then(async () => {
+        try { await fetchCurrentUser(); } catch (e) {}
+      }).catch((err) => {
+        console.warn('Failed to persist monthlyBudget', err);
+      });
+    }
     setSaving(false);
     setSavedAt(Date.now());
     setBudgetModalOpen(false);
@@ -219,6 +228,13 @@ function App() {
     autosaveTimerRef.current = setTimeout(() => {
       setPerCategoryBudgets({ ...tempBudgets });
       setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
+      // persist to server if logged in
+      const uid = getCurrentUserId();
+      if (uid != null) {
+        api.put('/user/budget', { monthlyBudget: tempMonthlyBudget }).then(async () => {
+          try { await fetchCurrentUser(); } catch (e) {}
+        }).catch((err) => console.warn('Failed to autosave monthlyBudget', err));
+      }
       autosaveTimerRef.current = null;
       setSaving(false);
       setSavedAt(Date.now());

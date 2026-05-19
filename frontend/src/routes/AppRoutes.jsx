@@ -16,7 +16,7 @@ import Savings from "../pages/Savings/Savings";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ProtectedRoute from "./ProtectedRoutes";
-import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
+import { api, getCurrentUserId, clearCurrentUser, setCurrentUser } from "../services/api";
 
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
@@ -180,6 +180,12 @@ function AppController() {
 		setSaving(true);
 		setPerCategoryBudgets({ ...tempBudgets });
 		setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
+		const uid = getCurrentUserId();
+		if (uid != null) {
+			api.put('/user/budget', { monthlyBudget: tempMonthlyBudget }).then(async () => {
+				try { const u = await api.get('/user/me'); setCurrentUser(u); } catch (e) {}
+			}).catch((err) => console.warn('Failed to persist monthlyBudget', err));
+		}
 		setSaving(false);
 		setSavedAt(Date.now());
 		setBudgetModalOpen(false);
@@ -192,6 +198,12 @@ function AppController() {
 		autosaveTimerRef.current = setTimeout(() => {
 			setPerCategoryBudgets({ ...tempBudgets });
 			setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
+			const uid = getCurrentUserId();
+			if (uid != null) {
+				api.put('/user/budget', { monthlyBudget: tempMonthlyBudget }).then(async () => {
+					try { const u = await api.get('/user/me'); setCurrentUser(u); } catch (e) {}
+				}).catch((err) => console.warn('Failed to autosave monthlyBudget', err));
+			}
 			autosaveTimerRef.current = null;
 			setSaving(false);
 			setSavedAt(Date.now());
