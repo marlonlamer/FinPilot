@@ -32,9 +32,24 @@ const createSavings = async ({
   });
 };
 
-const deleteSavings = async (id, userId) => {
-  const result = await prisma.savings.deleteMany({ where: { id: Number(id), userId } });
-  if (result.count === 0) throw new Error("Savings not found or not permitted");
+const deleteSavings = async (id, userId, restoreAvailable = false) => {
+  const sid = Number(id);
+  const uid = Number(userId);
+  const existing = await prisma.savings.findUnique({ where: { id: sid } });
+  if (!existing || existing.userId !== uid) throw new Error("Savings not found or not permitted");
+
+  // compute authoritative balance from transactions
+  const balance = await getSavingsBalance(uid, sid);
+
+  // Transactionally delete related transactions and the savings record.
+  // This covers cases where the DB doesn't have ON DELETE CASCADE yet.
+  await prisma.$transaction(async (tx) => {
+    await tx.savingsTransaction.deleteMany({ where: { savingsId: sid, userId: uid } });
+    await tx.savings.delete({ where: { id: sid } });
+    if (restoreAvailable && Number(balance) !== 0) {
+      await tx.user.updateMany({ where: { id: uid }, data: { availableBalance: { increment: Number(balance) } } });
+    }
+  });
   return;
 };
 

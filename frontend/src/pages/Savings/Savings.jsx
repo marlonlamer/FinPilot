@@ -280,7 +280,18 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   const handleDelete = (goalId) => {
     const uid = getCurrentUserId();
     if (uid) {
-      api.delete(`/savings/${goalId}`).then(() => setGoals(prev => prev.filter(g => g.id !== goalId))).catch(() => setGoals(prev => prev.filter(g => g.id !== goalId)));
+      api.delete(`/savings/${goalId}?restoreAvailable=true`)
+        .then(async () => {
+          setGoals(prev => prev.filter(g => g.id !== goalId));
+          try {
+            await Promise.all([fetchSavings(), fetchSavingsBalance()]);
+            const u = await api.get('/user/me');
+            try { setCurrentUser(u); } catch (e) {}
+          } catch (e) {
+            console.warn('Post-delete refresh failed', e);
+          }
+        })
+        .catch(() => setGoals(prev => prev.filter(g => g.id !== goalId)));
     } else {
       setGoals(prev => prev.filter(g => g.id !== goalId));
     }

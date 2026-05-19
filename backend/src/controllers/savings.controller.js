@@ -130,7 +130,8 @@ const createSavings = async (req, res) => {
 
 const deleteSavings = async (req, res) => {
   try {
-    await savingsService.deleteSavings(req.params.id, req.userId);
+    const restore = req.query.restoreAvailable === 'true';
+    await savingsService.deleteSavings(req.params.id, req.userId, restore);
     res.json({ message: "Savings deleted" });
   } catch (error) {
     console.error(error);

@@ -46,7 +46,7 @@ model Savings {
 model SavingsTransaction {
   id         Int      @id @default(autoincrement())
   savingsId  Int?
-  savings    Savings? @relation(fields: [savingsId], references: [id])
+  savings    Savings? @relation(fields: [savingsId], references: [id], onDelete: Cascade)
   userId     Int
   user       User     @relation(fields: [userId], references: [id])
   amount     Float
