@@ -67,6 +67,7 @@ model User {
 
   // new fields for budgets and available balance
   availableBalance Float @default(0)
+  totalSavings Float @default(0)
   monthlyBudget Float @default(0)
   monthlySpent Float @default(0)
 

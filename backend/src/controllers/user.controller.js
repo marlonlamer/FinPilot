@@ -17,7 +17,7 @@ const getUser = async (req, res) => {
   try {
     const user = await prisma.user.findUnique({ where: { id: Number(req.userId) } });
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json({ id: user.id, email: user.email, name: user.name, availableBalance: user.availableBalance || 0, monthlyBudget: user.monthlyBudget || 0, monthlySpent: user.monthlySpent || 0 });
+    res.json({ id: user.id, email: user.email, name: user.name, availableBalance: user.availableBalance || 0, monthlyBudget: user.monthlyBudget || 0, monthlySpent: user.monthlySpent || 0, totalSavings: user.totalSavings || 0 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to fetch user' });
