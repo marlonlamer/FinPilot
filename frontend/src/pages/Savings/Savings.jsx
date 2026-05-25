@@ -4,7 +4,7 @@ import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
 
-export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth }) {
+export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("All Time");
 
@@ -148,8 +148,10 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           api.post('/savings/deposit', { savingsId: s.id, amount: entry.amount, note: entry.note })
             .then(() => { fetchSavings(); try { adjustAvailableBalance && adjustAvailableBalance(-entry.amount); } catch (e) { console.warn('adjustAvailableBalance failed', e); } })
             .catch(() => fetchSavings());
+          try { if (typeof onSavingsUpdated === 'function') onSavingsUpdated(); } catch (e) {}
         } else {
           fetchSavings();
+          try { if (typeof onSavingsUpdated === 'function') onSavingsUpdated(); } catch (e) {}
         }
       }).catch((err) => {
         console.error('Failed to create saving on server, falling back to local state', err);

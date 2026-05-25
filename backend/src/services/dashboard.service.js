@@ -14,6 +14,11 @@ const getDashboard = async (userId) => {
   const savingsAgg = await prisma.savingsTransaction.aggregate({ where: { userId }, _sum: { amount: true } });
   const totalSavings = (savingsAgg && savingsAgg._sum && savingsAgg._sum.amount) ? Number(savingsAgg._sum.amount) : 0;
 
+  // Also fetch user's stored totals (availableBalance, totalSavings) for convenience
+  const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
+  const userTotalSavings = user && user.totalSavings != null ? Number(user.totalSavings) : totalSavings;
+  const userAvailable = user && user.availableBalance != null ? Number(user.availableBalance) : 0;
+
   // Monthly summary for last 6 months
   const now = new Date();
   const months = [];
@@ -58,7 +63,7 @@ const getDashboard = async (userId) => {
   transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return {
-    totals: { totalExpenses, totalIncome, totalSavings },
+    totals: { totalExpenses, totalIncome, totalSavings: userTotalSavings, availableBalance: userAvailable },
     savings: savingsList,
     expensesByCategory: expensesByCategory.map((c) => ({ category: c.category, total: (c._sum && c._sum.amount) || 0 })),
     monthlySummary: months,

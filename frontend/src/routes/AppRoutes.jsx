@@ -33,6 +33,8 @@ function AppController() {
 		recurrence: "monthly"
 	});
 
+	const [dashboardTotals, setDashboardTotals] = useState({ totalSavings: 0, availableBalance: 0 });
+
 	const [form, setForm] = useState({
 		amount: "",
 		category: "",
@@ -132,6 +134,13 @@ function AppController() {
 	useEffect(() => {
 		fetchExpenses();
 		fetchIncomes();
+		// fetch dashboard totals (savings, available balance)
+		(async () => {
+			try {
+				const d = await api.get('/dashboard');
+				setDashboardTotals(d.totals || {});
+			} catch (e) { console.warn('Failed to fetch dashboard', e); }
+		})();
 	}, []);
 
 	const [perCategoryBudgets, setPerCategoryBudgets] = useState(() => {
@@ -574,9 +583,9 @@ function AppController() {
 				<Route element={<ProtectedRoute />}>
 					<Route element={<AppLayout {...layoutProps} />}>
 						<Route index element={<Dashboard
-							availableBalance={availableBalance + (savingsBalanceAdjustment || 0)}
+							availableBalance={dashboardTotals.availableBalance != null ? dashboardTotals.availableBalance : (availableBalance + (savingsBalanceAdjustment || 0))}
 							totalSavings={totalSavings}
-							computedTotalSavings={computedTotalSavingsFromGoals}
+							computedTotalSavings={dashboardTotals.totalSavings != null ? dashboardTotals.totalSavings : computedTotalSavingsFromGoals}
 							monthlyIncomeTotal={monthlyIncomeTotal}
 							monthlyExpenseTotal={monthlyExpenseTotal}
 							totalNetWorth={totalNetWorth}
@@ -643,7 +652,9 @@ function AppController() {
 
 						<Route path="settings" element={<Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
-						<Route path="savings" element={<Savings availableBalance={availableBalance + (savingsBalanceAdjustment || 0)} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} selectedYear={selectedYear} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} />} />
+						<Route path="savings" element={<Savings availableBalance={dashboardTotals.availableBalance != null ? dashboardTotals.availableBalance : (availableBalance + (savingsBalanceAdjustment || 0))} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={dashboardTotals.totalSavings != null ? dashboardTotals.totalSavings : totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} selectedYear={selectedYear} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onSavingsUpdated={async () => {
+							await (async () => { try { const d = await api.get('/dashboard'); setDashboardTotals(d.totals || {}); } catch (e) { console.warn('failed dashboard refresh', e); } })();
+						}} />} />
 					</Route>
 				</Route>
 
