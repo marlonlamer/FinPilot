@@ -237,6 +237,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       } catch (e) { /* ignore */ }
       // update available balance after successful transaction (local adjustment fallback)
       try { adjustAvailableBalance && adjustAvailableBalance(-Number(amount)); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
+      // refresh dashboard totals in parent
+      try { if (typeof onSavingsUpdated === 'function') await onSavingsUpdated(); } catch (e) { console.warn('onSavingsUpdated failed', e); }
       console.debug('Refetched savings and balances from server');
     } catch (e) {
       // if server fails, do not rely on local-only mutations
@@ -289,6 +291,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
             await Promise.all([fetchSavings(), fetchSavingsBalance()]);
             const u = await api.get('/user/me');
             try { setCurrentUser(u); } catch (e) {}
+              try { if (typeof onSavingsUpdated === 'function') await onSavingsUpdated(); } catch (e) { console.warn('onSavingsUpdated failed', e); }
           } catch (e) {
             console.warn('Post-delete refresh failed', e);
           }
@@ -337,6 +340,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       try { adjustAvailableBalance && adjustAvailableBalance(deltaAvail); } catch (err) { console.warn('adjustAvailableBalance failed', err); }
       await Promise.all([fetchSavings(), fetchSavingsBalance()]);
       try { const u = await api.get('/user/me'); try { setCurrentUser(u); } catch (e) {} } catch (e) {}
+      try { if (typeof onSavingsUpdated === 'function') await onSavingsUpdated(); } catch (e) { console.warn('onSavingsUpdated failed', e); }
     } catch (err) {
       console.error('Failed to edit transaction', err);
     } finally {
@@ -359,6 +363,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         try { adjustAvailableBalance && adjustAvailableBalance(oldSigned); } catch (err) { console.warn('adjustAvailableBalance failed', err); }
         await Promise.all([fetchSavings(), fetchSavingsBalance()]);
         try { const u = await api.get('/user/me'); try { setCurrentUser(u); } catch (e) {} } catch (e) {}
+        try { if (typeof onSavingsUpdated === 'function') await onSavingsUpdated(); } catch (e) { console.warn('onSavingsUpdated failed', e); }
       } catch (err) {
         console.error('Failed to delete transaction', err);
       }
