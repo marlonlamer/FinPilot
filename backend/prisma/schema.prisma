@@ -70,6 +70,8 @@ model User {
   totalSavings Float @default(0)
   monthlyBudget Float @default(0)
   monthlySpent Float @default(0)
+  monthlyBudgetRemaining Float @default(0)
+  totalNetWorth Float @default(0)
 
   expenses  Expense[]
   income    Income[]

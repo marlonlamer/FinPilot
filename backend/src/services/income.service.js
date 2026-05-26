@@ -1,4 +1,5 @@
 const prisma = require("../prisma/client");
+const { recalcUserAggregates } = require('./userAggregates.service');
 
 const getAllIncomes = async (userId) => {
   return prisma.income.findMany({ 
@@ -20,6 +21,7 @@ const createIncome = async ({
   const created = await prisma.income.create({ data: { title, amount: Number(amount), source, userId } });
   // Increase user's available balance by income amount
   await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(amount) } } });
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return created;
 };
 
@@ -27,6 +29,7 @@ const deleteIncome = async (id, userId) => {
   // delete returns the deleted record so we can adjust availableBalance
   const deleted = await prisma.income.delete({ where: { id: Number(id), userId } });
   await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: -Number(deleted.amount) } } });
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return deleted;
 };
 
@@ -39,6 +42,7 @@ const updateIncome = async (id, data, userId) => {
   // adjust user's available balance by delta (new - old)
   const delta = Number(updated.amount || 0) - Number(existing.amount || 0);
   if (delta !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(delta) } } });
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return updated;
 };
 

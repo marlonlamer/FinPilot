@@ -1,4 +1,5 @@
 const prisma = require("../prisma/client");
+const { recalcUserAggregates } = require('./userAggregates.service');
 
 const getAllSavings = async (userId) => {
   const list = await prisma.savings.findMany({ where: { userId }, orderBy: { startDate: "desc" } });
@@ -54,6 +55,7 @@ const deleteSavings = async (id, userId, restoreAvailable = false) => {
       await tx.user.updateMany({ where: { id: uid }, data: { totalSavings: { increment: Number(-balance) } } });
     }
   });
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return;
 };
 
@@ -117,6 +119,7 @@ const addTransaction = async ({ savingsId, type, amount, note, userId }) => {
   // Update user's totalSavings: deposit increases, withdraw decreases
   const deltaTotal = signed; // signed already has + for deposit, - for withdraw
   if (deltaTotal !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { totalSavings: { increment: Number(deltaTotal) } } });
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return created;
 };
 
@@ -170,6 +173,7 @@ const updateTransaction = async (transactionId, { amount, note }, userId) => {
   // adjust user's totalSavings by deltaTotal = (newSigned - oldSigned)
   const deltaTotal = (newSigned - oldSigned);
   if (deltaTotal !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { totalSavings: { increment: Number(deltaTotal) } } });
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return updated;
 };
 
@@ -187,6 +191,7 @@ const deleteTransaction = async (transactionId, userId) => {
   if (oldSigned !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(oldSigned) } } });
   // also remove that amount from user's totalSavings
   if (oldSigned !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { totalSavings: { increment: Number(-oldSigned) } } });
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return deleted;
 };
 

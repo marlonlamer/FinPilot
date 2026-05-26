@@ -18,6 +18,8 @@ const getDashboard = async (userId) => {
   const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
   const userTotalSavings = user && user.totalSavings != null ? Number(user.totalSavings) : totalSavings;
   const userAvailable = user && user.availableBalance != null ? Number(user.availableBalance) : 0;
+  const monthlyBudgetRemaining = user && user.monthlyBudgetRemaining != null ? Number(user.monthlyBudgetRemaining) : ((user && user.monthlyBudget != null ? Number(user.monthlyBudget) : 0) - (user && user.monthlySpent != null ? Number(user.monthlySpent) : 0));
+  const totalNetWorth = user && user.totalNetWorth != null ? Number(user.totalNetWorth) : (userAvailable + userTotalSavings);
 
   // Monthly summary for last 6 months
   const now = new Date();
@@ -63,7 +65,7 @@ const getDashboard = async (userId) => {
   transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return {
-    totals: { totalExpenses, totalIncome, totalSavings: userTotalSavings, availableBalance: userAvailable },
+    totals: { totalExpenses, totalIncome, totalSavings: userTotalSavings, availableBalance: userAvailable, monthlyBudgetRemaining, totalNetWorth },
     savings: savingsList,
     expensesByCategory: expensesByCategory.map((c) => ({ category: c.category, total: (c._sum && c._sum.amount) || 0 })),
     monthlySummary: months,

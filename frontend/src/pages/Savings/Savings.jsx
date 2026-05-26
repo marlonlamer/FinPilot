@@ -19,6 +19,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   });
 
   const [goals, setGoals] = useState([]);
+  const [dashboardTotals, setDashboardTotals] = useState(null);
 
   const fetchSavings = async () => {
     const uid = getCurrentUserId();
@@ -65,6 +66,13 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     let mounted = true;
     const load = async () => { if (!mounted) return; await fetchSavings(); };
     load();
+    // fetch dashboard totals (monthlyBudgetRemaining, totalNetWorth)
+    (async () => {
+      try {
+        const d = await api.get('/dashboard');
+        if (d && d.totals) setDashboardTotals(d.totals);
+      } catch (e) { /* ignore */ }
+    })();
     return () => { mounted = false; };
   }, []);
 
@@ -398,6 +406,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   return (
     <div className="savings-root">
       <h2>Savings</h2>
+      {dashboardTotals && (
+        <div style={{ marginBottom: 12 }}>
+          <div><strong>Monthly Budget Remaining:</strong> {currencySymbol}{Number(dashboardTotals.monthlyBudgetRemaining || 0).toFixed(2)}</div>
+          <div><strong>Total Net Worth:</strong> {currencySymbol}{Number(dashboardTotals.totalNetWorth || 0).toFixed(2)}</div>
+        </div>
+      )}
 
       <div className="savings-controls">
         <div className="savings-pill-group">

@@ -1,4 +1,5 @@
 const prisma = require("../prisma/client");
+const { recalcUserAggregates } = require('./userAggregates.service');
 
 const getAllExpenses = async (userId) => {
   return prisma.expense.findMany({
@@ -24,6 +25,8 @@ const createExpense = async ({
       await prisma.user.updateMany({ where: { id: Number(userId) }, data: { monthlySpent: { increment: Number(amount) } } });
     }
   } catch (e) { }
+  // Recalculate derived aggregates
+  try { await recalcUserAggregates(userId); } catch (e) { /* non-fatal */ }
   return created;
 };
 
@@ -38,6 +41,7 @@ const deleteExpense = async (id, userId) => {
       await prisma.user.updateMany({ where: { id: Number(userId) }, data: { monthlySpent: { increment: -Number(deleted.amount) } } });
     }
   } catch (e) {}
+  try { await recalcUserAggregates(userId); } catch (e) {}
   return deleted;
 };
 
@@ -62,6 +66,7 @@ const updateExpense = async (id, data, userId) => {
       if (deltaMonthly !== 0) await prisma.user.updateMany({ where: { id: Number(userId) }, data: { monthlySpent: { increment: Number(deltaMonthly) } } });
     }
   } catch (e) {}
+      try { await recalcUserAggregates(userId); } catch (e) {}
   return updated;
 };
 
