@@ -131,6 +131,23 @@ function App() {
     }
   };
 
+  const persistMonthlyBudget = async (val) => {
+    try {
+      const uid = getCurrentUserId();
+      if (!uid) return null;
+      if (val == null) {
+        const resp = await api.delete('/user/budget');
+        return resp;
+      } else {
+        const resp = await api.put('/user/budget', { monthlyBudget: val });
+        return resp;
+      }
+    } catch (err) {
+      console.warn('Failed to persist monthlyBudget', err);
+      throw err;
+    }
+  };
+
   const fetchCurrentUser = async () => {
     try {
       const u = await api.get('/user/me');
@@ -207,18 +224,37 @@ function App() {
     setSaving(true);
     setPerCategoryBudgets({ ...tempBudgets });
     setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
-    // persist to server if logged in
-    const uid = getCurrentUserId();
-    if (uid != null) {
-      api.put('/user/budget', { monthlyBudget: tempMonthlyBudget }).then(async () => {
-        try { await fetchCurrentUser(); } catch (e) {}
-      }).catch((err) => {
-        console.warn('Failed to persist monthlyBudget', err);
-      });
+    if (getCurrentUserId() != null) {
+      (async () => {
+        try {
+          await persistMonthlyBudget(tempMonthlyBudget);
+          try { await fetchCurrentUser(); } catch (e) {}
+        } catch (err) {
+          console.warn('Failed to persist monthlyBudget', err);
+        }
+      })();
     }
     setSaving(false);
     setSavedAt(Date.now());
     setBudgetModalOpen(false);
+  };
+
+  const handleDeleteMonthlyBudget = async () => {
+    if (!window.confirm('Delete monthly budget? This will remove it from the database and UI.')) return;
+    setSaving(true);
+    try {
+      await persistMonthlyBudget(null);
+      setMonthlyBudgetForCurrentMonth(null);
+      setTempMonthlyBudget(null);
+      try { const u = await api.get('/user/me'); setCurrentUser(u); } catch (e) {}
+      try { const d = await api.get('/dashboard'); setDashboardTotals(d.totals || {}); } catch (e) {}
+      setBudgetModalOpen(false);
+    } catch (err) {
+      console.warn('Failed to delete monthly budget', err);
+      window.alert('Failed to delete monthly budget. See console for details.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   useEffect(() => {
@@ -231,9 +267,14 @@ function App() {
       // persist to server if logged in
       const uid = getCurrentUserId();
       if (uid != null) {
-        api.put('/user/budget', { monthlyBudget: tempMonthlyBudget }).then(async () => {
-          try { await fetchCurrentUser(); } catch (e) {}
-        }).catch((err) => console.warn('Failed to autosave monthlyBudget', err));
+        (async () => {
+          try {
+            await persistMonthlyBudget(tempMonthlyBudget);
+            try { await fetchCurrentUser(); } catch (e) {}
+          } catch (err) {
+            console.warn('Failed to autosave monthlyBudget', err);
+          }
+        })();
       }
       autosaveTimerRef.current = null;
       setSaving(false);
@@ -806,6 +847,7 @@ function App() {
               </div>
               <div className="modal-actions">
                 <button className="btn" onClick={() => closeBudgetModal()}>Cancel</button>
+                <button className="btn btn-danger" onClick={() => handleDeleteMonthlyBudget()}>Delete</button>
                 <button className="btn btn-primary" onClick={() => saveBudgetModal()}>Save</button>
               </div>
             </div>

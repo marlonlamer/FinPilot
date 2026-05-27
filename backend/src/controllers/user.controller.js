@@ -38,4 +38,13 @@ const updateBudget = async (req, res) => {
   }
 };
 
-module.exports = { updateProfile, getUser, updateBudget };
+const deleteBudget = async (req, res) => {
+  try {
+    const updated = await prisma.user.update({ where: { id: Number(req.userId) }, data: { monthlyBudget: null } });
+    res.json({ id: updated.id, monthlyBudget: updated.monthlyBudget, monthlySpent: updated.monthlySpent, availableBalance: updated.availableBalance });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to delete monthly budget' });
+  }
+};
+module.exports = { updateProfile, getUser, updateBudget, deleteBudget };
