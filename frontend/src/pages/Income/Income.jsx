@@ -44,7 +44,13 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
     <div className="income-root">
       <div className="income-header">
         <h3 className="page-title">Incomes</h3>
-        <button className="btn btn-primary" onClick={() => setIncomeModalOpen(true)}>＋ Add Income</button>
+        <button
+          className="btn btn-primary"
+          onClick={() => {
+            setIncomeForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
+            setIncomeModalOpen(true);
+          }}
+        >＋ Add Income</button>
       </div>
 
       <div className="stats-row">

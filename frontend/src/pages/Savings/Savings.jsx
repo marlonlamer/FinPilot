@@ -437,7 +437,13 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
             </select>
           </div>
 
-          <button className="savings-add-button" onClick={() => setIsModalOpen(true)}>
+          <button
+            className="savings-add-button"
+            onClick={() => {
+              setNewGoal(prev => ({ ...prev, startDate: new Date().toISOString().slice(0, 10) }));
+              setIsModalOpen(true);
+            }}
+          >
             + Add Saving Goal
           </button>
         </div>

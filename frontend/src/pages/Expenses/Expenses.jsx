@@ -76,7 +76,13 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
         <h3 className="header-title">Expenses</h3>
         <div className="header-actions">
           <button className="btn" onClick={openBudgetModal}>Edit Budgets</button>
-          <button className="btn btn-primary" onClick={() => setExpenseModalOpen(true)}>＋ Add Expense</button>
+          <button
+            className="btn btn-primary"
+            onClick={() => {
+              setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
+              setExpenseModalOpen(true);
+            }}
+          >＋ Add Expense</button>
         </div>
       </div>
 
