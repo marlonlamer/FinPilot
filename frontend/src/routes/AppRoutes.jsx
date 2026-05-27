@@ -553,6 +553,14 @@ function AppController() {
 	const totalNetWorth = totalIncomes - totalExpenses;
 
 	const [savingsBalanceAdjustment, setSavingsBalanceAdjustment] = useState(0);
+
+	// Keep dashboard totals in sync with local state so UI updates immediately
+	useEffect(() => {
+		setDashboardTotals(prev => ({
+			...prev,
+			availableBalance: (monthlyIncomeTotal - monthlyExpenseTotal) + (savingsBalanceAdjustment || 0)
+		}));
+	}, [monthlyIncomeTotal, monthlyExpenseTotal, savingsBalanceAdjustment]);
 	const [authToken, setAuthToken] = useState(() => {
 		try { return localStorage.getItem("token"); } catch { return null; }
 	});
