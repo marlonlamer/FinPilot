@@ -153,6 +153,7 @@ function AppController() {
 	useEffect(() => {
 		fetchExpenses();
 		fetchIncomes();
+		if (localStorage.getItem('token')) fetchBudgets();
 		// fetch dashboard totals (savings, available balance)
 		(async () => {
 			try {
@@ -171,107 +172,24 @@ function AppController() {
 			return {};
 		}
 	});
-	const [newBudgetCategory, setNewBudgetCategory] = useState("");
-	const [newBudgetAmount, setNewBudgetAmount] = useState("");
-	const [tempMonthlyBudget, setTempMonthlyBudget] = useState(() => selectedMonthlyBudget);
+	const [budgetsMeta, setBudgetsMeta] = useState({});
 
-	const [budgetModalOpen, setBudgetModalOpen] = useState(false);
-	const [tempBudgets, setTempBudgets] = useState({});
-	const originalBudgetsRef = useRef({});
-	const autosaveTimerRef = useRef(null);
-	const [saving, setSaving] = useState(false);
-	const [savedAt, setSavedAt] = useState(null);
-
-	const openBudgetModal = () => {
-		originalBudgetsRef.current = { ...perCategoryBudgets };
-		setTempBudgets({ ...perCategoryBudgets });
-		setTempMonthlyBudget(selectedMonthlyBudget);
-		setBudgetModalOpen(true);
-	};
-
-	const closeBudgetModal = () => {
-		if (autosaveTimerRef.current) {
-			clearTimeout(autosaveTimerRef.current);
-			autosaveTimerRef.current = null;
-		}
-		setPerCategoryBudgets({ ...originalBudgetsRef.current });
-		setTempMonthlyBudget(selectedMonthlyBudget);
-		setBudgetModalOpen(false);
-		setSaving(false);
-	};
-
-	const saveBudgetModal = () => {
-		if (autosaveTimerRef.current) {
-			clearTimeout(autosaveTimerRef.current);
-			autosaveTimerRef.current = null;
-		}
-		setSaving(true);
-		setPerCategoryBudgets({ ...tempBudgets });
-		setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
-		if (getCurrentUserId() != null) {
-			(async () => {
-				try {
-					await persistMonthlyBudget(tempMonthlyBudget);
-					try { const u = await api.get('/user/me'); setCurrentUser(u); } catch (e) {}
-					try { const d = await api.get('/dashboard'); setDashboardTotals(d.totals || {}); } catch (e) { /* ignore */ }
-				} catch (err) {
-					console.warn('Failed to persist monthlyBudget', err);
-				}
-			})();
-		}
-		setSaving(false);
-		setSavedAt(Date.now());
-		setBudgetModalOpen(false);
-	};
-
-	const handleDeleteMonthlyBudget = async () => {
-		if (!window.confirm('Delete monthly budget? This will remove it from the database and UI.')) return;
-		setSaving(true);
+	const fetchBudgets = async () => {
 		try {
-			await persistMonthlyBudget(null);
-			setMonthlyBudgetForCurrentMonth(null);
-			setTempMonthlyBudget(null);
-			try { const u = await api.get('/user/me'); setCurrentUser(u); } catch (e) {}
-			try { const d = await api.get('/dashboard'); setDashboardTotals(d.totals || {}); } catch (e) {}
-			setBudgetModalOpen(false);
-		} catch (err) {
-			console.warn('Failed to delete monthly budget', err);
-			window.alert('Failed to delete monthly budget. See console for details.');
-		} finally {
-			setSaving(false);
+			const uid = getCurrentUserId();
+			if (!uid) return;
+			const list = await api.get('/budgets');
+			const map = {};
+			const meta = {};
+			if (Array.isArray(list)) {
+				list.forEach(b => { map[b.category] = b.amount; meta[b.category] = b.id; });
+			}
+			setPerCategoryBudgets(map);
+			setBudgetsMeta(meta);
+		} catch (e) {
+			console.warn('Failed to fetch budgets', e);
 		}
 	};
-
-	useEffect(() => {
-		if (!budgetModalOpen) return;
-		if (autosaveTimerRef.current) clearTimeout(autosaveTimerRef.current);
-		setSaving(true);
-		autosaveTimerRef.current = setTimeout(() => {
-			setPerCategoryBudgets({ ...tempBudgets });
-			setMonthlyBudgetForCurrentMonth(tempMonthlyBudget);
-			const uid = getCurrentUserId();
-			if (uid != null) {
-				(async () => {
-					try {
-						await persistMonthlyBudget(tempMonthlyBudget);
-						try { const u = await api.get('/user/me'); setCurrentUser(u); } catch (e) {}
-						try { const d = await api.get('/dashboard'); setDashboardTotals(d.totals || {}); } catch (e) { /* ignore */ }
-					} catch (err) {
-						console.warn('Failed to autosave monthlyBudget', err);
-					}
-				})();
-			}
-			autosaveTimerRef.current = null;
-			setSaving(false);
-			setSavedAt(Date.now());
-		}, 800);
-		return () => {
-			if (autosaveTimerRef.current) {
-				clearTimeout(autosaveTimerRef.current);
-				autosaveTimerRef.current = null;
-			}
-		};
-	}, [budgetModalOpen, tempBudgets, tempMonthlyBudget]);
 
 	// persist per-category budgets per user
 	useEffect(() => {
@@ -662,6 +580,9 @@ function AppController() {
 							COLORS={COLORS}
 							currencySymbol={currencySymbol}
 							formatCurrency={formatCurrency}
+							budgets={perCategoryBudgets}
+							budgetsMeta={budgetsMeta}
+							onBudgetsUpdated={fetchBudgets}
 						/>} />
 
 						<Route path="expenses" element={<Expenses
@@ -671,7 +592,6 @@ function AppController() {
 							handleSubmit={handleSubmit}
 							expenseModalOpen={expenseModalOpen}
 							setExpenseModalOpen={setExpenseModalOpen}
-							openBudgetModal={openBudgetModal}
 							deleteExpense={deleteExpense}
 							openEditExpense={openEditExpense}
 							editingExpenseId={editingExpenseId}
@@ -717,58 +637,7 @@ function AppController() {
 				<Route path="*" element={<Navigate to="/" replace />} />
 			</Routes>
 
-			{/* Render budget modal at root level so it's available across routes */}
-			{budgetModalOpen && (
-				<div className="modal-overlay" onClick={() => closeBudgetModal()}>
-					<div className="modal" onClick={(e) => e.stopPropagation()}>
-						<div className="modal-header">
-							<div className="modal-header-col">
-									<div className="modal-title">Edit Budgets</div>
-									<div className="modal-sub">Set monthly budget and per-category budgets</div>
-								</div>
-							<button className="btn btn-ghost" onClick={() => closeBudgetModal()}>✕</button>
-						</div>
-						<div className="modal-body">
-							<div>
-								<label className="label-block">Monthly Budget</label>
-								<input type="number" className="modern-input" value={tempMonthlyBudget === null ? "" : tempMonthlyBudget} onChange={e => setTempMonthlyBudget(e.target.value === "" ? null : Number(e.target.value))} />
-							</div>
-
-							<div>
-								<label className="label-block mb">Per-category budgets</label>
-								<div className="budgets-grid">
-									{Object.keys(tempBudgets || {}).length === 0 ? (
-										<div className="text-muted">No categories available to set budgets for.</div>
-									) : (
-										Object.keys(tempBudgets).map(cat => (
-											<div key={cat} className="budget-item">
-												<div className="budget-name">{cat}</div>
-												<input type="number" className="modern-input" value={tempBudgets[cat] == null ? "" : tempBudgets[cat]} onChange={e => setTempBudgets(prev => ({ ...prev, [cat]: e.target.value === "" ? null : Number(e.target.value) }))} />
-												<button className="btn" onClick={() => setTempBudgets(prev => { const next = { ...prev }; delete next[cat]; return next; })}>Clear</button>
-											</div>
-										))
-									)}
-
-									<div className="add-budget-row">
-										<input placeholder="Category name" className="modern-input" value={newBudgetCategory} onChange={e => setNewBudgetCategory(e.target.value)} />
-										<input placeholder="Amount" className="modern-input" type="number" value={newBudgetAmount} onChange={e => setNewBudgetAmount(e.target.value)} />
-										<button className="btn" onClick={() => {
-											if (!newBudgetCategory) return;
-											setTempBudgets(prev => ({ ...prev, [newBudgetCategory]: newBudgetAmount === "" ? null : Number(newBudgetAmount) }));
-											setNewBudgetCategory(""); setNewBudgetAmount("");
-										}}>Add</button>
-									</div>
-								</div>
-							</div>
-							<div className="modal-actions">
-								<button className="btn" onClick={() => closeBudgetModal()}>Cancel</button>
-								<button className="btn btn-danger" onClick={() => handleDeleteMonthlyBudget()}>Delete</button>
-								<button className="btn btn-primary" onClick={() => saveBudgetModal()}>Save</button>
-							</div>
-						</div>
-					</div>
-				</div>
-			)}
+		
 		</BrowserRouter>
 	);
 }

@@ -33,6 +33,7 @@ export default function Dashboard(props) {
   } = props;
 
   const { availableBalance } = props;
+  const { budgets, onBudgetsUpdated, budgetsMeta } = props;
 
   const user = getCurrentUser() || {};
   const displayName = user.name || user.email || "";
@@ -93,6 +94,9 @@ export default function Dashboard(props) {
         COLORS={COLORS}
         currencySymbol={currencySymbol}
         formatCurrency={formatCurrency}
+        budgets={budgets}
+        budgetsMeta={budgetsMeta}
+        onBudgetsUpdated={onBudgetsUpdated}
       />
 
       <div className="chart-section">

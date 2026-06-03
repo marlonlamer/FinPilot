@@ -3,7 +3,7 @@ import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
-export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, openBudgetModal, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -75,7 +75,7 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
       <div className="page-header">
         <h3 className="header-title">Expenses</h3>
         <div className="header-actions">
-          <button className="btn" onClick={openBudgetModal}>Edit Budgets</button>
+          
           <button
             className="btn btn-primary"
             onClick={() => {
@@ -225,8 +225,8 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
             </div>
           ))}
         </div>
-      ) : (
-        <div className="muted">No budgets set. Click "Edit Budgets" to configure per-category budgets.</div>
+          ) : (
+        <div className="muted">No budgets set. Use Dashboard → Add Budget to create per-category budgets.</div>
       )}
 
       <h3 className="section-title">Recurring Expenses</h3>

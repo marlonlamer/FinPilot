@@ -77,6 +77,19 @@ model User {
   income    Income[]
   savings   Savings[]
   savingsTransactions SavingsTransaction[]
+  budgets   Budget[]
+}
+
+model Budget {
+  id        Int      @id @default(autoincrement())
+  category  String
+  amount    Float
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@unique([userId, category])
 }
 
 
