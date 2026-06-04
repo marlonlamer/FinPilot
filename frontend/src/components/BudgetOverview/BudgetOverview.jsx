@@ -25,7 +25,9 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
     const num = Number(amount || 0);
     if (!cat) return window.alert('Category name is required');
     try {
-      await api.post('/budgets', { category: cat, amount: num });
+      const now = new Date();
+      const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      await api.post('/budgets', { category: cat, budgetLimit: num, month });
       setAddOpen(false);
       await refresh();
     } catch (e) {
@@ -38,9 +40,11 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
     try {
       const id = editInitial.id;
       if (id) {
-        await api.put(`/budgets/${id}`, { category, amount: Number(amount || 0) });
+        await api.put(`/budgets/${id}`, { category, budgetLimit: Number(amount || 0) });
       } else {
-        await api.post('/budgets', { category, amount: Number(amount || 0) });
+        const now = new Date();
+        const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        await api.post('/budgets', { category, budgetLimit: Number(amount || 0), month });
       }
       setEditOpen(false);
       await refresh();
@@ -102,23 +106,25 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
         {entries.length > 0 ? (
           <div className="budget-grid">
             {entries.map((e) => {
-              const spent = 0; // parent computes spent in Expenses; Dashboard shows top overbudget separately
+              const meta = budgetsMeta[e.category] || {};
+              const spent = Number(meta.budgetSpent || 0);
+              const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
               const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
               return (
                 <div key={e.category} className="budget-category-card">
                   <div className="budget-row-header">
                     <div className="budget-name">{e.category}</div>
                     <div className="category-actions">
-                      <button className="icon-btn" onClick={() => { setEditInitial({ id: budgetsMeta[e.category] || null, category: e.category, amount: e.budget }); setEditOpen(true); }}>✏️</button>
-                      <button className="icon-btn" onClick={() => { setDeleteConfirm({ open: true, category: e.category, id: budgetsMeta[e.category] || null }); }}>❌</button>
+                      <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}>✏️</button>
+                      <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}>❌</button>
                     </div>
                   </div>
                   <div className="budget-progress">
                     <div className="progress-track">
-                      <div className={"progress-fill " + (pct > 100 ? 'over' : 'normal')} style={{ width: `${Math.min(100, Math.max(0, pct || 0))}%` }} />
+                      <div className={"progress-fill " + (pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal'))} style={{ width: `${Math.min(100, Math.max(0, pct || 0))}%` }} />
                     </div>
                   </div>
-                  <div className="budget-amount">{formatCurrency ? formatCurrency(spent) : `${currencySymbol}${spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(e.budget) : `${currencySymbol}${e.budget.toFixed(2)}`}</div>
+                  <div className="budget-amount">{formatCurrency ? formatCurrency(spent) : `${currencySymbol}${spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(e.budget) : `${currencySymbol}${e.budget.toFixed(2)}`} — Remaining: {formatCurrency ? formatCurrency(remaining) : `${currencySymbol}${remaining.toFixed(2)}`}</div>
                 </div>
               );
             })}

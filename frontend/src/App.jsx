@@ -199,7 +199,7 @@ function App() {
       const map = {};
       const meta = {};
       if (Array.isArray(list)) {
-        list.forEach(b => { map[b.category] = b.amount; meta[b.category] = b.id; });
+        list.forEach(b => { map[b.category] = Number(b.budgetLimit || 0); meta[b.category] = { id: b.id, budgetSpent: Number(b.budgetSpent || 0), budgetRemaining: Number(b.budgetRemaining || 0), month: b.month }; });
       }
       setPerCategoryBudgets(map);
       setBudgetsMeta(meta);
@@ -443,10 +443,11 @@ function App() {
     const uid = getCurrentUserId();
     if (uid) {
       const id = budgetsMeta[category];
+      const month = `${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, '0')}`;
       if (id) {
-        api.put(`/budgets/${id}`, { category, amount: num }).then(() => fetchBudgets()).catch(() => {});
+        api.put(`/budgets/${id}`, { category, budgetLimit: num }).then(() => fetchBudgets()).catch(() => {});
       } else {
-        api.post('/budgets', { category, amount: num }).then(() => fetchBudgets()).catch(() => {});
+        api.post('/budgets', { category, budgetLimit: num, month }).then(() => fetchBudgets()).catch(() => {});
       }
     }
   };

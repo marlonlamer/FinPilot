@@ -81,15 +81,18 @@ model User {
 }
 
 model Budget {
-  id        Int      @id @default(autoincrement())
-  category  String
-  amount    Float
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  category        String
+  budgetLimit     Float?
+  budgetSpent     Float    @default(0)
+  budgetRemaining Float    @default(0)
+  month           String?
+  createdAt       DateTime @default(now())
+  user            User     @relation(fields: [userId], references: [id])
 
   @@index([userId])
-  @@unique([userId, category])
+  @@unique([userId, category, month])
 }
 
 

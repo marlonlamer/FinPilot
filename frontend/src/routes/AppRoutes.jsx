@@ -182,7 +182,7 @@ function AppController() {
 			const map = {};
 			const meta = {};
 			if (Array.isArray(list)) {
-				list.forEach(b => { map[b.category] = b.amount; meta[b.category] = b.id; });
+				list.forEach(b => { map[b.category] = Number(b.budgetLimit || 0); meta[b.category] = { id: b.id, budgetSpent: Number(b.budgetSpent || 0), budgetRemaining: Number(b.budgetRemaining || 0), month: b.month }; });
 			}
 			setPerCategoryBudgets(map);
 			setBudgetsMeta(meta);
