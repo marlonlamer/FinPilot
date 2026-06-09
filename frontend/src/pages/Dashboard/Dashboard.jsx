@@ -96,7 +96,9 @@ export default function Dashboard(props) {
         formatCurrency={formatCurrency}
         budgets={budgets}
         budgetsMeta={budgetsMeta}
-        onBudgetsUpdated={onBudgetsUpdated}
+          onBudgetsUpdated={onBudgetsUpdated}
+          readOnly={true}
+          showAddButton={false}
       />
 
       <div className="chart-section">

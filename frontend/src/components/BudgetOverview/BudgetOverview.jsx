@@ -4,7 +4,7 @@ import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { api } from "../../services/api";
 
-export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {} }) {
+export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true }) {
   const pct = percentBudgetUsed || 0;
   const [localBudgets, setLocalBudgets] = useState(budgets || {});
   const [addOpen, setAddOpen] = useState(false);
@@ -13,6 +13,13 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, category: null, id: null });
 
   useEffect(() => setLocalBudgets(budgets || {}), [budgets]);
+
+  useEffect(() => {
+    if (externalAddOpen) {
+      setAddOpen(true);
+      try { onExternalAddHandled && onExternalAddHandled(); } catch (e) {}
+    }
+  }, [externalAddOpen]);
 
   const refresh = async () => {
     try {
@@ -82,7 +89,9 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
             <div className="card-value">{monthlyBudget === null ? "Not set" : (formatCurrency ? formatCurrency(monthlyBudget) :typeof monthlyBudget === "number" ? `${currencySymbol}${monthlyBudget.toFixed(2)}` : "Not set")}</div>
           </div>
           <div>
-            <button className="btn btn-primary" onClick={() => setAddOpen(true)}>＋ Add Budget</button>
+            {showAddButton && !readOnly && (
+              <button className="btn btn-primary" onClick={() => setAddOpen(true)}>＋ Add Budget</button>
+            )}
           </div>
         </div>
 
@@ -103,7 +112,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
 
       <div className="budget-card small">
         <div className="card-label">Budgets by Category</div>
-        {entries.length > 0 ? (
+            {entries.length > 0 ? (
           <div className="budget-grid">
             {entries.map((e) => {
               const meta = budgetsMeta[e.category] || {};
@@ -115,8 +124,12 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
                   <div className="budget-row-header">
                     <div className="budget-name">{e.category}</div>
                     <div className="category-actions">
-                      <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}>✏️</button>
-                      <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}>❌</button>
+                      {!readOnly && (
+                        <>
+                          <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}>✏️</button>
+                          <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}>❌</button>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="budget-progress">

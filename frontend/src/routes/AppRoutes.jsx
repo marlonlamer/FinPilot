@@ -597,6 +597,8 @@ function AppController() {
 							editingExpenseId={editingExpenseId}
 							cancelExpenseEdit={cancelExpenseEdit}
 							budgets={perCategoryBudgets}
+							budgetsMeta={budgetsMeta}
+							onBudgetsUpdated={fetchBudgets}
 							selectedYear={selectedYear}
 							selectedMonth={selectedMonth}
 							currencySymbol={currencySymbol}

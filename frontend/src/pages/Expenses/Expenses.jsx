@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
 
-export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -69,6 +70,7 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
   const recurring = useMemo(() => expenses.filter(e => e.recurring), [expenses]);
   const nonRecurring = useMemo(() => expenses.filter(e => !e.recurring), [expenses]);
   const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
+  const [externalAddOpen, setExternalAddOpen] = useState(false);
 
   return (
     <div className="expenses-root">
@@ -83,6 +85,18 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
               setExpenseModalOpen(true);
             }}
           >＋ Add Expense</button>
+          <button
+            className="btn btn-outline"
+            onClick={() => {
+              // trigger BudgetOverview's add modal
+              setExternalAddOpen(true);
+              // scroll to budgets section
+              setTimeout(() => {
+                const el = document.querySelector('.budget-list') || document.querySelector('.budget-overview');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 100);
+            }}
+          >＋ Add Budget</button>
         </div>
       </div>
 
@@ -208,26 +222,22 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
       )}
 
       <h3 className="section-title">Budget Status</h3>
-      {budgets ? (
-        <div className="budget-list">
-          {budgetStatus.map(s => (
-            <div key={s.category} className="budget-row">
-              <div className="budget-cat">{s.category}</div>
-                <div className="budget-progress">
-                  <div className="progress-track">
-                    <div
-                      className={"progress-fill " + (s.percent > 100 ? 'over' : 'normal')}
-                      style={{ width: `${Math.min(100, Math.max(0, s.percent || 0))}%` }}
-                    />
-                  </div>
-                </div>
-              <div className="budget-amount">{formatCurrency ? formatCurrency(s.spent) : `${currencySymbol}${s.spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(s.budget) : `${currencySymbol}${s.budget.toFixed(2)}`}</div>
-            </div>
-          ))}
-        </div>
-          ) : (
-        <div className="muted">No budgets set. Use Dashboard → Add Budget to create per-category budgets.</div>
-      )}
+      <BudgetOverview
+        monthlyBudget={null}
+        percentBudgetUsed={null}
+        budgetRemaining={null}
+        budgetColor={null}
+        overBudgetCategories={[]}
+        COLORS={[]}
+        currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
+        budgets={budgets}
+        budgetsMeta={budgetsMeta}
+        onBudgetsUpdated={onBudgetsUpdated}
+        externalAddOpen={externalAddOpen}
+        showAddButton={false}
+        onExternalAddHandled={() => setExternalAddOpen(false)}
+      />
 
       <h3 className="section-title">Recurring Expenses</h3>
       {recurring.length > 0 ? (
