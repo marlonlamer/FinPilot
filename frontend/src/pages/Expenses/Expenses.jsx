@@ -27,11 +27,13 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
   const byCategory = useMemo(() => {
     const map = {};
     expenses.forEach(it => {
+      const d = it.date ? new Date(it.date) : null;
+      if (!d || d.getFullYear() !== selectedYear || d.getMonth() !== selectedMonth) return;
       const key = it.category || "Uncategorized";
       map[key] = (map[key] || 0) + (Number(it.amount) || 0);
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
-  }, [expenses]);
+  }, [expenses, selectedYear, selectedMonth]);
 
   const pieData = useMemo(() => byCategory.map(([name, value]) => ({ name, value })), [byCategory]);
 
@@ -237,6 +239,8 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
         externalAddOpen={externalAddOpen}
         showAddButton={false}
         onExternalAddHandled={() => setExternalAddOpen(false)}
+        selectedYear={selectedYear}
+        selectedMonth={selectedMonth}
       />
 
       <h3 className="section-title">Recurring Expenses</h3>

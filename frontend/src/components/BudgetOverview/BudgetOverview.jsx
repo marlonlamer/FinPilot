@@ -4,7 +4,7 @@ import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { api } from "../../services/api";
 
-export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true }) {
+export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null }) {
   const pct = percentBudgetUsed || 0;
   const [localBudgets, setLocalBudgets] = useState(budgets || {});
   const [addOpen, setAddOpen] = useState(false);
@@ -32,8 +32,9 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
     const num = Number(amount || 0);
     if (!cat) return window.alert('Category name is required');
     try {
-      const now = new Date();
-      const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+      const month = (selectedYear != null && selectedMonth != null)
+        ? `${selectedYear}-${String(selectedMonth+1).padStart(2,'0')}`
+        : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
       await api.post('/budgets', { category: cat, budgetLimit: num, month });
       setAddOpen(false);
       await refresh();
@@ -49,8 +50,9 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
       if (id) {
         await api.put(`/budgets/${id}`, { category, budgetLimit: Number(amount || 0) });
       } else {
-        const now = new Date();
-        const month = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const month = (selectedYear != null && selectedMonth != null)
+          ? `${selectedYear}-${String(selectedMonth+1).padStart(2,'0')}`
+          : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
         await api.post('/budgets', { category, budgetLimit: Number(amount || 0), month });
       }
       setEditOpen(false);

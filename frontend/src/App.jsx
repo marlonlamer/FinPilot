@@ -195,7 +195,8 @@ function App() {
     try {
       const uid = getCurrentUserId();
       if (!uid) return;
-      const list = await api.get('/budgets');
+      const monthKey = `${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, '0')}`;
+      const list = await api.get('/budgets', { params: { month: monthKey } });
       const map = {};
       const meta = {};
       if (Array.isArray(list)) {
@@ -207,6 +208,10 @@ function App() {
       console.warn('Failed to fetch budgets', e);
     }
   };
+
+  useEffect(() => {
+    if (localStorage.getItem('token')) fetchBudgets();
+  }, [selectedYear, selectedMonth]);
 
   // budgets are persisted either locally or fetched from server; server sync handled by BudgetOverview component
 
@@ -522,9 +527,14 @@ function App() {
       ? "#FFD166"
       : "#2ED573";
   const budgetRemaining = selectedMonthlyBudget !== null ? selectedMonthlyBudget - totalExpenses : null;
+  // Ensure budget calculations use the selected month
+  const monthFilteredExpenses = filteredExpenses.filter(exp => {
+    const d = exp.date ? new Date(exp.date) : null;
+    return d && d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+  });
 
   const categorySummary = Object.values(
-    filteredExpenses.reduce((acc, expense) => {
+    monthFilteredExpenses.reduce((acc, expense) => {
       const cat = expense.category || "Uncategorized";
       const amt = Number(expense.amount) || 0;
       if (!acc[cat]) acc[cat] = { category: cat, amount: 0 };

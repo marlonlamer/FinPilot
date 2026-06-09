@@ -31,8 +31,7 @@ export default function Dashboard(props) {
     currencySymbol = "₱",
     formatCurrency,
   } = props;
-
-  const { availableBalance } = props;
+  const { availableBalance, selectedYear, selectedMonth } = props;
   const { budgets, onBudgetsUpdated, budgetsMeta } = props;
 
   const user = getCurrentUser() || {};
@@ -99,6 +98,8 @@ export default function Dashboard(props) {
           onBudgetsUpdated={onBudgetsUpdated}
           readOnly={true}
           showAddButton={false}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
       />
 
       <div className="chart-section">
