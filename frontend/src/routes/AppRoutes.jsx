@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import AppLayout from "../layouts/AppLayout";
@@ -16,7 +16,7 @@ import Savings from "../pages/Savings/Savings";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ProtectedRoute from "./ProtectedRoutes";
-import { api, getCurrentUserId, clearCurrentUser, setCurrentUser } from "../services/api";
+import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
 
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
