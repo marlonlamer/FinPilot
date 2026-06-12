@@ -13,6 +13,39 @@ const listBudgets = async (req, res) => {
   }
 };
 
+const budgetSummary = async (req, res) => {
+  try {
+    const userId = Number(req.userId);
+    const month = req.query.month || (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+    // fetch budgets for month
+    const items = await prisma.budget.findMany({ where: { userId, month } });
+
+    // For budgets that don't have budgetSpent set, compute from expenses
+    const totals = await items.reduce(async (accP, b) => {
+      const acc = await accP;
+      const limit = Number(b.budgetLimit || 0);
+      let spent = (b.budgetSpent != null) ? Number(b.budgetSpent || 0) : null;
+      if (spent === null) {
+        const start = new Date(`${month}-01T00:00:00Z`);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + 1);
+        const agg = await prisma.expense.aggregate({ where: { userId, category: String(b.category || '').trim(), date: { gte: start, lt: end } }, _sum: { amount: true } });
+        spent = Number(agg._sum.amount || 0);
+      }
+      const remaining = limit - spent;
+      acc.totalMonthlyBudget += limit;
+      acc.totalBudgetSpent += spent;
+      acc.totalBudgetRemaining += remaining;
+      return acc;
+    }, Promise.resolve({ totalMonthlyBudget: 0, totalBudgetSpent: 0, totalBudgetRemaining: 0 }));
+
+    res.json(totals);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to compute budget summary' });
+  }
+};
+
 const createBudget = async (req, res) => {
   try {
     const userId = Number(req.userId);
@@ -76,4 +109,4 @@ const deleteBudget = async (req, res) => {
   }
 };
 
-module.exports = { listBudgets, createBudget, updateBudget, deleteBudget };
+module.exports = { listBudgets, createBudget, updateBudget, deleteBudget, budgetSummary };

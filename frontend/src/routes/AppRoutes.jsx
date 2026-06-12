@@ -172,6 +172,20 @@ function AppController() {
 			return {};
 		}
 	});
+
+	const [budgetSummary, setBudgetSummary] = useState({ totalMonthlyBudget: 0, totalBudgetSpent: 0, totalBudgetRemaining: 0 });
+
+	const fetchBudgetSummary = async () => {
+		try {
+			const uid = getCurrentUserId();
+			if (!uid) return;
+			const monthKey = `${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, '0')}`;
+			const resp = await api.get('/budgets/summary', { params: { month: monthKey } });
+			if (resp) setBudgetSummary({ totalMonthlyBudget: Number(resp.totalMonthlyBudget || 0), totalBudgetSpent: Number(resp.totalBudgetSpent || 0), totalBudgetRemaining: Number(resp.totalBudgetRemaining || 0) });
+		} catch (e) {
+			console.warn('Failed to fetch budget summary', e);
+		}
+	};
 	const [budgetsMeta, setBudgetsMeta] = useState({});
 
 	const fetchBudgets = async () => {
@@ -193,8 +207,16 @@ function AppController() {
 	};
 
 	useEffect(() => {
-		if (localStorage.getItem('token')) fetchBudgets();
+		if (localStorage.getItem('token')) {
+			fetchBudgets();
+			fetchBudgetSummary();
+		}
 	}, [selectedYear, selectedMonth]);
+
+	useEffect(() => {
+		// refresh summary whenever budgets or expenses change
+		if (localStorage.getItem('token')) fetchBudgetSummary();
+	}, [perCategoryBudgets, expenses]);
 
 	// persist per-category budgets per user
 	useEffect(() => {
@@ -594,7 +616,10 @@ function AppController() {
 							budgets={perCategoryBudgets}
 							budgetsMeta={budgetsMeta}
 							onBudgetsUpdated={fetchBudgets}
-						selectedYear={selectedYear}
+							totalMonthlyBudget={budgetSummary.totalMonthlyBudget}
+							totalBudgetSpent={budgetSummary.totalBudgetSpent}
+							totalBudgetRemaining={budgetSummary.totalBudgetRemaining}
+							selectedYear={selectedYear}
 						selectedMonth={selectedMonth}
 						/>} />
 

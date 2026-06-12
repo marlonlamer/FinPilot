@@ -30,6 +30,9 @@ export default function Dashboard(props) {
     COLORS,
     currencySymbol = "₱",
     formatCurrency,
+    totalMonthlyBudget = 0,
+    totalBudgetSpent = 0,
+    totalBudgetRemaining = 0,
   } = props;
   const { availableBalance, selectedYear, selectedMonth } = props;
   const { budgets, onBudgetsUpdated, budgetsMeta } = props;
@@ -73,6 +76,18 @@ export default function Dashboard(props) {
         <div className="stat-card">
           <div className="stat-label">Monthly Expenses</div>
           <div className="stat-value">{fmt(monthlyExpenseTotal, 2)}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Total Monthly Budget</div>
+          <div className="stat-value">{fmt(totalMonthlyBudget, 2)}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Total Budget Spent</div>
+          <div className="stat-value">{fmt(totalBudgetSpent, 2)}</div>
+        </div>
+        <div className="stat-card">
+          <div className="stat-label">Total Budget Remaining</div>
+          <div className="stat-value">{fmt(totalBudgetRemaining, 2)}</div>
         </div>
         <div className="stat-card">
           <div className="stat-label">Total Net Worth</div>
