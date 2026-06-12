@@ -1,4 +1,5 @@
 const prisma = require("../prisma/client");
+const { recalcMonthlyTotals } = require('../services/budgets.service');
 
 const listBudgets = async (req, res) => {
   try {
@@ -17,28 +18,7 @@ const budgetSummary = async (req, res) => {
   try {
     const userId = Number(req.userId);
     const month = req.query.month || (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
-    // fetch budgets for month
-    const items = await prisma.budget.findMany({ where: { userId, month } });
-
-    // For budgets that don't have budgetSpent set, compute from expenses
-    const totals = await items.reduce(async (accP, b) => {
-      const acc = await accP;
-      const limit = Number(b.budgetLimit || 0);
-      let spent = (b.budgetSpent != null) ? Number(b.budgetSpent || 0) : null;
-      if (spent === null) {
-        const start = new Date(`${month}-01T00:00:00Z`);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
-        const agg = await prisma.expense.aggregate({ where: { userId, category: String(b.category || '').trim(), date: { gte: start, lt: end } }, _sum: { amount: true } });
-        spent = Number(agg._sum.amount || 0);
-      }
-      const remaining = limit - spent;
-      acc.totalMonthlyBudget += limit;
-      acc.totalBudgetSpent += spent;
-      acc.totalBudgetRemaining += remaining;
-      return acc;
-    }, Promise.resolve({ totalMonthlyBudget: 0, totalBudgetSpent: 0, totalBudgetRemaining: 0 }));
-
+    const totals = await recalcMonthlyTotals(userId, month);
     res.json(totals);
   } catch (error) {
     console.error(error);
@@ -63,6 +43,8 @@ const createBudget = async (req, res) => {
     const remaining = limit - spent;
 
     const created = await prisma.budget.create({ data: { userId, category: String(category).trim(), budgetLimit: limit, budgetSpent: spent, budgetRemaining: remaining, month: m } });
+    // Recalculate and persist monthly totals for user
+    try { await recalcMonthlyTotals(userId, m); } catch (e) { console.warn('Failed to recalc monthly totals after createBudget', e); }
     res.status(201).json(created);
   } catch (error) {
     console.error(error);
@@ -88,6 +70,7 @@ const updateBudget = async (req, res) => {
       data.budgetRemaining = limit - spent;
     }
     const updated = await prisma.budget.update({ where: { id }, data });
+    try { await recalcMonthlyTotals(userId, existing.month || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0'))); } catch (e) { console.warn('Failed to recalc monthly totals after updateBudget', e); }
     res.json(updated);
   } catch (error) {
     console.error(error);
@@ -102,6 +85,7 @@ const deleteBudget = async (req, res) => {
     const existing = await prisma.budget.findUnique({ where: { id } });
     if (!existing || Number(existing.userId) !== userId) return res.status(404).json({ error: 'Budget not found' });
     await prisma.budget.delete({ where: { id } });
+    try { await recalcMonthlyTotals(userId, existing.month || (new Date().getFullYear() + '-' + String(new Date().getMonth()+1).padStart(2,'0'))); } catch (e) { console.warn('Failed to recalc monthly totals after deleteBudget', e); }
     res.json({ success: true });
   } catch (error) {
     console.error(error);

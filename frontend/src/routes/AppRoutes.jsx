@@ -474,16 +474,20 @@ function AppController() {
 		computedTotalSavingsFromGoals = 0;
 	}
 
-	const percentBudgetUsed = selectedMonthlyBudget && selectedMonthlyBudget > 0 ? (totalExpenses / selectedMonthlyBudget) * 100 : null;
+	// Use budgetSummary totals as source of truth for monthly budget values
+	const monthlyBudgetValue = Number(budgetSummary.totalMonthlyBudget || 0);
+	const monthlySpentValue = Number(budgetSummary.totalBudgetSpent || 0);
+	const monthlyRemainingValue = Number(budgetSummary.totalBudgetRemaining || (monthlyBudgetValue - monthlySpentValue));
+	const percentBudgetUsed = monthlyBudgetValue > 0 ? (monthlySpentValue / monthlyBudgetValue) * 100 : null;
 	const budgetColor =
-		percentBudgetUsed === null
-			? "inherit"
-			: percentBudgetUsed >= 100
-			? "#FF6B6B"
-			: percentBudgetUsed >= 80
-			? "#FFD166"
-			: "#2ED573";
-	const budgetRemaining = selectedMonthlyBudget !== null ? selectedMonthlyBudget - totalExpenses : null;
+			percentBudgetUsed === null
+				? "inherit"
+				: percentBudgetUsed >= 100
+				? "#FF6B6B"
+				: percentBudgetUsed >= 80
+				? "#FFD166"
+				: "#2ED573";
+	const budgetRemaining = monthlyBudgetValue !== null ? monthlyRemainingValue : null;
 
 	// Category summary and over-budget calculation should use the selected month
 	const monthFilteredExpenses = expenses.filter(exp => {
@@ -602,7 +606,7 @@ function AppController() {
 							savingsRate={savingsRate}
 							dateFilter={dateFilter}
 							setDateFilter={setDateFilter}
-							monthlyBudget={selectedMonthlyBudget}
+							monthlyBudget={monthlyBudgetValue}
 							setMonthlyBudget={setMonthlyBudgetForCurrentMonth}
 							combinedLineData={combinedLineData}
 							pieData={pieData}

@@ -1,5 +1,6 @@
 const prisma = require("../prisma/client");
 const { recalcUserAggregates } = require('./userAggregates.service');
+const { recalcMonthlyTotals } = require('./budgets.service');
 
 const getAllExpenses = async (userId) => {
   return prisma.expense.findMany({
@@ -38,6 +39,8 @@ const createExpense = async ({
       const newRemaining = Number(budget.budgetLimit || 0) - newSpent;
       await prisma.budget.update({ where: { id: budget.id }, data: { budgetSpent: { increment: Number(amount) }, budgetRemaining: newRemaining } });
     }
+    // Recalculate monthly totals (persist to user row)
+    try { await recalcMonthlyTotals(userId, month); } catch (e) { console.warn('Failed to recalc monthly totals after createExpense', e); }
   } catch (e) { console.warn('Failed to update budget aggregates on createExpense', e); }
   return created;
 };
@@ -64,6 +67,7 @@ const deleteExpense = async (id, userId) => {
       const newRemaining = Number(budget.budgetLimit || 0) - newSpent;
       await prisma.budget.update({ where: { id: budget.id }, data: { budgetSpent: newSpent, budgetRemaining: newRemaining } });
     }
+    try { await recalcMonthlyTotals(userId, month); } catch (e) { console.warn('Failed to recalc monthly totals after deleteExpense', e); }
   } catch (e) { console.warn('Failed to update budget aggregates on deleteExpense', e); }
   return deleted;
 };
@@ -118,14 +122,16 @@ const updateExpense = async (id, data, userId) => {
       }
       // increment new budget
       const newBudget = await prisma.budget.findFirst({ where: { userId: Number(userId), category: newCategory, month: newMonth } });
-      if (newBudget) {
-        const newSpentNew = Number(newBudget.budgetSpent || 0) + newAmount;
-        const newRemainingNew = Number(newBudget.budgetLimit || 0) - newSpentNew;
-        await prisma.budget.update({ where: { id: newBudget.id }, data: { budgetSpent: newSpentNew, budgetRemaining: newRemainingNew } });
+        if (newBudget) {
+          const newSpentNew = Number(newBudget.budgetSpent || 0) + newAmount;
+          const newRemainingNew = Number(newBudget.budgetLimit || 0) - newSpentNew;
+          await prisma.budget.update({ where: { id: newBudget.id }, data: { budgetSpent: newSpentNew, budgetRemaining: newRemainingNew } });
+        }
       }
-    }
-  } catch (e) { console.warn('Failed to update budget aggregates on updateExpense', e); }
-      try { await recalcUserAggregates(userId); } catch (e) {}
+      // Recalc totals for affected months (inside same try so oldMonth/newMonth are in scope)
+      try { await recalcMonthlyTotals(userId, oldMonth); if (newMonth !== oldMonth) await recalcMonthlyTotals(userId, newMonth); } catch (e) { console.warn('Failed to recalc monthly totals after updateExpense', e); }
+    } catch (e) { console.warn('Failed to update budget aggregates on updateExpense', e); }
+    try { await recalcUserAggregates(userId); } catch (e) {}
   return updated;
 };
 
