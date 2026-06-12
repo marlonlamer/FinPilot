@@ -4,7 +4,7 @@ import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { api } from "../../services/api";
 
-export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null }) {
+export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true }) {
   const pct = percentBudgetUsed || 0;
   const [localBudgets, setLocalBudgets] = useState(budgets || {});
   const [addOpen, setAddOpen] = useState(false);
@@ -84,70 +84,74 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
 
   return (
     <div className="budget-overview">
-      <div className="budget-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <div className="card-label">Monthly Budget</div>
-            <div className="card-value">{monthlyBudget === null ? "Not set" : (formatCurrency ? formatCurrency(monthlyBudget) :typeof monthlyBudget === "number" ? `${currencySymbol}${monthlyBudget.toFixed(2)}` : "Not set")}</div>
+      {showSummary && (
+        <div className="budget-card">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div className="card-label">Monthly Budget</div>
+              <div className="card-value">{monthlyBudget == null ? "Not set" : (formatCurrency ? formatCurrency(monthlyBudget) : typeof monthlyBudget === "number" ? `${currencySymbol}${monthlyBudget.toFixed(2)}` : "Not set")}</div>
+            </div>
+            <div>
+              {showAddButton && !readOnly && (
+                <button className="btn btn-primary" onClick={() => setAddOpen(true)}>＋ Add Budget</button>
+              )}
+            </div>
           </div>
-          <div>
-            {showAddButton && !readOnly && (
-              <button className="btn btn-primary" onClick={() => setAddOpen(true)}>＋ Add Budget</button>
-            )}
+
+          <div className="budget-progress-block">
+            <div className="progress-track">
+              <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: budgetColor || "#60a5fa" }} />
+            </div>
+            <div className="progress-subtext">
+              {typeof percentBudgetUsed === "number"
+                ? `${percentBudgetUsed.toFixed(1)}% used`
+                : "Usage not available"}
+              {budgetRemaining != null && ` — Remaining: ${formatCurrency ? formatCurrency(budgetRemaining) : typeof budgetRemaining === "number"
+                ? `${currencySymbol}${budgetRemaining.toFixed(2)}`
+                : "N/A"} `}
+            </div>
           </div>
         </div>
+      )}
 
-        <div className="budget-progress-block">
-          <div className="progress-track">
-            <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: budgetColor || "#60a5fa" }} />
-          </div>
-          <div className="progress-subtext">
-            {typeof percentBudgetUsed === "number"
-            ? `${percentBudgetUsed.toFixed(1)}% used`
-            : "Usage not available"}
-            {budgetRemaining !== null && ` — Remaining: ${formatCurrency ? formatCurrency(budgetRemaining) : typeof budgetRemaining === "number"
-              ? `${currencySymbol}${budgetRemaining.toFixed(2)}`
-              : "N/A"} `}
-          </div>
+      {showCategoryList && (
+        <div className="budget-card small">
+          <div className="card-label">Budgets by Category</div>
+          {entries.length > 0 ? (
+            <div className="budget-grid">
+              {entries.map((e) => {
+                const meta = budgetsMeta[e.category] || {};
+                const spent = Number(meta.budgetSpent || 0);
+                const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
+                const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
+                return (
+                  <div key={e.category} className="budget-category-card">
+                    <div className="budget-row-header">
+                      <div className="budget-name">{e.category}</div>
+                      <div className="category-actions">
+                        {!readOnly && (
+                          <>
+                            <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}>✏️</button>
+                            <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}>❌</button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="budget-progress">
+                      <div className="progress-track">
+                        <div className={"progress-fill " + (pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal'))} style={{ width: `${Math.min(100, Math.max(0, pct || 0))}%` }} />
+                      </div>
+                    </div>
+                    <div className="budget-amount">{formatCurrency ? formatCurrency(spent) : `${currencySymbol}${spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(e.budget) : `${currencySymbol}${e.budget.toFixed(2)}`} — Remaining: {formatCurrency ? formatCurrency(remaining) : `${currencySymbol}${remaining.toFixed(2)}`}</div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="muted">No budgets set. Click "Add Budget" to create one.</div>
+          )}
         </div>
-      </div>
-
-      <div className="budget-card small">
-        <div className="card-label">Budgets by Category</div>
-            {entries.length > 0 ? (
-          <div className="budget-grid">
-            {entries.map((e) => {
-              const meta = budgetsMeta[e.category] || {};
-              const spent = Number(meta.budgetSpent || 0);
-              const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
-              const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
-              return (
-                <div key={e.category} className="budget-category-card">
-                  <div className="budget-row-header">
-                    <div className="budget-name">{e.category}</div>
-                    <div className="category-actions">
-                      {!readOnly && (
-                        <>
-                          <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}>✏️</button>
-                          <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}>❌</button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  <div className="budget-progress">
-                    <div className="progress-track">
-                      <div className={"progress-fill " + (pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal'))} style={{ width: `${Math.min(100, Math.max(0, pct || 0))}%` }} />
-                    </div>
-                  </div>
-                  <div className="budget-amount">{formatCurrency ? formatCurrency(spent) : `${currencySymbol}${spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(e.budget) : `${currencySymbol}${e.budget.toFixed(2)}`} — Remaining: {formatCurrency ? formatCurrency(remaining) : `${currencySymbol}${remaining.toFixed(2)}`}</div>
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="muted">No budgets set. Click "Add Budget" to create one.</div>
-        )}
-      </div>
+      )}
 
       <FormModal
         open={addOpen}

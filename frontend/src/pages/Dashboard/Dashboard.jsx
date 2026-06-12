@@ -78,18 +78,6 @@ export default function Dashboard(props) {
           <div className="stat-value">{fmt(monthlyExpenseTotal, 2)}</div>
         </div>
         <div className="stat-card">
-          <div className="stat-label">Total Monthly Budget</div>
-          <div className="stat-value">{fmt(totalMonthlyBudget, 2)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Total Budget Spent</div>
-          <div className="stat-value">{fmt(totalBudgetSpent, 2)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Total Budget Remaining</div>
-          <div className="stat-value">{fmt(totalBudgetRemaining, 2)}</div>
-        </div>
-        <div className="stat-card">
           <div className="stat-label">Total Net Worth</div>
           <div className="stat-value">{formatCurrency
               ? formatCurrency(Number(computedTotalSavings || 0) + Number(availableBalance || 0))
@@ -97,25 +85,51 @@ export default function Dashboard(props) {
         </div>
       </div>
 
-      {/* Monthly budget editing moved to Expenses -> Edit Budgets modal */}
-
-        <BudgetOverview
-        monthlyBudget={monthlyBudget}
-        percentBudgetUsed={percentBudgetUsed}
-        budgetRemaining={budgetRemaining}
-        budgetColor={budgetColor}
-        overBudgetCategories={overBudgetCategories}
-        COLORS={COLORS}
-        currencySymbol={currencySymbol}
-        formatCurrency={formatCurrency}
-        budgets={budgets}
-        budgetsMeta={budgetsMeta}
-          onBudgetsUpdated={onBudgetsUpdated}
-          readOnly={true}
-          showAddButton={false}
-          selectedYear={selectedYear}
-          selectedMonth={selectedMonth}
-      />
+      {/* Budget Overview (left) and Budgets by Category (right) */}
+      <div className="budget-section" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+        <div style={{ flex: 1 }}>
+          <BudgetOverview
+            monthlyBudget={monthlyBudget}
+            percentBudgetUsed={percentBudgetUsed}
+            budgetRemaining={budgetRemaining}
+            budgetColor={budgetColor}
+            overBudgetCategories={overBudgetCategories}
+            COLORS={COLORS}
+            currencySymbol={currencySymbol}
+            formatCurrency={formatCurrency}
+            budgets={budgets}
+            budgetsMeta={budgetsMeta}
+            onBudgetsUpdated={onBudgetsUpdated}
+            readOnly={true}
+            showAddButton={false}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            showSummary={true}
+            showCategoryList={false}
+          />
+        </div>
+        <div style={{ width: 420 }}>
+          <BudgetOverview
+            monthlyBudget={monthlyBudget}
+            percentBudgetUsed={percentBudgetUsed}
+            budgetRemaining={budgetRemaining}
+            budgetColor={budgetColor}
+            overBudgetCategories={overBudgetCategories}
+            COLORS={COLORS}
+            currencySymbol={currencySymbol}
+            formatCurrency={formatCurrency}
+            budgets={budgets}
+            budgetsMeta={budgetsMeta}
+            onBudgetsUpdated={onBudgetsUpdated}
+            readOnly={true}
+            showAddButton={false}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            showSummary={false}
+            showCategoryList={true}
+          />
+        </div>
+      </div>
 
       <div className="chart-section">
         <h2>Expenses vs Income Per Month</h2>
