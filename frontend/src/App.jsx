@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import toast, { Toaster } from 'react-hot-toast';
 import { api, getCurrentUserId, clearCurrentUser, setCurrentUser } from "./services/api";
 import "./App.css";
 
@@ -247,6 +248,7 @@ function App() {
     if (editingExpenseId) {
       // update existing expense
       try {
+        const t = toast.loading('Updating expense...');
         const updated = await api.put(`/expenses/${editingExpenseId}`, {
           amount: form.amount,
           category: form.category,
@@ -260,7 +262,9 @@ function App() {
         });
         setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? updated : p)));
         try { fetchCurrentUser(); } catch (e) {}
+        toast.success('Expense updated successfully', { id: t });
       } catch (e) {
+        toast.error('Failed to update expense');
         console.warn("Update expense failed, applying locally", e);
         setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? { ...p, ...form, amount: Number(form.amount) } : p)));
       } finally {
@@ -324,6 +328,7 @@ function App() {
     e.preventDefault();
     if (editingIncomeId) {
       try {
+        const t = toast.loading('Updating income...');
         const updated = await api.put(`/incomes/${editingIncomeId}`, {
           amount: incomeForm.amount,
           source: incomeForm.source,
@@ -335,6 +340,7 @@ function App() {
         });
         setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? updated : p)));
         try { fetchCurrentUser(); } catch (e) {}
+        toast.success('Income updated successfully', { id: t });
       } catch (e) {
         console.warn("Update income failed, applying locally", e);
         setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? { ...p, ...incomeForm, amount: Number(incomeForm.amount) } : p)));
@@ -358,10 +364,12 @@ function App() {
         userId: getCurrentUserId()
       };
 
+      const t = toast.loading('Adding income...');
       const newIncome = await api.post("/incomes", payload);
 
       setIncomes(prev => [newIncome, ...prev]);
       try { fetchCurrentUser(); } catch (e) {}
+      toast.success('Income added successfully', { id: t });
 
     } catch (e) {
       console.warn("Create income failed, adding locally", e);
@@ -427,9 +435,16 @@ function App() {
 
   const deleteIncome = async (id) => {
     setIncomes(prev => prev.filter(i => i.id !== id));
-    await api.delete(`/incomes/${id}`);
-    await fetchIncomes();
-    try { fetchCurrentUser(); } catch (e) {}
+    const t = toast.loading('Deleting income...');
+    try {
+      await api.delete(`/incomes/${id}`);
+      await fetchIncomes();
+      try { fetchCurrentUser(); } catch (e) {}
+      toast.success('Income deleted successfully', { id: t });
+    } catch (err) {
+      toast.error('Failed to delete income', { id: t });
+      console.warn('Failed to delete income', err);
+    }
   };
 
   const editCategoryBudget = (category) => {
@@ -444,9 +459,10 @@ function App() {
       // if logged in, delete on server as well
       if (uid) {
         const id = budgetsMeta[category];
-        if (id) {
-          api.delete(`/budgets/${id}`).then(() => fetchBudgets()).catch(() => {});
-        }
+          if (id) {
+            const t = toast.loading('Deleting budget...');
+            api.delete(`/budgets/${id}`).then(() => { fetchBudgets(); toast.success('Budget deleted successfully', { id: t }); }).catch(() => { toast.error('Failed to delete budget', { id: t }); });
+          }
       }
       return;
     }
@@ -461,9 +477,15 @@ function App() {
       const id = budgetsMeta[category];
       const month = `${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, '0')}`;
       if (id) {
-        api.put(`/budgets/${id}`, { category, budgetLimit: num }).then(() => fetchBudgets()).catch(() => {});
+        const t = toast.loading('Updating budget...');
+        api.put(`/budgets/${id}`, { category, budgetLimit: num })
+          .then(() => { fetchBudgets(); toast.success('Budget updated successfully', { id: t }); })
+          .catch(() => { toast.error('Failed to update budget', { id: t }); });
       } else {
-        api.post('/budgets', { category, budgetLimit: num, month }).then(() => fetchBudgets()).catch(() => {});
+        const t = toast.loading('Adding budget...');
+        api.post('/budgets', { category, budgetLimit: num, month })
+          .then(() => { fetchBudgets(); toast.success('Budget added successfully', { id: t }); })
+          .catch(() => { toast.error('Failed to add budget', { id: t }); });
       }
     }
   };
@@ -711,6 +733,7 @@ function App() {
 
   return (
     <div className="app-root">
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
       <nav className="sidebar">
         <h2 className="sidebar-title">Expense Analyzer</h2>
         <ul className="nav-list">

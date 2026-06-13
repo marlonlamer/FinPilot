@@ -3,6 +3,7 @@ import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
+import toast from 'react-hot-toast';
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -129,6 +130,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     const uid = getCurrentUserId();
 
     if (uid) {
+      const t = toast.loading('Creating savings goal...');
       api.post('/savings', {
         name: newGoal.goalName,
         targetAmount: target,
@@ -161,7 +163,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           fetchSavings();
           try { if (typeof onSavingsUpdated === 'function') onSavingsUpdated(); } catch (e) {}
         }
+        toast.success('Savings goal added successfully', { id: t });
       }).catch((err) => {
+        toast.error('Failed to save savings goal');
         console.error('Failed to create saving on server, falling back to local state', err);
         const newEntry = {
           id: Date.now(),
@@ -231,7 +235,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     }
 
     try {
-      const body = { savingsId: goalId, amount: Math.abs(Number(amount)), note };
+        const t = toast.loading(isDeposit ? 'Adding deposit...' : 'Processing withdrawal...');
+        const body = { savingsId: goalId, amount: Math.abs(Number(amount)), note };
       if (isDeposit) {
         await api.post('/savings/deposit', body);
       } else {
@@ -248,9 +253,11 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       // refresh dashboard totals in parent
       try { if (typeof onSavingsUpdated === 'function') await onSavingsUpdated(); } catch (e) { console.warn('onSavingsUpdated failed', e); }
       console.debug('Refetched savings and balances from server');
+        toast.success(isDeposit ? 'Deposit added successfully' : 'Withdrawal processed successfully', { id: t });
     } catch (e) {
       // if server fails, do not rely on local-only mutations
-      console.error('Failed to persist transaction', e);
+        toast.error('Failed to process transaction');
+        console.error('Failed to persist transaction', e);
     }
   };
   const [modalState, setModalState] = useState({ open: false, mode: null, goalId: null, initial: {} });
@@ -278,9 +285,12 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     const uid = getCurrentUserId();
     const data = { name: goalName, targetAmount: Number(targetAmount), targetDate };
     if (uid) {
+      const t = toast.loading('Updating savings goal...');
       api.put(`/savings/${modalState.goalId}`, data).then(updated => {
         setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: updated.name, targetAmount: updated.targetAmount, targetDate: updated.targetDate ? new Date(updated.targetDate).toISOString().slice(0,10) : g.targetDate } : g));
+        toast.success('Savings goal updated successfully', { id: t });
       }).catch(() => {
+        toast.error('Failed to update savings goal', { id: t });
         setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, targetAmount: Number(targetAmount) || g.targetAmount, targetDate: targetDate || g.targetDate } : g));
       }).finally(() => setModalState({ open: false, mode: null, goalId: null, initial: {} }));
     } else {
@@ -292,6 +302,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
   const handleDelete = (goalId) => {
     const uid = getCurrentUserId();
     if (uid) {
+      const t = toast.loading('Deleting savings goal...');
       api.delete(`/savings/${goalId}?restoreAvailable=true`)
         .then(async () => {
           setGoals(prev => prev.filter(g => g.id !== goalId));
@@ -303,8 +314,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
           } catch (e) {
             console.warn('Post-delete refresh failed', e);
           }
+          toast.success('Savings goal deleted successfully', { id: t });
         })
-        .catch(() => setGoals(prev => prev.filter(g => g.id !== goalId)));
+        .catch(() => { toast.error('Failed to delete savings goal', { id: t }); setGoals(prev => prev.filter(g => g.id !== goalId)); });
     } else {
       setGoals(prev => prev.filter(g => g.id !== goalId));
     }

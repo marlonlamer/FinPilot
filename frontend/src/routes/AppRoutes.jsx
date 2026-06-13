@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import toast, { Toaster } from 'react-hot-toast';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import AppLayout from "../layouts/AppLayout";
@@ -241,6 +242,7 @@ function AppController() {
 		e.preventDefault();
 		if (editingExpenseId) {
 			try {
+				const t = toast.loading('Updating expense...');
 				const updated = await api.put(`/expenses/${editingExpenseId}`, {
 					amount: form.amount,
 					category: form.category,
@@ -253,7 +255,9 @@ function AppController() {
 					paymentMethod: form.paymentMethod || undefined
 				});
 				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? updated : p)));
+				toast.success('Expense updated successfully', { id: t });
 			} catch (e) {
+				toast.error('Failed to update expense');
 				console.warn("Update expense failed, applying locally", e);
 				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? { ...p, ...form, amount: Number(form.amount) } : p)));
 			} finally {
@@ -278,9 +282,11 @@ function AppController() {
 				userId: getCurrentUserId()
 			};
 
+			const t = toast.loading('Adding expense...');
 			const newExpense = await api.post("/expenses", payload);
 
 			setExpenses(prev => [newExpense, ...prev]);
+			toast.success('Expense added successfully', { id: t });
 
 		} catch (e) {
 			console.warn("Create expense failed, adding locally", e);
@@ -306,14 +312,22 @@ function AppController() {
 
 	const deleteExpense = async (id) => {
 		setExpenses(prev => prev.filter(e => e.id !== id));
-		await api.delete(`/expenses/${id}`);
-		fetchExpenses();
+		const t = toast.loading('Deleting expense...');
+		try {
+			await api.delete(`/expenses/${id}`);
+			fetchExpenses();
+			toast.success('Expense deleted successfully', { id: t });
+		} catch (err) {
+			toast.error('Failed to delete expense', { id: t });
+			console.warn('Failed to delete expense', err);
+		}
 	};
 
 	const handleIncomeSubmit = async (e) => {
 		e.preventDefault();
 		if (editingIncomeId) {
 			try {
+				const t = toast.loading('Updating income...');
 				const updated = await api.put(`/incomes/${editingIncomeId}`, {
 					amount: incomeForm.amount,
 					source: incomeForm.source,
@@ -324,7 +338,9 @@ function AppController() {
 					recurrence: incomeForm.recurrence || undefined
 				});
 				setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? updated : p)));
+				toast.success('Income updated successfully', { id: t });
 			} catch (e) {
+				toast.error('Failed to update income');
 				console.warn("Update income failed, applying locally", e);
 				setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? { ...p, ...incomeForm, amount: Number(incomeForm.amount) } : p)));
 			} finally {
@@ -347,9 +363,11 @@ function AppController() {
 				userId: getCurrentUserId()
 			};
 
+			const t = toast.loading('Adding income...');
 			const newIncome = await api.post("/incomes", payload);
 
 			setIncomes(prev => [newIncome, ...prev]);
+			toast.success('Income added successfully', { id: t });
 
 		} catch (e) {
 			console.warn("Create income failed, adding locally", e);
@@ -415,8 +433,15 @@ function AppController() {
 
 	const deleteIncome = async (id) => {
 		setIncomes(prev => prev.filter(i => i.id !== id));
-		await api.delete(`/incomes/${id}`);
-		fetchIncomes();
+		const t = toast.loading('Deleting income...');
+		try {
+			await api.delete(`/incomes/${id}`);
+			fetchIncomes();
+			toast.success('Income deleted successfully', { id: t });
+		} catch (err) {
+			toast.error('Failed to delete income', { id: t });
+			console.warn('Failed to delete income', err);
+		}
 	};
 
 	const parseDate = (d) => (d ? new Date(d) : null);
@@ -589,6 +614,7 @@ function AppController() {
 
 	return (
 		<BrowserRouter future={{ v7_startTransition: true }}>
+			<Toaster position="top-right" toastOptions={{ duration: 3000 }} />
 			<Routes>
 				<Route element={<AuthLayout />}>
 					<Route path="/login" element={<Login onAuthSuccess={(t) => onAuthSuccess(t)} />} />

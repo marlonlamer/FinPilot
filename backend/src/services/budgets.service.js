@@ -1,6 +1,7 @@
-const prisma = require('../prisma/client');
+const defaultPrisma = require('../prisma/client');
 
-async function recalcMonthlyTotals(userId, month) {
+async function recalcMonthlyTotals(userId, month, prismaClient) {
+  const db = prismaClient || defaultPrisma;
   userId = Number(userId);
   if (!month) {
     const d = new Date();
@@ -8,7 +9,7 @@ async function recalcMonthlyTotals(userId, month) {
   }
 
   // fetch budgets for the month
-  const budgets = await prisma.budget.findMany({ where: { userId, month } });
+  const budgets = await db.budget.findMany({ where: { userId, month } });
 
   let totalBudget = 0;
   let totalSpent = 0;
@@ -21,7 +22,7 @@ async function recalcMonthlyTotals(userId, month) {
       const start = new Date(`${month}-01T00:00:00Z`);
       const end = new Date(start);
       end.setMonth(end.getMonth() + 1);
-      const agg = await prisma.expense.aggregate({ where: { userId, category: String(b.category || '').trim(), date: { gte: start, lt: end } }, _sum: { amount: true } });
+      const agg = await db.expense.aggregate({ where: { userId, category: String(b.category || '').trim(), date: { gte: start, lt: end } }, _sum: { amount: true } });
       spent = Number(agg._sum.amount || 0);
     }
     totalSpent += spent;
@@ -30,7 +31,7 @@ async function recalcMonthlyTotals(userId, month) {
   const totalRemaining = totalBudget - totalSpent;
 
   // persist into user row
-  await prisma.user.updateMany({ where: { id: userId }, data: { monthlyBudget: totalBudget, monthlySpent: totalSpent, monthlyBudgetRemaining: totalRemaining } });
+  await db.user.updateMany({ where: { id: userId }, data: { monthlyBudget: totalBudget, monthlySpent: totalSpent, monthlyBudgetRemaining: totalRemaining } });
 
   return { totalMonthlyBudget: totalBudget, totalBudgetSpent: totalSpent, totalBudgetRemaining: totalRemaining };
 }

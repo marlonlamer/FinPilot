@@ -3,6 +3,7 @@ import "./BudgetOverview.css";
 import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { api } from "../../services/api";
+import toast from 'react-hot-toast';
 
 export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true }) {
   const pct = percentBudgetUsed || 0;
@@ -35,12 +36,14 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
       const month = (selectedYear != null && selectedMonth != null)
         ? `${selectedYear}-${String(selectedMonth+1).padStart(2,'0')}`
         : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
+      const t = toast.loading('Adding budget...');
       await api.post('/budgets', { category: cat, budgetLimit: num, month });
       setAddOpen(false);
       await refresh();
+      toast.success('Budget added successfully', { id: t });
     } catch (e) {
       console.error(e);
-      window.alert('Failed to add budget');
+      toast.error('Failed to add budget');
     }
   };
 
@@ -48,27 +51,33 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
     try {
       const id = editInitial.id;
       if (id) {
+        const t = toast.loading('Updating budget...');
         await api.put(`/budgets/${id}`, { category, budgetLimit: Number(amount || 0) });
+        toast.success('Budget updated successfully', { id: t });
       } else {
         const month = (selectedYear != null && selectedMonth != null)
           ? `${selectedYear}-${String(selectedMonth+1).padStart(2,'0')}`
           : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
+        const t = toast.loading('Adding budget...');
         await api.post('/budgets', { category, budgetLimit: Number(amount || 0), month });
+        toast.success('Budget added successfully', { id: t });
       }
       setEditOpen(false);
       await refresh();
     } catch (e) {
       console.error(e);
-      window.alert('Failed to update budget');
+      toast.error('Failed to update budget');
     }
   };
 
   const handleDelete = async () => {
     try {
       if (deleteConfirm.id) {
+        const t = toast.loading('Deleting budget...');
         await api.delete(`/budgets/${deleteConfirm.id}`);
         setDeleteConfirm({ open: false, category: null, id: null });
         await refresh();
+        toast.success('Budget deleted successfully', { id: t });
       } else {
         // local-only removal
         setDeleteConfirm({ open: false, category: null, id: null });
@@ -76,7 +85,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
       }
     } catch (e) {
       console.error(e);
-      window.alert('Failed to delete budget');
+      toast.error('Failed to delete budget');
     }
   };
 
