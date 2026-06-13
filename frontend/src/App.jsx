@@ -676,6 +676,9 @@ function App() {
           COLORS={COLORS}
           currencySymbol={currencySymbol}
           formatCurrency={formatCurrency}
+          expenses={expenses}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
           budgets={perCategoryBudgets}
           onBudgetsUpdated={fetchBudgets}
           budgetsMeta={budgetsMeta}

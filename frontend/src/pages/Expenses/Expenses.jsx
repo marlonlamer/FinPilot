@@ -2,7 +2,8 @@ import React, { useMemo, useState } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
 import "./ExpensesModule.css";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, PieChart, Pie, ResponsiveContainer } from "recharts";
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 
 export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -35,7 +36,7 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [expenses, selectedYear, selectedMonth]);
 
-  const pieData = useMemo(() => byCategory.map(([name, value]) => ({ name, value })), [byCategory]);
+  // pieData is now computed inside ExpenseDistribution
 
   const lastSixMonthsData = useMemo(() => {
     const now = new Date();
@@ -121,15 +122,13 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
         <div className="card category-card">
           <div className="card-label">Expenses by Category</div>
           <div className="chart-small center">
-            <ResponsiveContainer>
-              <PieChart>
-                <Pie data={pieData} dataKey="value" nameKey="name" innerRadius={30} outerRadius={50} />
-                <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="card-subtext">
-            {pieData.slice(0,3).map(p => `${p.name} (${Math.round((p.value / (pieData.reduce((s, it) => s + it.value, 0) || 1)) * 100)}%)`).join(" • ")}
+            <ExpenseDistribution
+              expenses={expenses}
+              selectedYear={selectedYear}
+              selectedMonth={selectedMonth}
+              currencySymbol={currencySymbol}
+              formatCurrency={formatCurrency}
+            />
           </div>
         </div>
       </div>

@@ -6,11 +6,9 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend,
-  PieChart,
-  Pie,
-  Cell
+  Legend
 } from "recharts";
+import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
 import { getCurrentUser } from "../../services/api";
 import "./DashboardModule.css";
@@ -76,7 +74,7 @@ export default function Dashboard(props) {
   };
 
   const cld = Array.isArray(combinedLineData) ? combinedLineData : [];
-  const pd = Array.isArray(pieData) ? pieData : [];
+  // pieData handled by ExpenseDistribution via expenses prop
   const obc = Array.isArray(overBudgetCategories) ? overBudgetCategories : [];
 
 
@@ -192,43 +190,16 @@ export default function Dashboard(props) {
         </div>
       )}
 
-      {pd.length > 0 ? (
-        <div className="pie-wrapper">
-          <ResponsiveContainer>
-            <PieChart>
-              <Pie
-                data={pd}
-                dataKey="value"
-                nameKey="name"
-                cx="50%"
-                cy="50%"
-                innerRadius={40}
-                outerRadius={80}
-                labelLine={false}
-                  label={({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-                  const RAD = Math.PI / 180;
-                  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-                  const x = cx + radius * Math.cos(-midAngle * RAD);
-                  const y = cy + radius * Math.sin(-midAngle * RAD);
-                  return (
-                    <text x={x} y={y} fill="#ffffff" textAnchor="middle" dominantBaseline="central" className="pie-label">
-                      {`${(toNumber(percent) * 100).toFixed(0)}%`}
-                    </text>
-                  );
-                }}
-              >
-                {pd.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(toNumber(value)) : `${currencySymbol}${toNumber(value).toFixed(2)}`)} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-        </div>
-      ) : (
-        <p>No expenses to display.</p>
-      )}
+      <div className="pie-wrapper">
+        <ExpenseDistribution
+          expenses={props.expenses || []}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          currencySymbol={currencySymbol}
+          formatCurrency={formatCurrency}
+          colors={COLORS}
+        />
+      </div>
     </div>
   );
 }
