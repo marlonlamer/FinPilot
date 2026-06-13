@@ -14,6 +14,7 @@ import {
 import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
 import { getCurrentUser } from "../../services/api";
 import "./DashboardModule.css";
+import React, { useEffect, useMemo, useState } from "react";
 
 export default function Dashboard(props) {
   const {
@@ -40,6 +41,30 @@ export default function Dashboard(props) {
   const user = getCurrentUser() || {};
   const displayName = user.name || user.email || "";
 
+  const [now, setNow] = useState(new Date());
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60 * 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const greeting = useMemo(() => {
+    const hr = now.getHours();
+    if (hr >= 5 && hr < 12) return 'Good Morning';
+    if (hr >= 12 && hr < 18) return 'Good Afternoon';
+    return 'Good Evening';
+  }, [now]);
+
+  const formattedDate = useMemo(() => {
+    try {
+      return new Intl.DateTimeFormat(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).format(now);
+    } catch (e) {
+      // fallback
+      const d = now;
+      return d.toLocaleDateString();
+    }
+  }, [now]);
+
   const toNumber = (v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : 0;
@@ -57,7 +82,15 @@ export default function Dashboard(props) {
 
   return (
     <div className="dashboard-root">
-      {displayName && <h1 style={{ marginBottom: 12 }}>Welcome, {displayName}</h1>}
+      {displayName && (
+        <div className="dashboard-header">
+          <div className="dashboard-greeting">
+            <h1>{greeting}, {displayName} <span className="wave">👋</span></h1>
+            <div className="dashboard-date">{formattedDate}</div>
+          </div>
+          <div className="dashboard-subtext">Track your finances and stay on top of your goals.</div>
+        </div>
+      )}
   
       <div className="dashboard-stats">
         <div className="stat-card">

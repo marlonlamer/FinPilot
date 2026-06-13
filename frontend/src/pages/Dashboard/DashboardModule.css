@@ -5,6 +5,34 @@
   color: #0f172a;
 }
 
+.dashboard-header {
+  margin-bottom: 12px;
+}
+
+.dashboard-greeting h1 {
+  margin: 0 0 6px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: #0b1220;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-date {
+  font-size: 14px;
+  color: #475569;
+  margin-top: 2px;
+}
+
+.dashboard-subtext {
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.wave { font-size: 22px; }
+
 .dashboard-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
