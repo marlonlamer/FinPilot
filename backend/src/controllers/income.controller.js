@@ -6,7 +6,8 @@ const getIncomes = async (req, res) => {
       return res.status(401).json({error: "Unauthorized"});
     }
 
-    const incomes = await incomeService.getAllIncomes(req.userId);
+    const month = req.query.month || null;
+    const incomes = await incomeService.getAllIncomes(req.userId, month);
     res.json(incomes);
   } catch (error) {
     console.error("Fetch incomes error:", error);

@@ -3,9 +3,12 @@ const expenseService = require("../services/expense.service");
 
 const getExpenses = async (req, res) => {
   try {
-    const expenses = await expenseService.getAllExpenses(req.userId);
+    // accept optional month=YYYY-MM
+    const month = req.query.month || null;
+    const expenses = await expenseService.getAllExpenses(req.userId, month);
     res.json(expenses);
   } catch (error) {
+    console.error('Get expenses error:', error);
     res.status(500).json({ error: "Failed to fetch expenses" });
   }
 };

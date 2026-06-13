@@ -115,7 +115,9 @@ function App() {
 
   const fetchExpenses = async () => {
     try {
-      const data = await api.get("/expenses");
+      const pad = (n) => String(n + 1).padStart(2, "0");
+      const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+      const data = await api.get("/expenses", { params: { month: monthKey } });
       setExpenses(data);
     } catch (e) {
       console.warn("Failed to fetch expenses", e);
@@ -124,7 +126,9 @@ function App() {
 
   const fetchIncomes = async () => {
     try {
-      const data = await api.get("/incomes");
+      const pad = (n) => String(n + 1).padStart(2, "0");
+      const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+      const data = await api.get("/incomes", { params: { month: monthKey } });
       setIncomes(data);
     } catch (e) {
       console.warn("Failed to fetch incomes", e);
@@ -166,6 +170,13 @@ function App() {
       fetchBudgets();
     }
   }, []);
+
+  // Re-fetch transactions when selected month/year changes
+  useEffect(() => {
+    fetchExpenses();
+    fetchIncomes();
+    if (localStorage.getItem('token')) fetchBudgets();
+  }, [selectedYear, selectedMonth]);
 
   // When the selected month/year changes, clear add-form amounts (so amount isn't copied between months)
   useEffect(() => {

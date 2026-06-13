@@ -115,7 +115,9 @@ function AppController() {
 
 	const fetchExpenses = async () => {
 		try {
-			const data = await api.get("/expenses");
+			const pad = (n) => String(n + 1).padStart(2, "0");
+			const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+			const data = await api.get("/expenses", { params: { month: monthKey } });
 			setExpenses(data);
 		} catch (e) {
 			console.warn("Failed to fetch expenses", e);
@@ -124,7 +126,9 @@ function AppController() {
 
 	const fetchIncomes = async () => {
 		try {
-			const data = await api.get("/incomes");
+			const pad = (n) => String(n + 1).padStart(2, "0");
+			const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+			const data = await api.get("/incomes", { params: { month: monthKey } });
 			setIncomes(data);
 		} catch (e) {
 			console.warn("Failed to fetch incomes", e);
@@ -161,7 +165,7 @@ function AppController() {
 				setDashboardTotals(d.totals || {});
 			} catch (e) { console.warn('Failed to fetch dashboard', e); }
 		})();
-	}, []);
+	}, [selectedYear, selectedMonth]);
 
 	const [perCategoryBudgets, setPerCategoryBudgets] = useState(() => {
 		try {

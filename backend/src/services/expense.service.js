@@ -2,9 +2,16 @@ const prisma = require("../prisma/client");
 const { recalcUserAggregates } = require('./userAggregates.service');
 const { recalcMonthlyTotals } = require('./budgets.service');
 
-const getAllExpenses = async (userId) => {
+const getAllExpenses = async (userId, month) => {
+  const where = { userId };
+  if (month) {
+    const start = new Date(`${month}-01T00:00:00Z`);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + 1);
+    where.date = { gte: start, lt: end };
+  }
   return prisma.expense.findMany({
-    where: { userId },
+    where,
     orderBy: { date: "desc" }
   });
 };
