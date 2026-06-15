@@ -1,9 +1,8 @@
 import React, { useMemo, useState, useCallback } from "react";
 import "./TransactionsModule.css";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
-import { api, getCurrentUserId } from "../../services/api";
 
-export default function Transactions({ incomes = [], expenses = [], deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
+export default function Transactions({ incomes = [], expenses = [], savingsHistory = [], deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [customStart, setCustomStart] = useState("");
@@ -59,16 +58,6 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
 
   const filteredIncomes = useMemo(() => incomes.filter(i => inDateRange(i.date) && matchesCategory(i)), [incomes, inDateRange, matchesCategory]);
   const filteredExpenses = useMemo(() => expenses.filter(e => inDateRange(e.date) && matchesCategory(e)), [expenses, inDateRange, matchesCategory]);
-  const [savingsEntries, setSavingsEntries] = useState([]);
-
-  // fetch savings history when user present so we can include deposit/withdrawal records
-  React.useEffect(() => {
-    const uid = getCurrentUserId();
-    if (!uid) return;
-    let mounted = true;
-    api.get(`/savings/history/${uid}`).then(list => { if (!mounted) return; setSavingsEntries(Array.isArray(list) ? list : []); }).catch(() => {});
-    return () => { mounted = false; };
-  }, []);
 
   const matchesSearch = useCallback((item) => {
     if (!searchQuery) return true;
@@ -119,16 +108,16 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
     if (typeFilter === "all") {
       list = [...filteredIncomes.map(mapIncome), ...filteredExpenses.map(mapExpense)];
       // include savings entries mapped into feed items
-      const mappedSavings = (savingsEntries || []).map(s => ({ ...s, id: `savings-${s.id}`, type: Number(s.amount) > 0 ? 'savings_deposit' : 'savings_withdraw' }));
+      const mappedSavings = (savingsHistory || []).map(s => ({ ...s, id: `savings-${s.id}`, type: Number(s.amount) > 0 ? 'savings_deposit' : 'savings_withdraw' }));
       list = [...list, ...mappedSavings];
     } else if (typeFilter === "income") {
       list = filteredIncomes.map(mapIncome);
     } else if (typeFilter === "expense") {
       list = filteredExpenses.map(mapExpense);
     } else if (typeFilter === "savings_deposit") {
-      list = (savingsEntries || []).filter(s => Number(s.amount) > 0).map(s => ({ ...s, id: `savings-${s.id}`, type: 'savings_deposit' }));
+      list = (savingsHistory || []).filter(s => Number(s.amount) > 0).map(s => ({ ...s, id: `savings-${s.id}`, type: 'savings_deposit' }));
     } else if (typeFilter === "savings_withdraw") {
-      list = (savingsEntries || []).filter(s => Number(s.amount) < 0).map(s => ({ ...s, id: `savings-${s.id}`, type: 'savings_withdraw' }));
+      list = (savingsHistory || []).filter(s => Number(s.amount) < 0).map(s => ({ ...s, id: `savings-${s.id}`, type: 'savings_withdraw' }));
     }
 
     list = list.filter(matchesSearch);

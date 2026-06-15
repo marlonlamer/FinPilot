@@ -35,6 +35,19 @@ function AppController() {
 	});
 
 	const [dashboardTotals, setDashboardTotals] = useState({ totalSavings: 0, availableBalance: 0 });
+	const [savingsHistory, setSavingsHistory] = useState([]);
+
+	const fetchSavingsHistory = async () => {
+		try {
+			const uid = getCurrentUserId();
+			if (!uid) return setSavingsHistory([]);
+			const list = await api.get(`/savings/history/${uid}`);
+			setSavingsHistory(Array.isArray(list) ? list : []);
+		} catch (e) {
+			console.warn('Failed to fetch savings history', e);
+			setSavingsHistory([]);
+		}
+	};
 
 	const [form, setForm] = useState({
 		amount: "",
@@ -158,6 +171,7 @@ function AppController() {
 	useEffect(() => {
 		fetchExpenses();
 		fetchIncomes();
+		fetchSavingsHistory();
 		if (localStorage.getItem('token')) fetchBudgets();
 		// fetch dashboard totals (savings, available balance)
 		(async () => {
@@ -695,7 +709,7 @@ function AppController() {
 							formatCurrency={formatCurrency}
 						/>} />
 
-						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="reports" element={<Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
@@ -704,8 +718,16 @@ function AppController() {
 						<Route path="settings" element={<Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="savings" element={<Savings availableBalance={dashboardTotals.availableBalance != null ? dashboardTotals.availableBalance : (availableBalance + (savingsBalanceAdjustment || 0))} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={dashboardTotals.totalSavings != null ? dashboardTotals.totalSavings : totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} selectedYear={selectedYear} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onSavingsUpdated={async () => {
-							await (async () => { try { const d = await api.get('/dashboard'); setDashboardTotals(d.totals || {}); } catch (e) { console.warn('failed dashboard refresh', e); } })();
-						}} />} />
+							// Refresh dashboard, transactions, and savings history after savings updates
+							try {
+								await fetchSavingsHistory();
+								await fetchExpenses();
+								await fetchIncomes();
+								if (localStorage.getItem('token')) await fetchBudgets();
+								const d = await api.get('/dashboard');
+								setDashboardTotals(d.totals || {});
+							} catch (e) { console.warn('failed savings-related refresh', e); }
+						}} savingsHistory={savingsHistory} />} />
 					</Route>
 				</Route>
 

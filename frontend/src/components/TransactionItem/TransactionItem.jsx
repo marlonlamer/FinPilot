@@ -31,7 +31,11 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
 
   const amountDisplay = formatCurrency ? (isPositive ? `+ ${formatCurrency(Math.abs(amountVal))}` : `- ${formatCurrency(Math.abs(amountVal))}`) : (isPositive ? `+ ${currencySymbol}${Math.abs(amountVal).toFixed(2)}` : `- ${currencySymbol}${Math.abs(amountVal).toFixed(2)}`);
 
-  const amountClass = t.includes('income') || (item.savingsId && isPositive) ? 'amount-income' : (t.includes('expense') || (item.savingsId && !isPositive) ? 'amount-expense' : 'amount-expense');
+  let amountClass = 'amount-expense';
+  if (t.includes('income')) amountClass = 'amount-income';
+  else if (t.includes('savings_deposit') || t.includes('deposit')) amountClass = 'amount-deposit';
+  else if (t.includes('savings_withdraw') || t.includes('withdraw')) amountClass = 'amount-withdraw';
+  else if (t.includes('expense')) amountClass = 'amount-expense';
 
   return (
     <div className="transaction-item">
