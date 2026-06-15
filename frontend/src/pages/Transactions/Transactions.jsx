@@ -1,5 +1,4 @@
 import React, { useMemo, useState, useCallback } from "react";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./TransactionsModule.css";
 
 export default function Transactions({ incomes = [], expenses = [], deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
@@ -10,7 +9,6 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
-  const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   const categories = useMemo(() => {
     const set = new Set();
@@ -116,16 +114,43 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
 
     list = list.filter(matchesSearch);
     list = sortItems(list);
+    return list;
+  }, [typeFilter, filteredIncomes, filteredExpenses, matchesSearch, sortItems]);
 
-    let running = 0;
-    const withBalance = list.map(item => {
-      const amt = Number(item.amount) || 0;
-      running = item.type === "income" ? running + amt : running - amt;
-      return { ...item, runningBalance: running };
+  // Group transactions by readable date label (Today, Yesterday, or full date)
+  const grouped = useMemo(() => {
+    const groups = {};
+    const now = new Date();
+    const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
+
+    const labelFor = (d) => {
+      if (!d) return 'Unknown';
+      if (d.toDateString() === now.toDateString()) return 'Today';
+      if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    };
+
+    displayedList.forEach(item => {
+      const d = item.date ? new Date(item.date) : null;
+      const label = labelFor(d);
+      if (!groups[label]) groups[label] = [];
+      groups[label].push(item);
     });
 
-    return withBalance;
-  }, [typeFilter, filteredIncomes, filteredExpenses, matchesSearch, sortItems]);
+    return groups;
+  }, [displayedList]);
+
+  const getCategoryIcon = (category) => {
+    if (!category) return '💳';
+    const key = String(category).toLowerCase();
+    if (key.includes('food') || key.includes('restaurant')) return '🍔';
+    if (key.includes('salary') || key.includes('pay')) return '💼';
+    if (key.includes('savings') || key.includes('deposit')) return '🏦';
+    if (key.includes('withdraw') || key.includes('atm')) return '🏧';
+    if (key.includes('transport')) return '🚗';
+    if (key.includes('shopping')) return '🛍️';
+    return '💳';
+  };
 
   return (
     <div className="transactions-root">
@@ -187,85 +212,41 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
         </div>
       </div>
       
-      {typeFilter === "all" ? (
-        <>
-          <h3>Transactions</h3>
-          <table className="transactions-table">
-            <thead>
-              <tr className="transactions-row-header">
-                <th className="transactions-th">Date</th>
-                <th className="transactions-th">Type</th>
-                <th className="transactions-th">Category / Source</th>
-                <th className="transactions-th">Amount</th>
-                <th className="transactions-th">Running</th>
-                <th className="transactions-th">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedList.map(item => (
-                <tr key={`${item.type}-${item.id}`} className="transactions-row">
-                  <td className="transactions-td">{item.date ? new Date(item.date).toLocaleDateString() : "N/A"}</td>
-                  <td className="transactions-td">{item.type}</td>
-                  <td className="transactions-td">
-                    {item.category ? item.category : item.source} {item.recurring ? <span className="transactions-recurring">🔁 recurring</span> : null}
-                  </td>
-                  <td className="transactions-td">{formatCurrency ? formatCurrency(item.amount) : `${currencySymbol}${Number(item.amount).toFixed(2)}`}</td>
-                  <td className="transactions-td">{formatCurrency ? formatCurrency(item.runningBalance) : `${currencySymbol}${Number(item.runningBalance).toFixed(2)}`}</td>
-                  <td className="transactions-td">
-                    {item.type === "income" ? (
-                      <>
-                        <button className="transactions-action" onClick={() => openEditIncome(item)}>✏️</button>
-                        <button className="transactions-action" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(item.id) })}>❌</button>
-                      </>
-                    ) : (
-                      <>
-                        <button className="transactions-action" onClick={() => openEditExpense(item)}>✏️</button>
-                        <button className="transactions-action" onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(item.id) })}>❌</button>
-                      </>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </>
-      ) : (
-        <>
-          {typeFilter !== "expense" && (
-            <>
-              <h3>Incomes</h3>
-              <ul>
-                {displayedList.filter(i => i.type === "income").map(i => (
-                    <li key={i.id}>{formatCurrency ? formatCurrency(i.amount) : `${currencySymbol}${Number(i.amount).toFixed(2)}`} {i.category ? `(${i.category})` : `(${i.source})`} {i.recurring ? `— recurring (${i.recurrence || "monthly"})` : ""} — {(i.date ? new Date(i.date).toLocaleDateString() : "N/A")} {i.notes ? `— ${i.notes}` : null} — Running: {formatCurrency ? formatCurrency(i.runningBalance) : `${currencySymbol}${Number(i.runningBalance).toFixed(2)}`}
-                      <button className="transactions-list-button" onClick={() => openEditIncome(i)}>✏️</button>
-                      <button className="transactions-list-button" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(i.id) })}>❌</button>
-                    </li>
-                  ))}
-              </ul>
-            </>
-          )}
+      <h3>Transactions</h3>
+      <div className="transaction-feed">
+        {Object.keys(grouped).length === 0 && (
+          <div className="transactions-empty">No transactions found</div>
+        )}
 
-          {typeFilter !== "income" && (
-            <>
-              <h3>Expenses</h3>
-              <ul>
-                {displayedList.filter(e => e.type === "expense").map(e => (
-                  <li key={e.id}>{formatCurrency ? formatCurrency(e.amount) : `${currencySymbol}${Number(e.amount).toFixed(2)}`} {e.category ? `(${e.category})` : `(${e.source})`} {e.description ? `— ${e.description}` : ""} {e.recurring ? ` — recurring (${e.recurrence || "monthly"})` : ""} — {(e.date ? new Date(e.date).toLocaleDateString() : "N/A")} {e.notes ? `— ${e.notes}` : null} — Running: {formatCurrency ? formatCurrency(e.runningBalance) : `${currencySymbol}${Number(e.runningBalance).toFixed(2)}`}
-                    <button className="transactions-list-button" onClick={() => openEditExpense(e)}>✏️</button>
-                    <button className="transactions-list-button" onClick={() => setConfirm({ open: true, message: "Delete this expense? This cannot be undone.", onConfirm: () => deleteExpense(e.id) })}>❌</button>
+        {Object.entries(grouped).map(([label, items]) => (
+          <div key={label} className="transaction-group">
+            <div className="transaction-group-label">{label}</div>
+            <ul className="transaction-group-list">
+              {items.map(item => {
+                const date = item.date ? new Date(item.date) : null;
+                const time = date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+                const isIncome = item.type === 'income';
+                const amountAbs = Math.abs(Number(item.amount) || 0);
+                const amountDisplay = formatCurrency ? (isIncome ? `+ ${formatCurrency(amountAbs)}` : `- ${formatCurrency(amountAbs)}`) : (isIncome ? `+ ${currencySymbol}${amountAbs.toFixed(2)}` : `- ${currencySymbol}${amountAbs.toFixed(2)}`);
+                const icon = getCategoryIcon(item.category || item.source);
+                return (
+                  <li key={`${item.type}-${item.id}`} className="transaction-item">
+                    <div className="transaction-left">
+                      <div className="category-icon">{icon}</div>
+                      <div className="transaction-content">
+                        <div className="transaction-name">{item.category ? item.category : item.source}</div>
+                        <div className="transaction-meta">{item.type.charAt(0).toUpperCase() + item.type.slice(1)} • {time}</div>
+                      </div>
+                    </div>
+                    <div className={"transaction-right " + (isIncome ? 'amount-income' : 'amount-expense')}>{amountDisplay}</div>
                   </li>
-                ))}
-              </ul>
-            </>
-          )}
-        </>
-      )}
-      <ConfirmModal
-        open={confirm.open}
-        message={confirm.message}
-        onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
-        onCancel={() => setConfirm({ open: false })}
-      />
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </div>
+      {/* action buttons removed from feed; no confirm modal needed */}
     </div>
   );
 }
