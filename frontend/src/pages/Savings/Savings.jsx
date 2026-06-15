@@ -3,6 +3,7 @@ import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
+import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import toast from 'react-hot-toast';
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated }) {
@@ -630,23 +631,10 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
                 <div className="savings-history">
                   <strong>History</strong>
                   <div className="savings-history-list">
-                    <ul className="savings-history-ul">
-                      {( (historyForDisplay || []).slice().reverse() ).map(entry => {
-                        const isDeposit = Number(entry.amount) > 0;
-                        const label = isDeposit ? 'Deposit' : 'Withdraw';
-                        const amt = Math.abs(Number(entry.amount));
-                        const amountDisplay = formatCurrency ? formatCurrency(isDeposit ? amt : -amt) : `${currencySymbol}${amt.toFixed(2)}`;
-                        return (
-                          <li key={entry.id} className="savings-history-item">
-                            {new Date(entry.date).toLocaleDateString()} — <span className={isDeposit ? 'savings-deposit' : 'savings-withdraw'}>{label}</span> {amountDisplay}{entry.note ? ` (${entry.note})` : ""}
-                              <div className="savings-history-actions">
-                                <button className="btn-small" onClick={() => openEditEntry(goal.id, entry)}>Edit</button>
-                                <button className="btn-small" onClick={() => handleDeleteEntry(goal.id, entry)}>Delete</button>
-                              </div>
-                            </li>
-                        );
-                      })}
-                    </ul>
+                    {/* Render savings history using shared TransactionFeed; map entries to include goal context */}
+                    <div>
+                      <TransactionFeed transactions={(historyForDisplay || []).slice().reverse().map(entry => ({ ...entry, id: `s-${entry.id}`, goalName: goal.goalName, savingsId: goal.id, type: Number(entry.amount) > 0 ? 'savings_deposit' : 'savings_withdraw' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+                    </div>
                   </div>
                 </div>
               )}

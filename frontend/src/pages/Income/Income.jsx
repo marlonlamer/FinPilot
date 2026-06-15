@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
-import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import "./IncomeModule.css";
+import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 
 export default function Income({ incomes = [], incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -38,7 +38,6 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
 
   const recurring = useMemo(() => incomes.filter(i => i.recurring), [incomes]);
   const nonRecurring = useMemo(() => incomes.filter(i => !i.recurring), [incomes]);
-  const [confirm, setConfirm] = useState({ open: false, message: "", onConfirm: null });
 
   return (
     <div className="income-root">
@@ -124,17 +123,7 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
 
       <h3 className="section-title">Recurring Incomes</h3>
       {recurring.length > 0 ? (
-        <ul>
-            {recurring.map(income => (
-            <li key={income.id} className="income-item">
-              <div className="income-item-main">{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {income.recurrence ? `${income.recurrence}` : "recurring"} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}</div>
-              <div className="income-item-actions">
-                <button className="icon-btn" onClick={() => openEditIncome(income)}>✏️</button>
-                <button className="icon-btn" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <TransactionFeed transactions={recurring.map(i => ({ ...i, type: 'income' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
       ) : (
         <div className="no-data">No recurring incomes set.</div>
       )}
@@ -154,23 +143,7 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
       )}
 
       <h3 className="section-title">All Incomes</h3>
-      <ul>
-        {nonRecurring.map(income => (
-          <li key={income.id} className="income-item">
-            <div className="income-item-main">{formatCurrency ? formatCurrency(income.amount) : `${currencySymbol}${Number(income.amount).toFixed(2)}`} {income.category ? `(${income.category})` : `(${income.source})`} — {(income.date ? new Date(income.date).toLocaleDateString() : "N/A")} {income.notes ? `— ${income.notes}` : null}</div>
-            <div className="income-item-actions">
-              <button className="icon-btn" onClick={() => openEditIncome(income)}>✏️</button>
-              <button className="icon-btn" onClick={() => setConfirm({ open: true, message: "Delete this income? This cannot be undone.", onConfirm: () => deleteIncome(income.id) })}>❌</button>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <ConfirmModal
-        open={confirm.open}
-        message={confirm.message}
-        onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
-        onCancel={() => setConfirm({ open: false })}
-      />
+      <TransactionFeed transactions={nonRecurring.map(i => ({ ...i, type: 'income' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
     </div>
   );
 }

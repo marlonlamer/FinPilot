@@ -1,5 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import "./TransactionsModule.css";
+import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
+import { api, getCurrentUserId } from "../../services/api";
 
 export default function Transactions({ incomes = [], expenses = [], deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all");
@@ -57,6 +59,16 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
 
   const filteredIncomes = useMemo(() => incomes.filter(i => inDateRange(i.date) && matchesCategory(i)), [incomes, inDateRange, matchesCategory]);
   const filteredExpenses = useMemo(() => expenses.filter(e => inDateRange(e.date) && matchesCategory(e)), [expenses, inDateRange, matchesCategory]);
+  const [savingsEntries, setSavingsEntries] = useState([]);
+
+  // fetch savings history when user present so we can include deposit/withdrawal records
+  React.useEffect(() => {
+    const uid = getCurrentUserId();
+    if (!uid) return;
+    let mounted = true;
+    api.get(`/savings/history/${uid}`).then(list => { if (!mounted) return; setSavingsEntries(Array.isArray(list) ? list : []); }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
 
   const matchesSearch = useCallback((item) => {
     if (!searchQuery) return true;
@@ -106,10 +118,17 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
     let list = [];
     if (typeFilter === "all") {
       list = [...filteredIncomes.map(mapIncome), ...filteredExpenses.map(mapExpense)];
+      // include savings entries mapped into feed items
+      const mappedSavings = (savingsEntries || []).map(s => ({ ...s, id: `savings-${s.id}`, type: Number(s.amount) > 0 ? 'savings_deposit' : 'savings_withdraw' }));
+      list = [...list, ...mappedSavings];
     } else if (typeFilter === "income") {
       list = filteredIncomes.map(mapIncome);
-    } else {
+    } else if (typeFilter === "expense") {
       list = filteredExpenses.map(mapExpense);
+    } else if (typeFilter === "savings_deposit") {
+      list = (savingsEntries || []).filter(s => Number(s.amount) > 0).map(s => ({ ...s, id: `savings-${s.id}`, type: 'savings_deposit' }));
+    } else if (typeFilter === "savings_withdraw") {
+      list = (savingsEntries || []).filter(s => Number(s.amount) < 0).map(s => ({ ...s, id: `savings-${s.id}`, type: 'savings_withdraw' }));
     }
 
     list = list.filter(matchesSearch);
@@ -117,40 +136,7 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
     return list;
   }, [typeFilter, filteredIncomes, filteredExpenses, matchesSearch, sortItems]);
 
-  // Group transactions by readable date label (Today, Yesterday, or full date)
-  const grouped = useMemo(() => {
-    const groups = {};
-    const now = new Date();
-    const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
-
-    const labelFor = (d) => {
-      if (!d) return 'Unknown';
-      if (d.toDateString() === now.toDateString()) return 'Today';
-      if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
-    };
-
-    displayedList.forEach(item => {
-      const d = item.date ? new Date(item.date) : null;
-      const label = labelFor(d);
-      if (!groups[label]) groups[label] = [];
-      groups[label].push(item);
-    });
-
-    return groups;
-  }, [displayedList]);
-
-  const getCategoryIcon = (category) => {
-    if (!category) return '💳';
-    const key = String(category).toLowerCase();
-    if (key.includes('food') || key.includes('restaurant')) return '🍔';
-    if (key.includes('salary') || key.includes('pay')) return '💼';
-    if (key.includes('savings') || key.includes('deposit')) return '🏦';
-    if (key.includes('withdraw') || key.includes('atm')) return '🏧';
-    if (key.includes('transport')) return '🚗';
-    if (key.includes('shopping')) return '🛍️';
-    return '💳';
-  };
+  // displayedList is provided to TransactionFeed which handles grouping and icons
 
   return (
     <div className="transactions-root">
@@ -163,6 +149,8 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
             <option value="all">All</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
+            <option value="savings_deposit">Savings Deposit</option>
+            <option value="savings_withdraw">Savings Withdrawal</option>
           </select>
         </div>
 
@@ -213,39 +201,7 @@ export default function Transactions({ incomes = [], expenses = [], deleteIncome
       </div>
       
       <h3>Transactions</h3>
-      <div className="transaction-feed">
-        {Object.keys(grouped).length === 0 && (
-          <div className="transactions-empty">No transactions found</div>
-        )}
-
-        {Object.entries(grouped).map(([label, items]) => (
-          <div key={label} className="transaction-group">
-            <div className="transaction-group-label">{label}</div>
-            <ul className="transaction-group-list">
-              {items.map(item => {
-                const date = item.date ? new Date(item.date) : null;
-                const time = date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
-                const isIncome = item.type === 'income';
-                const amountAbs = Math.abs(Number(item.amount) || 0);
-                const amountDisplay = formatCurrency ? (isIncome ? `+ ${formatCurrency(amountAbs)}` : `- ${formatCurrency(amountAbs)}`) : (isIncome ? `+ ${currencySymbol}${amountAbs.toFixed(2)}` : `- ${currencySymbol}${amountAbs.toFixed(2)}`);
-                const icon = getCategoryIcon(item.category || item.source);
-                return (
-                  <li key={`${item.type}-${item.id}`} className="transaction-item">
-                    <div className="transaction-left">
-                      <div className="category-icon">{icon}</div>
-                      <div className="transaction-content">
-                        <div className="transaction-name">{item.category ? item.category : item.source}</div>
-                        <div className="transaction-meta">{item.type.charAt(0).toUpperCase() + item.type.slice(1)} • {time}</div>
-                      </div>
-                    </div>
-                    <div className={"transaction-right " + (isIncome ? 'amount-income' : 'amount-expense')}>{amountDisplay}</div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </div>
+      <TransactionFeed transactions={displayedList} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
       {/* action buttons removed from feed; no confirm modal needed */}
     </div>
   );
