@@ -41,7 +41,9 @@ function AppController() {
 		try {
 			const uid = getCurrentUserId();
 			if (!uid) return setSavingsHistory([]);
-			const list = await api.get(`/savings/history/${uid}`);
+			const pad = (n) => String(n + 1).padStart(2, "0");
+			const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+			const list = await api.get(`/savings/history/${uid}`, { params: { month: monthKey } });
 			setSavingsHistory(Array.isArray(list) ? list : []);
 		} catch (e) {
 			console.warn('Failed to fetch savings history', e);
@@ -709,7 +711,7 @@ function AppController() {
 							formatCurrency={formatCurrency}
 						/>} />
 
-						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} selectedYear={selectedYear} selectedMonth={selectedMonth} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="reports" element={<Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 

@@ -2,7 +2,7 @@ import React, { useMemo, useState, useCallback } from "react";
 import "./TransactionsModule.css";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 
-export default function Transactions({ incomes = [], expenses = [], savingsHistory = [], deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
+export default function Transactions({ incomes = [], expenses = [], savingsHistory = [], selectedYear, selectedMonth, deleteIncome, deleteExpense, openEditIncome, openEditExpense, currencySymbol = "₱", formatCurrency }) {
   const [typeFilter, setTypeFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [customStart, setCustomStart] = useState("");
@@ -35,7 +35,9 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
       return d >= sevenAgo && d <= now;
     }
     if (dateFilter === "month") {
-      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+      const y = (typeof selectedYear === 'number') ? selectedYear : now.getFullYear();
+      const m = (typeof selectedMonth === 'number') ? selectedMonth : now.getMonth();
+      return d.getMonth() === m && d.getFullYear() === y;
     }
     if (dateFilter === "custom") {
       if (!customStart && !customEnd) return true;

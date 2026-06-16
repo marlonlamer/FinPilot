@@ -6,7 +6,7 @@ import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import toast from 'react-hot-toast';
 
-export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated }) {
+export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("All Time");
 
@@ -28,10 +28,9 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     if (!uid) return;
     try {
       // fetch savings list and authoritative transactions, then reconcile
-      const [sList, txList] = await Promise.all([
-        api.get('/savings'),
-        api.get(`/savings/history/${uid}`)
-      ]);
+      const sList = await api.get('/savings');
+      // prefer centralized, pre-filtered savingsHistory prop when available (use empty array as authoritative)
+      const txList = Array.isArray(savingsHistory) ? savingsHistory : await api.get(`/savings/history/${uid}`);
       if (!Array.isArray(sList)) return;
       const mapped = sList.map(s => ({
         id: s.id,
@@ -76,7 +75,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
       } catch (e) { /* ignore */ }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [savingsHistory]);
 
   // no localStorage persistence: server is the source of truth
 
