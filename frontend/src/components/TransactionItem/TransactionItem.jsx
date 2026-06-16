@@ -27,9 +27,17 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
   const displayName = item.category || item.source || item.goalName || `Savings ${item.savingsId || ''}`;
 
   const amountVal = Number(item.amount || 0);
-  const isPositive = amountVal > 0;
+  // Determine sign based on transaction type (not stored sign)
+  const isPositiveByType = (() => {
+    if (!t) return amountVal > 0;
+    if (t.includes('income')) return true;
+    if (t.includes('expense')) return false;
+    if (t.includes('savings_deposit') || t.includes('deposit')) return true;
+    if (t.includes('savings_withdraw') || t.includes('withdraw')) return false;
+    return amountVal > 0;
+  })();
 
-  const amountDisplay = formatCurrency ? (isPositive ? `+ ${formatCurrency(Math.abs(amountVal))}` : `- ${formatCurrency(Math.abs(amountVal))}`) : (isPositive ? `+ ${currencySymbol}${Math.abs(amountVal).toFixed(2)}` : `- ${currencySymbol}${Math.abs(amountVal).toFixed(2)}`);
+  const amountDisplay = formatCurrency ? (isPositiveByType ? `+ ${formatCurrency(Math.abs(amountVal))}` : `- ${formatCurrency(Math.abs(amountVal))}`) : (isPositiveByType ? `+ ${currencySymbol}${Math.abs(amountVal).toFixed(2)}` : `- ${currencySymbol}${Math.abs(amountVal).toFixed(2)}`);
 
   let amountClass = 'amount-expense';
   if (t.includes('income')) amountClass = 'amount-income';
