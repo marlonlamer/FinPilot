@@ -34,10 +34,21 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
     const mapExpense = (e) => ({ ...e, type: "expense" });
 
     // include incomes and expenses that belong to the selected month
+    const incomeList = incomes.filter(i => inSelectedMonth(i.date)).map(mapIncome);
+    const expenseList = expenses.filter(e => inSelectedMonth(e.date)).map(mapExpense);
+
+    // normalize date field for savings and filter by selected month BEFORE merging
+    const normalizeDate = (s) => s.date || s.createdAt || s.transactionDate || s.timestamp || s.created_at || s.time;
+    const mappedSavingsAll = (savingsHistory || []).map(s => {
+      const nd = normalizeDate(s);
+      return { ...s, id: `savings-${s.id}`, type: Number(s.amount) > 0 ? 'savings_deposit' : 'savings_withdraw', date: nd, _normalizedDate: nd };
+    });
+    const filteredSavings = mappedSavingsAll.filter(s => inSelectedMonth(s._normalizedDate));
+
     const list = [
-      ...incomes.filter(i => inSelectedMonth(i.date)).map(mapIncome),
-      ...expenses.filter(e => inSelectedMonth(e.date)).map(mapExpense),
-      ...(savingsHistory || []).map(s => ({ ...s, id: `savings-${s.id}`, type: Number(s.amount) > 0 ? 'savings_deposit' : 'savings_withdraw' }))
+      ...incomeList,
+      ...expenseList,
+      ...filteredSavings
     ];
 
     // filter by search and sort by date desc
