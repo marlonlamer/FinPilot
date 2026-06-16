@@ -24,7 +24,6 @@ export default function Sidebar() {
         <NavLink to="/reports" style={linkStyle}>Reports</NavLink>
         <NavLink to="/profile" style={linkStyle}>Profile</NavLink>
         <NavLink to="/settings" style={linkStyle}>Settings</NavLink>
-        <NavLink to="/logout" style={linkStyle}>Logout</NavLink>
       </nav>
     </aside>
   );
