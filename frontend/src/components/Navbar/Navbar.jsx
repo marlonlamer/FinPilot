@@ -1,6 +1,6 @@
 import React from "react";
 
-export default function Navbar({ monthNames = [], selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, dateFilter, setDateFilter, authToken, logout }) {
+export default function Navbar({ monthNames = [], selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, authToken, logout }) {
   const prevMonth = () => {
     if (selectedMonth === 0) {
       setSelectedMonth(11);
@@ -25,15 +25,6 @@ export default function Navbar({ monthNames = [], selectedMonth, setSelectedMont
         <button onClick={prevMonth} style={{ padding: "6px 10px" }}>{"<"}</button>
         <div style={{ minWidth: 160, textAlign: "center", fontWeight: 600 }}>{monthNames[selectedMonth] || ""} {selectedYear}</div>
         <button onClick={nextMonth} style={{ padding: "6px 10px" }}>{">"}</button>
-
-        <div style={{ marginLeft: 12 }}>
-          <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-            <option value="all">All</option>
-            <option value="today">Today</option>
-            <option value="week">This Week</option>
-            <option value="month">This Month</option>
-          </select>
-        </div>
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
