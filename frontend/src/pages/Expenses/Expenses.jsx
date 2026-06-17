@@ -5,7 +5,7 @@ import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 
-export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -223,12 +223,12 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
 
       <h3 className="section-title">Budget Status</h3>
       <BudgetOverview
-        monthlyBudget={null}
-        percentBudgetUsed={null}
-        budgetRemaining={null}
-        budgetColor={null}
-        overBudgetCategories={[]}
-        COLORS={[]}
+        monthlyBudget={monthlyBudget}
+        percentBudgetUsed={percentBudgetUsed}
+        budgetRemaining={budgetRemaining}
+        budgetColor={budgetColor}
+        overBudgetCategories={overBudgetCategories}
+        COLORS={COLORS}
         currencySymbol={currencySymbol}
         formatCurrency={formatCurrency}
         budgets={budgets}

@@ -688,6 +688,12 @@ function AppController() {
 							budgets={perCategoryBudgets}
 							budgetsMeta={budgetsMeta}
 							onBudgetsUpdated={fetchBudgets}
+							monthlyBudget={monthlyBudgetValue}
+							percentBudgetUsed={percentBudgetUsed}
+							budgetRemaining={monthlyRemainingValue}
+							budgetColor={budgetColor}
+							overBudgetCategories={overBudgetCategories}
+							COLORS={COLORS}
 							selectedYear={selectedYear}
 							selectedMonth={selectedMonth}
 							currencySymbol={currencySymbol}
