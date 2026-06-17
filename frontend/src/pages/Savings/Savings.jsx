@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 
 export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("All Time");
+  const [activeTab, setActiveTab] = useState("Selected Month");
 
   const [newGoal, setNewGoal] = useState({
     goalName: "",
@@ -41,7 +41,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : '',
         monthlySuggestion: '',
         notes: '',
-        history: Array.isArray(txList) ? txList.filter(t => Number(t.savingsId) === Number(s.id)) : [],
+        history: Array.isArray(txList) ? txList.filter(t => Number(t.savingsId) === Number(s.id)).map(h => ({ ...h, date: h.date || h.createdAt || h.transactionDate || h.timestamp || h.created_at || h.time })) : [],
         userId: uid
       }));
       setGoals(mapped);
@@ -76,6 +76,8 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
     })();
     return () => { mounted = false; };
   }, [savingsHistory]);
+
+  
 
   // no localStorage persistence: server is the source of truth
 
@@ -392,16 +394,19 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
   const allHistory = (goals || []).reduce((acc, g) => acc.concat((g.history || []).map(h => ({ ...h, goalId: g.id }))), []);
 
-  const months = useMemo(() => [
-    'January','February','March','April','May','June','July','August','September','October','November','December'
-  ], []);
-
   const monthFilteredHistory = useMemo(() => {
     return allHistory.filter(h => {
       const d = new Date(h.date);
       return d.getFullYear() === (Number(selectedYear) || new Date().getFullYear()) && d.getMonth() === Number(selectedMonth);
     });
   }, [allHistory, selectedMonth, selectedYear]);
+
+  useEffect(() => {
+    // debug: log counts of month-filtered history for current selection
+    try {
+      const hf = monthFilteredHistory || [];
+    } catch (e) {}
+  }, [monthFilteredHistory, selectedYear, selectedMonth]);
 
   const computeTotals = (historyArray) => {
     const deposits = (historyArray || []).reduce((acc, h) => acc + (h.amount > 0 ? h.amount : 0), 0);
@@ -427,7 +432,7 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
 
       <div className="savings-controls">
         <div className="savings-pill-group">
-          {['All Time', 'Selected Month', 'Summary'].map(tab => {
+          {['Selected Month', 'All Time', 'Summary'].map(tab => {
             const active = activeTab === tab;
             return (
               <button
@@ -442,13 +447,6 @@ export default function Savings({ currencySymbol = "₱", formatCurrency, availa
         </div>
 
         <div className="savings-controls-right">
-          <div className="savings-month">
-            <label className="savings-small-label">Month</label>
-            <select className="savings-select" value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))}>
-              {months.map((m, i) => <option key={m} value={i}>{m}</option>)}
-            </select>
-          </div>
-
           <button
             className="savings-add-button"
             onClick={() => {
