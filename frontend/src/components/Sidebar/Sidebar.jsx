@@ -14,7 +14,7 @@ const linkStyle = ({ isActive }) => ({
 export default function Sidebar() {
   return (
     <aside style={{ width: 220, padding: 16, borderRight: "1px solid #eee", background: "#fafafa" }}>
-      <h3 style={{ margin: "0 0 12px 0" }}>Finance</h3>
+      <h3 style={{ margin: "0 0 12px 0" }}>FinPilot</h3>
       <nav>
         <NavLink to="/" style={linkStyle} end>Dashboard</NavLink>
         <NavLink to="/transactions" style={linkStyle}>Transactions</NavLink>

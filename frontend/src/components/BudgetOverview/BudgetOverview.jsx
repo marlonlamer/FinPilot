@@ -5,15 +5,14 @@ import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { api } from "../../services/api";
 import toast from 'react-hot-toast';
 
-export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, overBudgetCategories, COLORS, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true }) {
+export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor , currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true }) {
   const pct = percentBudgetUsed || 0;
-  const [localBudgets, setLocalBudgets] = useState(budgets || {});
+  const localBudgets = budgets || {};
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editInitial, setEditInitial] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, category: null, id: null });
 
-  useEffect(() => setLocalBudgets(budgets || {}), [budgets]);
 
   useEffect(() => {
     if (externalAddOpen) {
@@ -22,11 +21,11 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
     }
   }, [externalAddOpen]);
 
-  const refresh = async () => {
+  async function refresh() {
     try {
       if (typeof onBudgetsUpdated === 'function') await onBudgetsUpdated();
     } catch (e) { console.warn('refresh budgets failed', e); }
-  };
+  }
 
   const handleAdd = async ({ category, amount }) => {
     const cat = String(category || "").trim();

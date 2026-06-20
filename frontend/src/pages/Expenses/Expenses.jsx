@@ -5,7 +5,7 @@ import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 
-export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, deleteExpense, openEditExpense, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
