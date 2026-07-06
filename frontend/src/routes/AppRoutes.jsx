@@ -19,6 +19,7 @@ import Register from "../pages/auth/Register";
 import ProtectedRoute from "./ProtectedRoutes";
 import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
 import { formatCurrency as formatCurrencyValue, getCurrencySymbol } from "../utils/formatCurrency";
+import { formatYearMonth } from "../utils/dateUtils";
 
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
@@ -87,7 +88,7 @@ function AppController() {
 		}
 	});
 
-	const currentMonthKey = `${userKey}:${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, "0")}`;
+	const currentMonthKey = `${userKey}:${formatYearMonth(selectedYear, selectedMonth || 0)}`;
 	const selectedMonthlyBudget = monthlyBudgetMap[currentMonthKey] != null ? Number(monthlyBudgetMap[currentMonthKey]) : null;
 
 	const setMonthlyBudgetForCurrentMonth = (val) => {
@@ -113,8 +114,7 @@ function AppController() {
 
 	const fetchExpenses = async () => {
 		try {
-			const pad = (n) => String(n + 1).padStart(2, "0");
-			const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+			const monthKey = formatYearMonth(selectedYear, selectedMonth);
 			const data = await api.get("/expenses", { params: { month: monthKey } });
 			setExpenses(data);
 		} catch (e) {
@@ -124,8 +124,7 @@ function AppController() {
 
 	const fetchIncomes = async () => {
 		try {
-			const pad = (n) => String(n + 1).padStart(2, "0");
-			const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+			const monthKey = formatYearMonth(selectedYear, selectedMonth);
 			const data = await api.get("/incomes", { params: { month: monthKey } });
 			setIncomes(data);
 		} catch (e) {
