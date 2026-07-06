@@ -3,6 +3,7 @@ import "./BudgetOverview.css";
 import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { api } from "../../services/api";
+import { formatYearMonth } from "../../utils/dateUtils";
 import toast from 'react-hot-toast';
 
 export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor , currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true }) {
@@ -33,7 +34,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
     if (!cat) return window.alert('Category name is required');
     try {
       const month = (selectedYear != null && selectedMonth != null)
-        ? `${selectedYear}-${String(selectedMonth+1).padStart(2,'0')}`
+        ? formatYearMonth(selectedYear, selectedMonth)
         : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
       const t = toast.loading('Adding budget...');
       await api.post('/budgets', { category: cat, budgetLimit: num, month });
@@ -55,7 +56,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
         toast.success('Budget updated successfully', { id: t });
       } else {
         const month = (selectedYear != null && selectedMonth != null)
-          ? `${selectedYear}-${String(selectedMonth+1).padStart(2,'0')}`
+          ? formatYearMonth(selectedYear, selectedMonth)
           : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
         const t = toast.loading('Adding budget...');
         await api.post('/budgets', { category, budgetLimit: Number(amount || 0), month });
