@@ -18,6 +18,7 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import ProtectedRoute from "./ProtectedRoutes";
 import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
+import { formatCurrency as formatCurrencyValue, getCurrencySymbol } from "../utils/formatCurrency";
 
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
@@ -98,36 +99,17 @@ function AppController() {
 		});
 	};
 
-	const currencyMap = {
-		PHP: "₱",
-		USD: "$",
-		EUR: "€",
-		GBP: "£",
-		JPY: "¥",
-		INR: "₹",
-		CAD: "$",
-		AUD: "$",
-		CNY: "¥"
-	};
-
 	const [currencyCode, setCurrencyCode] = useState(() => {
 		try { return localStorage.getItem("currencyCode") || "PHP"; } catch { return "PHP"; }
 	});
 
-	const currencySymbol = currencyMap[currencyCode] || "₱";
+	const currencySymbol = getCurrencySymbol(currencyCode);
 
 	useEffect(() => {
 		try { localStorage.setItem("currencyCode", currencyCode); } catch {}
 	}, [currencyCode]);
 
-	const formatCurrency = (value) => {
-		try {
-			if (value == null || isNaN(Number(value))) return "";
-			return new Intl.NumberFormat(undefined, { style: "currency", currency: currencyCode, minimumFractionDigits: 2 }).format(Number(value));
-		} catch (e) {
-			return `${currencySymbol}${Number(value).toFixed(2)}`;
-		}
-	};
+	const formatCurrency = (value) => formatCurrencyValue(value, { currencyCode, currencySymbol });
 
 	const fetchExpenses = async () => {
 		try {
