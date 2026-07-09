@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./BudgetOverview.css";
 import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
+import BudgetSummaryCard from "./BudgetSummaryCard";
 import { api } from "../../services/api";
 import { formatYearMonth } from "../../utils/dateUtils";
 import { clampPercentage } from "../../utils/clampPercentage";
@@ -95,33 +96,18 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
   return (
     <div className="budget-overview">
       {showSummary && (
-        <div className="budget-card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div className="card-label">Monthly Budget</div>
-              <div className="card-value">{monthlyBudget == null ? "Not set" : (formatCurrency ? formatCurrency(monthlyBudget) : typeof monthlyBudget === "number" ? `${currencySymbol}${monthlyBudget.toFixed(2)}` : "Not set")}</div>
-            </div>
-            <div>
-              {showAddButton && !readOnly && (
-                <button className="btn btn-primary" onClick={() => setAddOpen(true)}>＋ Add Budget</button>
-              )}
-            </div>
-          </div>
-
-          <div className="budget-progress-block">
-            <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${clampPercentage(pct)}%`, background: budgetColor || "#60a5fa" }} />
-            </div>
-            <div className="progress-subtext">
-              {typeof percentBudgetUsed === "number"
-                ? `${percentBudgetUsed.toFixed(1)}% used`
-                : "Usage not available"}
-              {budgetRemaining != null && ` — Remaining: ${formatCurrency ? formatCurrency(budgetRemaining) : typeof budgetRemaining === "number"
-                ? `${currencySymbol}${budgetRemaining.toFixed(2)}`
-                : "N/A"} `}
-            </div>
-          </div>
-        </div>
+        <BudgetSummaryCard
+          monthlyBudget={monthlyBudget}
+          percentBudgetUsed={percentBudgetUsed}
+          budgetRemaining={budgetRemaining}
+          budgetColor={budgetColor}
+          currencySymbol={currencySymbol}
+          formatCurrency={formatCurrency}
+          showAddButton={showAddButton}
+          readOnly={readOnly}
+          progressPercent={clampPercentage(pct)}
+          onAddBudget={() => setAddOpen(true)}
+        />
       )}
 
       {showCategoryList && (
