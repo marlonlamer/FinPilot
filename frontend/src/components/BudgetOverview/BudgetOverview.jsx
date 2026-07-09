@@ -3,6 +3,7 @@ import "./BudgetOverview.css";
 import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import BudgetSummaryCard from "./BudgetSummaryCard";
+import BudgetCategoryItem from "./BudgetCategoryItem";
 import { api } from "../../services/api";
 import { formatYearMonth } from "../../utils/dateUtils";
 import { clampPercentage } from "../../utils/clampPercentage";
@@ -120,26 +121,22 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
                 const spent = Number(meta.budgetSpent || 0);
                 const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
                 const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
+                const severity = pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal');
                 return (
-                  <div key={e.category} className="budget-category-card">
-                    <div className="budget-row-header">
-                      <div className="budget-name">{e.category}</div>
-                      <div className="category-actions">
-                        {!readOnly && (
-                          <>
-                            <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}>✏️</button>
-                            <button className="icon-btn" onClick={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}>❌</button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className="budget-progress">
-                      <div className="progress-track">
-                        <div className={"progress-fill " + (pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal'))} style={{ width: `${clampPercentage(pct || 0)}%` }} />
-                      </div>
-                    </div>
-                    <div className="budget-amount">{formatCurrency ? formatCurrency(spent) : `${currencySymbol}${spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(e.budget) : `${currencySymbol}${e.budget.toFixed(2)}`} — Remaining: {formatCurrency ? formatCurrency(remaining) : `${currencySymbol}${remaining.toFixed(2)}`}</div>
-                  </div>
+                  <BudgetCategoryItem
+                    key={e.category}
+                    category={e.category}
+                    budget={e.budget}
+                    spent={spent}
+                    remaining={remaining}
+                    severity={severity}
+                    readOnly={readOnly}
+                    currencySymbol={currencySymbol}
+                    formatCurrency={formatCurrency}
+                    progressPercent={clampPercentage(pct || 0)}
+                    onEdit={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}
+                    onDelete={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}
+                  />
                 );
               })}
             </div>
