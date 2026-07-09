@@ -4,6 +4,7 @@ import FormModal from "../../components/FormModal/FormModal";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import { api } from "../../services/api";
 import { formatYearMonth } from "../../utils/dateUtils";
+import { clampPercentage } from "../../utils/clampPercentage";
 import toast from 'react-hot-toast';
 
 export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor , currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true }) {
@@ -109,7 +110,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
 
           <div className="budget-progress-block">
             <div className="progress-track">
-              <div className="progress-fill" style={{ width: `${Math.min(100, Math.max(0, pct))}%`, background: budgetColor || "#60a5fa" }} />
+              <div className="progress-fill" style={{ width: `${clampPercentage(pct)}%`, background: budgetColor || "#60a5fa" }} />
             </div>
             <div className="progress-subtext">
               {typeof percentBudgetUsed === "number"
@@ -148,7 +149,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
                     </div>
                     <div className="budget-progress">
                       <div className="progress-track">
-                        <div className={"progress-fill " + (pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal'))} style={{ width: `${Math.min(100, Math.max(0, pct || 0))}%` }} />
+                        <div className={"progress-fill " + (pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal'))} style={{ width: `${clampPercentage(pct || 0)}%` }} />
                       </div>
                     </div>
                     <div className="budget-amount">{formatCurrency ? formatCurrency(spent) : `${currencySymbol}${spent.toFixed(2)}`} / {formatCurrency ? formatCurrency(e.budget) : `${currencySymbol}${e.budget.toFixed(2)}`} — Remaining: {formatCurrency ? formatCurrency(remaining) : `${currencySymbol}${remaining.toFixed(2)}`}</div>
