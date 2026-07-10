@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
+import BudgetOverview from "../../features/budgets/components/BudgetOverview";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";

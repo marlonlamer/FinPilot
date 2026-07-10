@@ -9,7 +9,7 @@ import {
   Legend
 } from "recharts";
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
-import BudgetOverview from "../../components/BudgetOverview/BudgetOverview";
+import BudgetOverview from "../../features/budgets/components/BudgetOverview";
 import { getCurrentUser } from "../../services/api";
 import "./DashboardModule.css";
 import React, { useEffect, useMemo, useState } from "react";
