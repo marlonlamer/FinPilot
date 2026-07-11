@@ -1,4 +1,5 @@
 import React from "react";
+import "./Navbar.css";
 
 export default function Navbar({ monthNames = [], selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, authToken, logout }) {
   const prevMonth = () => {
@@ -20,7 +21,7 @@ export default function Navbar({ monthNames = [], selectedMonth, setSelectedMont
   };
 
   return (
-    <header style={{ padding: 12, borderBottom: "1px solid #eee", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <header className="navbar">
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <button onClick={prevMonth} style={{ padding: "6px 10px" }}>{"<"}</button>
         <div style={{ minWidth: 160, textAlign: "center", fontWeight: 600 }}>{monthNames[selectedMonth] || ""} {selectedYear}</div>
