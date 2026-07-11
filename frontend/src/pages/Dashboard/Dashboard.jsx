@@ -16,7 +16,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 export default function Dashboard(props) {
   const {
-    computedTotalSavings,
+    computedTotalSavings, 
     monthlyIncomeTotal,
     monthlyExpenseTotal,
     monthlyBudget,
@@ -117,8 +117,8 @@ export default function Dashboard(props) {
       </div>
 
       {/* Budget Overview (left) and Budgets by Category (right) */}
-      <div className="budget-section" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-        <div style={{ flex: 1 }}>
+      <div className="budget-section">
+        <div className="budget-summary-column">
           <BudgetOverview
             monthlyBudget={monthlyBudget}
             percentBudgetUsed={percentBudgetUsed}
@@ -139,7 +139,7 @@ export default function Dashboard(props) {
             showCategoryList={false}
           />
         </div>
-        <div style={{ width: 420 }}>
+        <div className="budget-category-column">
           <BudgetOverview
             monthlyBudget={monthlyBudget}
             percentBudgetUsed={percentBudgetUsed}

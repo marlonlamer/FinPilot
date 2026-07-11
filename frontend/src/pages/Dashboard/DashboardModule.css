@@ -68,6 +68,23 @@
   color: #64748b;
 }
 
+.budget-section {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 20px;
+}
+
+.budget-summary-column {
+  flex: 1;
+  min-width: 0;
+}
+
+.budget-category-column {
+  width: 420px;
+  flex-shrink: 0;
+}
+
 .chart-section {
   margin-top: 22px;
 }
@@ -123,5 +140,29 @@
     gap: 18px;
     align-items: start;
   }
-  .chart-wrapper { height: 360px; }
+  .chart-wrapper { 
+    height: 300px; 
+  }
+
+  .budget-section {
+    flex-direction: column;
+  }
+
+  .budget-category-column {
+    width: 100%;
+  }
 }
+
+@media (max-width:600px){
+
+  .dashboard-greeting h1{
+      font-size:22px;
+  }
+
+  .dashboard-root{
+    padding:18px 14px;
+  }
+
+}
+
+
