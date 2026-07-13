@@ -4,3 +4,14 @@
   align-items: center;
   padding: 12px;
 }
+
+.menu-button{
+  display:none;
+}
+
+@media (max-width:900px){
+
+  .menu-button{
+    display:block;
+  }
+}

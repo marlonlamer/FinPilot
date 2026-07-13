@@ -12,10 +12,21 @@ const linkStyle = ({ isActive }) => ({
   marginBottom: 6
 });
 
-export default function Sidebar() {
+export default function Sidebar({
+      isOpen,
+      onClose
+  }) {
   return (
-    <aside className="sidebar">
+    <aside 
+      className={`sidebar ${isOpen ? "open" : ""}`}
+    >
       <h3 style={{ margin: "0 0 12px 0" }}>FinPilot</h3>
+      <button
+        className="sidebar-close"
+        onClick={onClose}
+      >
+        ✕
+      </button>
       <nav>
         <NavLink to="/" style={linkStyle} end>Dashboard</NavLink>
         <NavLink to="/transactions" style={linkStyle}>Transactions</NavLink>

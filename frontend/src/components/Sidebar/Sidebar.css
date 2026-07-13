@@ -2,3 +2,26 @@
   width: 220px;
   padding: 16px;
 }
+
+@media (max-width:900px){
+
+  .sidebar{
+    position:fixed;
+    left:-240px;
+
+    top:0;
+    bottom:0;
+
+    z-index:1000;
+
+    transition:left .3s ease;
+  }
+
+  .sidebar.open{
+    left:0;
+  }
+
+  .sidebar-close{
+    display:block;
+  }
+}
