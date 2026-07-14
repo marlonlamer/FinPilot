@@ -3,6 +3,10 @@
   padding: 16px;
 }
 
+.sidebar-title {
+  margin: 0 0 12px;
+}
+
 @media (max-width:900px){
 
   .sidebar{
