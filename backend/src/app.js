@@ -13,20 +13,28 @@ const budgetsRoutes = require("./routes/budgets.routes");
 const app = express();
 
 const allowedOrigins = [
-  "http://localhost:5173",
   "https://fin-pilot-ten-alpha.vercel.app"
 ];
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
+    origin(origin, callback) {
+      // Allow tools like Postman or server-to-server requests
+      if (!origin) {
+        return callback(null, true);
+      }
 
+      // Allow any localhost port during development
+      if (origin.startsWith("http://localhost:")) {
+        return callback(null, true);
+      }
+
+      // Allow production frontend
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-      callback(new Error("Not allowed by CORS"));
+      return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   })
