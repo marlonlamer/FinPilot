@@ -1,5 +1,4 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 import {
   LayoutDashboard,
@@ -9,9 +8,11 @@ import {
   PiggyBank,
   BarChart3,
   User,
-  Settings,
-  X
+  Settings
 } from "lucide-react";
+import SidebarHeader from "./SidebarHeader";
+import SidebarNavigation from "./SidebarNavigation";
+import SidebarFooter from "./SidebarFooter";
 
 const menuItems = [
   {
@@ -70,58 +71,11 @@ export default function Sidebar({
     <aside 
       className={`sidebar ${isOpen ? "open" : ""}`}
     >
-      <div className="sidebar-header">
-          <div>
-              <h2 className="sidebar-title">FinPilot</h2>
+      <SidebarHeader onClose={onClose} />
 
-              <p className="sidebar-subtitle">
-                  Personal Finance Tracker
-              </p>
-          </div>
-          <button
-              className="sidebar-close"
-              onClick={onClose}
-          >
-            <X size={20}/>
-          </button>
-      </div>
-      <nav className="sidebar-nav">
+      <SidebarNavigation items={menuItems} onLinkClick={handleLinkClick} />
 
-      {menuItems.map(item => {
-        const Icon=item.icon;
-
-        return(
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === "/"}
-             className={({isActive})=>
-                `sidebar-link ${
-                    isActive ? "active":""
-                }`
-            }
-            onClick={handleLinkClick}
-          >
-            <Icon size={20}/>
-
-            <span>
-                {item.label}
-            </span>
-          </NavLink>
-        );
-      })}
-      </nav>
-
-      <div className="sidebar-footer">
-        <div className="sidebar-balance">
-            <p className="balance-label">
-                Available Balance
-            </p>
-            <h3>
-                ₱73,500
-            </h3>
-        </div>
-      </div>
+      <SidebarFooter />
     </aside>
   );
 }
