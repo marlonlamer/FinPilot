@@ -9,10 +9,12 @@ import Dashboard from "../pages/Dashboard/Dashboard";
 import Expenses from "../pages/Expenses/Expenses";
 import Income from "../pages/Income/Income";
 import Transactions from "../pages/Transactions/Transactions";
-import Reports from "../pages/Reports/Reports";
+import Budget from "../pages/Budget/Budget";
+import DebtBills from "../pages/DebtBills/DebtBills";
+import Analytics from "../pages/Analytics/Analytics";
 import Profile from "../pages/Profile/Profile";
 import Settings from "../pages/Settings/Settings";
-import Savings from "../pages/Savings/Savings";
+import SavingsGoals from "../pages/SavingsGoals/SavingsGoals";
 
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
@@ -700,13 +702,17 @@ function AppController() {
 
 						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} selectedYear={selectedYear} selectedMonth={selectedMonth} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
-						<Route path="reports" element={<Reports combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="budget" element={<Budget budgets={perCategoryBudgets} budgetsMeta={budgetsMeta} onBudgetsUpdated={fetchBudgets} monthlyBudget={monthlyBudgetValue} setMonthlyBudget={setMonthlyBudgetForCurrentMonth} percentBudgetUsed={percentBudgetUsed} budgetRemaining={budgetRemaining} budgetColor={budgetColor} overBudgetCategories={overBudgetCategories} COLORS={COLORS} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+
+						<Route path="debt-bills" element={<DebtBills selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+
+						<Route path="analytics" element={<Analytics combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="profile" element={<Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="settings" element={<Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
-						<Route path="savings" element={<Savings availableBalance={dashboardTotals.availableBalance != null ? dashboardTotals.availableBalance : (availableBalance + (savingsBalanceAdjustment || 0))} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={dashboardTotals.totalSavings != null ? dashboardTotals.totalSavings : totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} selectedYear={selectedYear} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onSavingsUpdated={async () => {
+						<Route path="savings" element={<SavingsGoals availableBalance={dashboardTotals.availableBalance != null ? dashboardTotals.availableBalance : (availableBalance + (savingsBalanceAdjustment || 0))} adjustAvailableBalance={(delta) => setSavingsBalanceAdjustment(prev => (prev || 0) + delta)} totalIncomes={totalIncomes} totalExpenses={totalExpenses} totalSavings={dashboardTotals.totalSavings != null ? dashboardTotals.totalSavings : totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} selectedYear={selectedYear} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} onSavingsUpdated={async () => {
 							// Refresh dashboard, transactions, and savings history after savings updates
 							try {
 								await fetchSavingsHistory();

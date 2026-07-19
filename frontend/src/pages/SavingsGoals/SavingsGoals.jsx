@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useMemo } from "react";
 import ConfirmModal from "../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../components/FormModal/FormModal";
-import "./SavingsModule.css";
+import "./SavingsGoalsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import toast from 'react-hot-toast';
 
-export default function Savings({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
+export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Selected Month");
 

@@ -1,11 +1,11 @@
 import React from "react";
 import { ResponsiveContainer, LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, Legend, PieChart, Pie } from "recharts";
-import "./ReportsModule.css";
+import "./Analytics.css";
 
-export default function Reports({ combinedLineData, pieData, currencySymbol = "₱", formatCurrency }) {
+export default function Analytics({ combinedLineData, pieData, currencySymbol = "₱", formatCurrency }) {
   return (
     <div>
-      <h2>Reports</h2>
+      <h2>Analytics</h2>
       <div className="reports-chart reports-line">
         <ResponsiveContainer>
           <LineChart data={combinedLineData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>

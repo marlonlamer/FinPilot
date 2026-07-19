@@ -8,7 +8,9 @@ import {
   PiggyBank,
   BarChart3,
   User,
-  Settings
+  Settings,
+  Target,
+  Landmark
 } from "lucide-react";
 import SidebarHeader from "./SidebarHeader";
 import SidebarNavigation from "./SidebarNavigation";
@@ -36,13 +38,23 @@ const menuItems = [
     icon: TrendingDown
   },
   {
-    label: "Savings",
+    label: "Budgets",
+    path: "/budget",
+    icon: Target
+  },
+  {
+    label: "Debt & bills",
+    path: "/debt-bills",
+    icon: Landmark
+  },
+  {
+    label: "Savings & Goals",
     path: "/savings",
     icon: PiggyBank
   },
   {
-    label: "Reports",
-    path: "/reports",
+    label: "Analytics",
+    path: "/analytics",
     icon: BarChart3
   },
   {
