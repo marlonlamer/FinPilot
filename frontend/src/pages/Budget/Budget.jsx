@@ -1,9 +1,5 @@
-function Budget() {
-  return (
-    <div>
-      <h1>Budget</h1>
-    </div>
-  );
-}
+import BudgetPage from "../../features/budgets/BudgetPage";
 
-export default Budget;
+export default function Budget() {
+    return <BudgetPage />;
+}
