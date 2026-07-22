@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 import BudgetOverview from "../../features/budgets/components/BudgetOverview";
+import BudgetCategoryList from "../../features/budgets/components/BudgetCategoryList";
 import { getCurrentUser } from "../../services/api";
 import "./DashboardModule.css";
 import React, { useEffect, useMemo, useState } from "react";
@@ -140,25 +141,7 @@ export default function Dashboard(props) {
           />
         </div>
         <div className="budget-category-column">
-          <BudgetOverview
-            monthlyBudget={monthlyBudget}
-            percentBudgetUsed={percentBudgetUsed}
-            budgetRemaining={budgetRemaining}
-            budgetColor={budgetColor}
-            overBudgetCategories={overBudgetCategories}
-            COLORS={COLORS}
-            currencySymbol={currencySymbol}
-            formatCurrency={formatCurrency}
-            budgets={budgets}
-            budgetsMeta={budgetsMeta}
-            onBudgetsUpdated={onBudgetsUpdated}
-            readOnly={true}
-            showAddButton={false}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            showSummary={false}
-            showCategoryList={true}
-          />
+          <BudgetCategoryList />
         </div>
       </div>
 
