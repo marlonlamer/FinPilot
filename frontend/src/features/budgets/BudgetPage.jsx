@@ -1,10 +1,9 @@
-function Budget() {
+import BudgetOverview from "./components/BudgetOverview";
+
+export default function BudgetPage(props) {
   return (
-    <div className="page">
-      <h1>Budget</h1>
-      <p>Coming soon...</p>
-    </div>
+    <BudgetOverview
+      {...props}
+    />
   );
 }
-
-export default Budget;
