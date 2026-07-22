@@ -1,3 +1,6 @@
 export function useBudgets() {
-  return {};
+  return {
+    budgets: {},
+    budgetsMeta: {},
+  };
 }

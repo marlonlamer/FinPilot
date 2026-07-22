@@ -190,6 +190,8 @@ function AppController() {
 			console.warn('Failed to fetch budget summary', e);
 		}
 	};
+
+	// ===== Budget Feature =====
 	const [budgetsMeta, setBudgetsMeta] = useState({});
 
 	const fetchBudgets = async () => {
