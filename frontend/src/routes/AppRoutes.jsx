@@ -200,12 +200,9 @@ function AppController() {
 			if (!uid) return;
 			const monthKey = `${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, '0')}`;
 			const list = await api.get('/budgets', { params: { month: monthKey } });
-			const map = {};
-			const meta = {};
-			if (Array.isArray(list)) {
-				list.forEach(b => { map[b.category] = Number(b.budgetLimit || 0); meta[b.category] = { id: b.id, budgetSpent: Number(b.budgetSpent || 0), budgetRemaining: Number(b.budgetRemaining || 0), month: b.month }; });
-			}
-			setPerCategoryBudgets(map);
+            const { budgets, meta } = budgetService.mapBudgets(list);
+
+			setPerCategoryBudgets(budgets);
 			setBudgetsMeta(meta);
 		} catch (e) {
 			console.warn('Failed to fetch budgets', e);
