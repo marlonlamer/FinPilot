@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { budgetService } from "../services/budgetServices";
 
 export function useBudgets({selectedYear, selectedMonth}) {
@@ -12,16 +12,16 @@ export function useBudgets({selectedYear, selectedMonth}) {
     setBudgetsMeta(meta);
   };
 
-  const loadBudgets = async () => {
+  const loadBudgets = useCallback(async () => {
     const list = await budgetService.getBudgets(monthKey);
-      
+    
     const { budgets, meta } = budgetService.mapBudgets(list);
-      
+    
     applyBudgets({
       budgets, 
       meta 
     });
-  };
+  }, [monthKey]);
 
   return {
     perCategoryBudgets,

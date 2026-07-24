@@ -1,5 +1,6 @@
 import BudgetOverview from "./components/BudgetOverview";
 import { useBudgets } from "./hooks/useBudgets";
+import { useEffect } from "react";
 
 export default function BudgetPage(props) {
   const {
@@ -10,6 +11,10 @@ export default function BudgetPage(props) {
     selectedYear: props.selectedYear,
     selectedMonth: props.selectedMonth,
   });
+
+  useEffect(() => {
+    loadBudgets();
+  }, [loadBudgets]);
 
   return (
     <BudgetOverview
