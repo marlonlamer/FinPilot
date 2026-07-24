@@ -198,7 +198,7 @@ function AppController() {
 		try {
 			const uid = getCurrentUserId();
 			if (!uid) return;
-			const monthKey = `${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, '0')}`;
+	
 			const list = await api.get('/budgets', { params: { month: monthKey } });
             const { budgets, meta } = budgetService.mapBudgets(list);
 

@@ -23,7 +23,6 @@ export const budgetService = {
         };
       });
     }
-
     return { budgets, meta };
   },
 };

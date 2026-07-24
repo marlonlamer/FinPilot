@@ -3,14 +3,18 @@ import { useBudgets } from "./hooks/useBudgets";
 
 export default function BudgetPage(props) {
   const {
-    budgets,
+    perCategoryBudgets,
     budgetsMeta,
-  } = useBudgets();
+    loadBudgets,
+  } = useBudgets({
+    selectedYear: props.selectedYear,
+    selectedMonth: props.selectedMonth,
+  });
 
   return (
     <BudgetOverview
       {...props}
-      budgets={budgets}
+      budgets={perCategoryBudgets}
       budgetsMeta={budgetsMeta}
     />
   );
