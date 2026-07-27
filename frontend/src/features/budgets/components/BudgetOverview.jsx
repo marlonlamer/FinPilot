@@ -8,8 +8,9 @@ import { api } from "../../../services/api";
 import { formatYearMonth } from "../../../utils/dateUtils";
 import { clampPercentage } from "../../../utils/clampPercentage";
 import toast from 'react-hot-toast';
+import BudgetSkeleton from "./BudgetSkeleton";
 
-export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor , currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true }) {
+export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor , currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true, isLoading = false, error = null }) {
   const pct = percentBudgetUsed || 0;
   const localBudgets = budgets || {};
   const [addOpen, setAddOpen] = useState(false);
@@ -96,83 +97,95 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
 
   return (
     <div className="budget-overview">
-      {showSummary && (
-        <BudgetSummaryCard
-          monthlyBudget={monthlyBudget}
-          percentBudgetUsed={percentBudgetUsed}
-          budgetRemaining={budgetRemaining}
-          budgetColor={budgetColor}
-          currencySymbol={currencySymbol}
-          formatCurrency={formatCurrency}
-          showAddButton={showAddButton}
-          readOnly={readOnly}
-          progressPercent={clampPercentage(pct)}
-          onAddBudget={() => setAddOpen(true)}
-        />
-      )}
+      {isLoading && <BudgetSkeleton />}
 
-      {showCategoryList && (
-        <div className="budget-card small">
-          <div className="card-label">Budgets by Category</div>
-          {entries.length > 0 ? (
-            <div className="budget-grid">
-              {entries.map((e) => {
-                const meta = budgetsMeta[e.category] || {};
-                const spent = Number(meta.budgetSpent || 0);
-                const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
-                const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
-                const severity = pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal');
-                return (
-                  <BudgetCategoryItem
-                    key={e.category}
-                    category={e.category}
-                    budget={e.budget}
-                    spent={spent}
-                    remaining={remaining}
-                    severity={severity}
-                    readOnly={readOnly}
-                    currencySymbol={currencySymbol}
-                    formatCurrency={formatCurrency}
-                    progressPercent={clampPercentage(pct || 0)}
-                    onEdit={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}
-                    onDelete={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <div className="muted">No budgets set. Click "Add Budget" to create one.</div>
-          )}
+      {error && (
+        <div className="budget-error">
+          <div>{error}</div>
         </div>
       )}
 
-      <FormModal
-        open={addOpen}
-        title="Add Budget"
-        fields={[{ name: 'category', label: 'Category Name' }, { name: 'amount', label: 'Budget Amount', type: 'number' }]}
-        initialValues={{ category: '', amount: '' }}
-        onCancel={() => setAddOpen(false)}
-        onSubmit={handleAdd}
-        submitLabel="Add"
-      />
+      {!isLoading && !error && (
+        <>
+          {showSummary && (
+            <BudgetSummaryCard
+              monthlyBudget={monthlyBudget}
+              percentBudgetUsed={percentBudgetUsed}
+              budgetRemaining={budgetRemaining}
+              budgetColor={budgetColor}
+              currencySymbol={currencySymbol}
+              formatCurrency={formatCurrency}
+              showAddButton={showAddButton}
+              readOnly={readOnly}
+              progressPercent={clampPercentage(pct)}
+              onAddBudget={() => setAddOpen(true)}
+            />
+          )}
 
-      <FormModal
-        open={editOpen}
-        title="Edit Budget"
-        fields={[{ name: 'category', label: 'Category Name' }, { name: 'amount', label: 'Budget Amount', type: 'number' }]}
-        initialValues={{ category: editInitial.category || '', amount: editInitial.amount || '' }}
-        onCancel={() => setEditOpen(false)}
-        onSubmit={handleEdit}
-        submitLabel="Save"
-      />
+          {showCategoryList && (
+            <div className="budget-card small">
+              <div className="card-label">Budgets by Category</div>
+              {entries.length > 0 ? (
+                <div className="budget-grid">
+                  {entries.map((e) => {
+                    const meta = budgetsMeta[e.category] || {};
+                    const spent = Number(meta.budgetSpent || 0);
+                    const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
+                    const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
+                    const severity = pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal');
+                    return (
+                      <BudgetCategoryItem
+                        key={e.category}
+                        category={e.category}
+                        budget={e.budget}
+                        spent={spent}
+                        remaining={remaining}
+                        severity={severity}
+                        readOnly={readOnly}
+                        currencySymbol={currencySymbol}
+                        formatCurrency={formatCurrency}
+                        progressPercent={clampPercentage(pct || 0)}
+                        onEdit={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}
+                        onDelete={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}
+                      />
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="muted">No budgets set. Click "Add Budget" to create one.</div>
+              )}
+            </div>
+          )}
 
-      <ConfirmModal
-        open={deleteConfirm.open}
-        message={deleteConfirm.category ? `Delete budget for ${deleteConfirm.category}? This cannot be undone.` : 'Delete budget?'}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteConfirm({ open: false, category: null, id: null })}
-        confirmLabel="Delete"
-      />
+          <FormModal
+            open={addOpen}
+            title="Add Budget"
+            fields={[{ name: 'category', label: 'Category Name' }, { name: 'amount', label: 'Budget Amount', type: 'number' }]}
+            initialValues={{ category: '', amount: '' }}
+            onCancel={() => setAddOpen(false)}
+            onSubmit={handleAdd}
+            submitLabel="Add"
+          />
+
+          <FormModal
+            open={editOpen}
+            title="Edit Budget"
+            fields={[{ name: 'category', label: 'Category Name' }, { name: 'amount', label: 'Budget Amount', type: 'number' }]}
+            initialValues={{ category: editInitial.category || '', amount: editInitial.amount || '' }}
+            onCancel={() => setEditOpen(false)}
+            onSubmit={handleEdit}
+            submitLabel="Save"
+          />
+
+          <ConfirmModal
+            open={deleteConfirm.open}
+            message={deleteConfirm.category ? `Delete budget for ${deleteConfirm.category}? This cannot be undone.` : 'Delete budget?'}
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteConfirm({ open: false, category: null, id: null })}
+            confirmLabel="Delete"
+          />
+        </>
+      )}
     </div>
   );
 }

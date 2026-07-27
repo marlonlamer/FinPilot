@@ -7,6 +7,8 @@ export default function BudgetPage(props) {
     perCategoryBudgets,
     budgetsMeta,
     loadBudgets,
+    isLoading,
+    error,
   } = useBudgets({
     selectedYear: props.selectedYear,
     selectedMonth: props.selectedMonth,
@@ -21,6 +23,8 @@ export default function BudgetPage(props) {
       {...props}
       budgets={perCategoryBudgets}
       budgetsMeta={budgetsMeta}
+      isLoading={isLoading}
+      error={error}
     />
   );
 }
