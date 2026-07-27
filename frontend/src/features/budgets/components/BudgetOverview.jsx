@@ -4,6 +4,7 @@ import FormModal from "../../../components/FormModal/FormModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import BudgetSummaryCard from "./BudgetSummaryCard";
 import BudgetCategoryItem from "./BudgetCategoryItem";
+import BudgetCategoryList from "./BudgetCategoryList";
 import { api } from "../../../services/api";
 import { formatYearMonth } from "../../../utils/dateUtils";
 import { clampPercentage } from "../../../utils/clampPercentage";
@@ -17,7 +18,6 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
   const [editOpen, setEditOpen] = useState(false);
   const [editInitial, setEditInitial] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, category: null, id: null });
-
 
   useEffect(() => {
     if (externalAddOpen) {
@@ -123,38 +123,31 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
           )}
 
           {showCategoryList && (
-            <div className="budget-card small">
-              <div className="card-label">Budgets by Category</div>
-              {entries.length > 0 ? (
-                <div className="budget-grid">
-                  {entries.map((e) => {
-                    const meta = budgetsMeta[e.category] || {};
-                    const spent = Number(meta.budgetSpent || 0);
-                    const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
-                    const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
-                    const severity = pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal');
-                    return (
-                      <BudgetCategoryItem
-                        key={e.category}
-                        category={e.category}
-                        budget={e.budget}
-                        spent={spent}
-                        remaining={remaining}
-                        severity={severity}
-                        readOnly={readOnly}
-                        currencySymbol={currencySymbol}
-                        formatCurrency={formatCurrency}
-                        progressPercent={clampPercentage(pct || 0)}
-                        onEdit={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}
-                        onDelete={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="muted">No budgets set. Click "Add Budget" to create one.</div>
-              )}
-            </div>
+            <BudgetCategoryList hasItems={entries.length > 0}>
+              {entries.map((e) => {
+                const meta = budgetsMeta[e.category] || {};
+                const spent = Number(meta.budgetSpent || 0);
+                const remaining = (meta.budgetRemaining != null) ? Number(meta.budgetRemaining) : (Number(e.budget || 0) - spent);
+                const pct = e.budget > 0 ? (spent / e.budget) * 100 : 0;
+                const severity = pct > 100 ? 'over' : (pct > 80 ? 'warning' : 'normal');
+                return (
+                  <BudgetCategoryItem
+                    key={e.category}
+                    category={e.category}
+                    budget={e.budget}
+                    spent={spent}
+                    remaining={remaining}
+                    severity={severity}
+                    readOnly={readOnly}
+                    currencySymbol={currencySymbol}
+                    formatCurrency={formatCurrency}
+                    progressPercent={clampPercentage(pct || 0)}
+                    onEdit={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}
+                    onDelete={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}
+                  />
+                );
+              })}
+            </BudgetCategoryList>
           )}
 
           <FormModal
