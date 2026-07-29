@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useCallback } from "react";
 import "./TransactionsModule.css";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
+import TransactionsSearchBar from "./TransactionsSearchBar";
 
 export default function Transactions({ incomes = [], expenses = [], savingsHistory = [], selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   // only keep search input per requirements
@@ -61,13 +62,7 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
 
   return (
     <div className="transactions-root">
-      <h2>All Transactions</h2>
-
-      <div className="transactions-controls">
-        <div className="transactions-search">
-          <input className="transactions-input" placeholder="Search amounts, notes, category..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-        </div>
-      </div>
+      <TransactionsSearchBar value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
 
       <h3>Transactions</h3>
       <TransactionFeed transactions={displayedList} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
