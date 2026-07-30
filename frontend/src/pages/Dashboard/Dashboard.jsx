@@ -11,6 +11,7 @@ import {
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 import BudgetOverview from "../../features/budgets/components/BudgetOverview";
 import BudgetCategoryList from "../../features/budgets/components/BudgetCategoryList";
+import DashboardHeader from "../../features/dashboard/components/DashboardHeader";
 import { getCurrentUser } from "../../services/api";
 import "./DashboardModule.css";
 import React, { useEffect, useMemo, useState } from "react";
@@ -82,13 +83,7 @@ export default function Dashboard(props) {
   return (
     <div className="dashboard-root">
       {displayName && (
-        <div className="dashboard-header">
-          <div className="dashboard-greeting">
-            <h1>{greeting}, {displayName} <span className="wave">👋</span></h1>
-            <div className="dashboard-date">{formattedDate}</div>
-          </div>
-          <div className="dashboard-subtext">Track your finances and stay on top of your goals.</div>
-        </div>
+        <DashboardHeader displayName={displayName} greeting={greeting} formattedDate={formattedDate} />
       )}
   
       <div className="dashboard-stats">
