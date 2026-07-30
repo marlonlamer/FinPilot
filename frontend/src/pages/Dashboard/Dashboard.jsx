@@ -12,6 +12,7 @@ import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDis
 import BudgetOverview from "../../features/budgets/components/BudgetOverview";
 import BudgetCategoryList from "../../features/budgets/components/BudgetCategoryList";
 import DashboardHeader from "../../features/dashboard/components/DashboardHeader";
+import DashboardSummaryCards from "../../features/dashboard/components/DashboardSummaryCards";
 import { getCurrentUser } from "../../services/api";
 import "./DashboardModule.css";
 import React, { useEffect, useMemo, useState } from "react";
@@ -75,6 +76,14 @@ export default function Dashboard(props) {
     return formatCurrency ? formatCurrency(n) : `${currencySymbol}${n.toFixed(digits)}`;
   };
 
+  const availableBalanceDisplay = fmt(availableBalance, 2);
+  const totalSavingsDisplay = fmt(computedTotalSavings, 2);
+  const monthlyIncomeDisplay = fmt(monthlyIncomeTotal, 2);
+  const monthlyExpensesDisplay = fmt(monthlyExpenseTotal, 2);
+  const totalNetWorthDisplay = formatCurrency
+    ? formatCurrency(Number(computedTotalSavings || 0) + Number(availableBalance || 0))
+    : `${currencySymbol}${(Number(computedTotalSavings || 0) + Number(availableBalance || 0)).toFixed(2)}`;
+
   const cld = Array.isArray(combinedLineData) ? combinedLineData : [];
   // pieData handled by ExpenseDistribution via expenses prop
   const obc = Array.isArray(overBudgetCategories) ? overBudgetCategories : [];
@@ -86,31 +95,13 @@ export default function Dashboard(props) {
         <DashboardHeader displayName={displayName} greeting={greeting} formattedDate={formattedDate} />
       )}
   
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <div className="stat-label">Available Balance</div>
-          <div className="stat-value">{fmt(availableBalance, 2)}</div>
-          <div className="stat-sub" />
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Total Savings</div>
-          <div className="stat-value">{fmt(computedTotalSavings, 2)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Monthly Income</div>
-          <div className="stat-value">{fmt(monthlyIncomeTotal, 2)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Monthly Expenses</div>
-          <div className="stat-value">{fmt(monthlyExpenseTotal, 2)}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Total Net Worth</div>
-          <div className="stat-value">{formatCurrency
-              ? formatCurrency(Number(computedTotalSavings || 0) + Number(availableBalance || 0))
-              : `${currencySymbol}${(Number(computedTotalSavings || 0) + Number(availableBalance || 0)).toFixed(2)}`}</div>
-        </div>
-      </div>
+      <DashboardSummaryCards
+        availableBalanceDisplay={availableBalanceDisplay}
+        totalSavingsDisplay={totalSavingsDisplay}
+        monthlyIncomeDisplay={monthlyIncomeDisplay}
+        monthlyExpensesDisplay={monthlyExpensesDisplay}
+        totalNetWorthDisplay={totalNetWorthDisplay}
+      />
 
       {/* Budget Overview (left) and Budgets by Category (right) */}
       <div className="budget-section">
