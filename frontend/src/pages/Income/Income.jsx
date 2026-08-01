@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import "./IncomeModule.css";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
+import IncomeHeader from "../../features/income/components/IncomeHeader";
 
 export default function Income({ incomes = [], incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -41,16 +42,12 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
 
   return (
     <div className="income-root">
-      <div className="income-header">
-        <h3 className="page-title">Incomes</h3>
-        <button
-          className="btn btn-primary"
-          onClick={() => {
-            setIncomeForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
-            setIncomeModalOpen(true);
-          }}
-        >＋ Add Income</button>
-      </div>
+      <IncomeHeader
+        onAddClick={() => {
+          setIncomeForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
+          setIncomeModalOpen(true);
+        }}
+      />
 
       <div className="stats-row">
         <div className="stat-card">
