@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import "./IncomeModule.css";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import IncomeHeader from "../../features/income/components/IncomeHeader";
+import IncomeStats from "../../features/income/components/IncomeStats";
 
 export default function Income({ incomes = [], incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -40,6 +41,10 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
   const recurring = useMemo(() => incomes.filter(i => i.recurring), [incomes]);
   const nonRecurring = useMemo(() => incomes.filter(i => !i.recurring), [incomes]);
 
+  const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
+  const lastMonthDisplay = formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`;
+  const recurringCount = recurring.length;
+
   return (
     <div className="income-root">
       <IncomeHeader
@@ -49,20 +54,7 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
         }}
       />
 
-      <div className="stats-row">
-        <div className="stat-card">
-          <div className="stat-label">This Month</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Last Month</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`}</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-label">Recurring Incomes</div>
-          <div className="stat-value">{recurring.length}</div>
-        </div>
-      </div>
+      <IncomeStats monthlyDisplay={monthlyDisplay} lastMonthDisplay={lastMonthDisplay} recurringCount={recurringCount} />
 
       {incomeModalOpen && (
         <div className="modal-overlay" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>
