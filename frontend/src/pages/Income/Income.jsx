@@ -3,6 +3,7 @@ import "./IncomeModule.css";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import IncomeHeader from "../../features/income/components/IncomeHeader";
 import IncomeStats from "../../features/income/components/IncomeStats";
+import SourceBreakdownList from "../../features/income/components/SourceBreakdownList";
 
 export default function Income({ incomes = [], incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -117,19 +118,7 @@ export default function Income({ incomes = [], incomeForm, setIncomeForm, handle
         <div className="no-data">No recurring incomes set.</div>
       )}
 
-      <h3 className="section-title">Income Source Breakdown</h3>
-      {bySource.length > 0 ? (
-        <div className="source-list">
-              {bySource.map(([source, total]) => (
-            <div key={source} className="source-item">
-              <div>{source}</div>
-              <div className="source-value">{formatCurrency ? formatCurrency(total) : `${currencySymbol}${total.toFixed(2)}`}</div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="no-data">No incomes recorded.</div>
-      )}
+      <SourceBreakdownList bySource={bySource} formatCurrency={formatCurrency} currencySymbol={currencySymbol} />
 
       <h3 className="section-title">All Incomes</h3>
       <TransactionFeed transactions={nonRecurring.map(i => ({ ...i, type: 'income' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
