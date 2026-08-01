@@ -4,6 +4,7 @@ import FormModal from "../../components/FormModal/FormModal";
 import "./SavingsGoalsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
+import SavingsControls from "../../features/savingsGoals/components/SavingsControls";
 import toast from 'react-hot-toast';
 
 export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
@@ -419,6 +420,10 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
   const viewTotals = computeTotals(viewHistory);
   const summaryTotals = computeTotals(allHistory);
 
+  const openAddGoal = () => {
+    setNewGoal(prev => ({ ...prev, startDate: new Date().toISOString().slice(0, 10) }));
+    setIsModalOpen(true);
+  };
 
   return (
     <div className="savings-root">
@@ -430,34 +435,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         </div>
       )}
 
-      <div className="savings-controls">
-        <div className="savings-pill-group">
-          {['Selected Month', 'All Time', 'Summary'].map(tab => {
-            const active = activeTab === tab;
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={"savings-pill" + (active ? ' active' : '')}
-              >
-                {tab}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="savings-controls-right">
-          <button
-            className="savings-add-button"
-            onClick={() => {
-              setNewGoal(prev => ({ ...prev, startDate: new Date().toISOString().slice(0, 10) }));
-              setIsModalOpen(true);
-            }}
-          >
-            + Add Saving Goal
-          </button>
-        </div>
-      </div>
+      <SavingsControls activeTab={activeTab} onTabChange={setActiveTab} onAddGoal={openAddGoal} />
 
       {isModalOpen && (
         <div className="savings-modal-overlay">
