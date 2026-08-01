@@ -5,6 +5,7 @@ import "./SavingsGoalsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../services/api";
 import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import SavingsControls from "../../features/savingsGoals/components/SavingsControls";
+import SavingsSummaryPanel from "../../features/savingsGoals/components/SavingsSummaryPanel";
 import toast from 'react-hot-toast';
 
 export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
@@ -529,23 +530,11 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
           <p>Total Savings: {formatCurrency ? formatCurrency(viewTotals.net) : `${currencySymbol}${Number(viewTotals.net).toFixed(2)}`}</p>
         </>
       ) : (
-        <div className="savings-summary-panel">
-          <h3>Summary</h3>
-          <div className="savings-summary-items">
-            <div className="savings-summary-item">
-              <div className="savings-summary-label">Total Deposits</div>
-              <div className="savings-summary-value">{formatCurrency ? formatCurrency(summaryTotals.deposits) : `${currencySymbol}${Number(summaryTotals.deposits).toFixed(2)}`}</div>
-            </div>
-            <div className="savings-summary-item">
-              <div className="savings-summary-label">Total Withdrawals</div>
-              <div className="savings-summary-value">{formatCurrency ? formatCurrency(summaryTotals.withdrawals) : `${currencySymbol}${Number(summaryTotals.withdrawals).toFixed(2)}`}</div>
-            </div>
-            <div className="savings-summary-item">
-              <div className="savings-summary-label">Net Savings</div>
-              <div className="savings-summary-value">{formatCurrency ? formatCurrency(summaryTotals.net) : `${currencySymbol}${Number(summaryTotals.net).toFixed(2)}`}</div>
-            </div>
-          </div>
-        </div>
+        <SavingsSummaryPanel
+          totalDepositsDisplay={formatCurrency ? formatCurrency(summaryTotals.deposits) : `${currencySymbol}${Number(summaryTotals.deposits).toFixed(2)}`}
+          totalWithdrawalsDisplay={formatCurrency ? formatCurrency(summaryTotals.withdrawals) : `${currencySymbol}${Number(summaryTotals.withdrawals).toFixed(2)}`}
+          netSavingsDisplay={formatCurrency ? formatCurrency(summaryTotals.net) : `${currencySymbol}${Number(summaryTotals.net).toFixed(2)}`}
+        />
       )}
 
       <div className="savings-list-container">
