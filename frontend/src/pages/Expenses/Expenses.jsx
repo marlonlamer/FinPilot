@@ -4,6 +4,7 @@ import TransactionFeed from "../../components/TransactionFeed/TransactionFeed";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
+import ExpensesHeader from "../../features/expenses/components/ExpensesHeader";
 
 export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -74,33 +75,22 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
   const nonRecurring = useMemo(() => expenses.filter(e => !e.recurring), [expenses]);
   const [externalAddOpen, setExternalAddOpen] = useState(false);
 
+  const handleAddExpense = () => {
+    setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
+    setExpenseModalOpen(true);
+  };
+
+  const handleAddBudget = () => {
+    setExternalAddOpen(true);
+    setTimeout(() => {
+      const el = document.querySelector('.budget-list') || document.querySelector('.budget-overview');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
   return (
     <div className="expenses-root">
-      <div className="page-header">
-        <h3 className="header-title">Expenses</h3>
-        <div className="header-actions">
-          
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
-              setExpenseModalOpen(true);
-            }}
-          >＋ Add Expense</button>
-          <button
-            className="btn btn-outline"
-            onClick={() => {
-              // trigger BudgetOverview's add modal
-              setExternalAddOpen(true);
-              // scroll to budgets section
-              setTimeout(() => {
-                const el = document.querySelector('.budget-list') || document.querySelector('.budget-overview');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 100);
-            }}
-          >＋ Add Budget</button>
-        </div>
-      </div>
+      <ExpensesHeader onAddExpense={handleAddExpense} onAddBudget={handleAddBudget} />
 
       <div className="analytics-row">
         <div className="card trend-card">
