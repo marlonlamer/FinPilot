@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, setCurrentUser } from "../../services/api";
+import AuthHeader from "../../features/auth/components/AuthHeader";
+import AuthFooter from "../../features/auth/components/AuthFooter";
 import "./AuthModule.css";
 
 export default function Register({ onAuthSuccess }) {
@@ -49,7 +51,7 @@ export default function Register({ onAuthSuccess }) {
 
   return (
     <div className="auth-root">
-      <h2>Register</h2>
+      <AuthHeader title="Register" />
       <form className="auth-form" onSubmit={submit}>
         <label>Name</label>
         <input type="text" value={name} onChange={e => setName(e.target.value)} required />
@@ -63,6 +65,7 @@ export default function Register({ onAuthSuccess }) {
           <button className="btn btn-primary" disabled={loading}>{loading ? "Registering..." : "Create Account"}</button>
         </div>
       </form>
+      <AuthFooter text="Already have an account?" linkTo="/login" linkLabel="Sign in here" />
     </div>
   );
 }

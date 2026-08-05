@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { api, setCurrentUser } from "../../services/api";
+import AuthHeader from "../../features/auth/components/AuthHeader";
+import AuthFooter from "../../features/auth/components/AuthFooter";
 import "./AuthModule.css";
 
 export default function Login({ onAuthSuccess }) {
@@ -39,7 +41,7 @@ export default function Login({ onAuthSuccess }) {
 
   return (
     <div className="auth-root">
-      <h2>Login</h2>
+      <AuthHeader title="Login" />
       <form className="auth-form" onSubmit={submit}>
         <label>Email</label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} required />
@@ -50,9 +52,7 @@ export default function Login({ onAuthSuccess }) {
           <button className="btn btn-primary" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</button>
         </div>
       </form>
-      <div className="auth-footer">
-        Don't have an account? <Link to="/register">Register here</Link>
-      </div>
+      <AuthFooter text="Don't have an account?" linkTo="/register" linkLabel="Register here" />
     </div>
   );
 }
