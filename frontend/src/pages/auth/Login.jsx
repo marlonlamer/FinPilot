@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api, setCurrentUser } from "../../services/api";
 import AuthHeader from "../../features/auth/components/AuthHeader";
 import AuthFooter from "../../features/auth/components/AuthFooter";
+import AuthSubmitButton from "../../features/auth/components/AuthSubmitButton";
 import "./AuthModule.css";
 
 export default function Login({ onAuthSuccess }) {
@@ -49,7 +50,7 @@ export default function Login({ onAuthSuccess }) {
         <input type="password" value={password} onChange={e => setPassword(e.target.value)} required />
         {error && <div className="auth-error">{error}</div>}
         <div className="auth-actions">
-          <button className="btn btn-primary" disabled={loading}>{loading ? "Signing in..." : "Sign In"}</button>
+          <AuthSubmitButton loading={loading} buttonText={loading ? "Signing in..." : "Sign In"} />
         </div>
       </form>
       <AuthFooter text="Don't have an account?" linkTo="/register" linkLabel="Register here" />

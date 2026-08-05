@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { api, setCurrentUser } from "../../services/api";
 import AuthHeader from "../../features/auth/components/AuthHeader";
 import AuthFooter from "../../features/auth/components/AuthFooter";
+import AuthSubmitButton from "../../features/auth/components/AuthSubmitButton";
 import "./AuthModule.css";
 
 export default function Register({ onAuthSuccess }) {
@@ -62,7 +63,7 @@ export default function Register({ onAuthSuccess }) {
         {error && <div className="auth-error">{error}</div>}
         {success && <div className="auth-success">{success}</div>}
         <div className="auth-actions">
-          <button className="btn btn-primary" disabled={loading}>{loading ? "Registering..." : "Create Account"}</button>
+          <AuthSubmitButton loading={loading} buttonText={loading ? "Registering..." : "Create Account"} />
         </div>
       </form>
       <AuthFooter text="Already have an account?" linkTo="/login" linkLabel="Sign in here" />
