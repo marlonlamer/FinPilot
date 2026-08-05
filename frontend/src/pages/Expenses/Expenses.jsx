@@ -6,6 +6,7 @@ import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContai
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 import ExpensesHeader from "../../features/expenses/components/ExpensesHeader";
 import ExpenseStats from "../../features/expenses/components/ExpenseStats";
+import BudgetAlert from "../../features/expenses/components/BudgetAlert";
 
 export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -126,11 +127,7 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
         </div>
       </div>
 
-      {overBudgetCategories.length > 0 && (
-        <div className="budget-alert">
-          <strong>Budget Alert:</strong> You've exceeded budgets for {overBudgetCategories.map(c => c.category).join(", ")}
-        </div>
-      )}
+      <BudgetAlert overBudgetCategories={overBudgetCategories} />
 
       <ExpenseStats
         monthlyDisplay={monthlyDisplay}
