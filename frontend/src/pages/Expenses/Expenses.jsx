@@ -5,6 +5,7 @@ import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDistribution";
 import ExpensesHeader from "../../features/expenses/components/ExpensesHeader";
+import ExpenseStats from "../../features/expenses/components/ExpenseStats";
 
 export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -25,6 +26,9 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
     if (d.getFullYear() === selectedYear && d.getMonth() === selectedMonth) return s + (Number(it.amount) || 0);
     return s;
   }, 0), [expenses, selectedYear, selectedMonth]);
+
+  const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
+  const lastMonthDisplay = formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`;
 
   const byCategory = useMemo(() => {
     const map = {};
@@ -128,16 +132,10 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
         </div>
       )}
 
-      <div className="stats-row">
-        <div className="small-stat-card">
-          <div className="stat-label">This Month</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`}</div>
-        </div>
-        <div className="small-stat-card">
-          <div className="stat-label">Last Month</div>
-          <div className="stat-value">{formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`}</div>
-        </div>
-      </div>
+      <ExpenseStats
+        monthlyDisplay={monthlyDisplay}
+        lastMonthDisplay={lastMonthDisplay}
+      />
 
       {expenseModalOpen && (
         <div className="modal-overlay" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>
