@@ -7,6 +7,7 @@ import ExpenseDistribution from "../../components/ExpenseDistribution/ExpenseDis
 import ExpensesHeader from "../../features/expenses/components/ExpensesHeader";
 import ExpenseStats from "../../features/expenses/components/ExpenseStats";
 import BudgetAlert from "../../features/expenses/components/BudgetAlert";
+import ExpensesAnalytics from "../../features/expenses/components/ExpensesAnalytics";
 
 export default function Expenses({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -97,35 +98,14 @@ export default function Expenses({ expenses = [], form, setForm, handleSubmit, e
     <div className="expenses-root">
       <ExpensesHeader onAddExpense={handleAddExpense} onAddBudget={handleAddBudget} />
 
-      <div className="analytics-row">
-        <div className="card trend-card">
-          <div className="card-label">6‑Month Expense Trend</div>
-          <div className="chart-small">
-            <ResponsiveContainer>
-              <LineChart data={lastSixMonthsData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis tickFormatter={(v) => (formatCurrency ? formatCurrency(v) : (v.toFixed ? `${currencySymbol}${v.toFixed(0)}` : v))} />
-                <Tooltip formatter={(value) => (formatCurrency ? formatCurrency(value) : `${currencySymbol}${Number(value).toFixed(2)}`)} />
-                <Line type="monotone" dataKey="value" stroke="#FF6B6B" strokeWidth={2} dot={{ r: 2 }} />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="card category-card">
-          <div className="card-label">Expenses by Category</div>
-          <div className="chart-small center">
-            <ExpenseDistribution
-              expenses={expenses}
-              selectedYear={selectedYear}
-              selectedMonth={selectedMonth}
-              currencySymbol={currencySymbol}
-              formatCurrency={formatCurrency}
-            />
-          </div>
-        </div>
-      </div>
+      <ExpensesAnalytics
+        lastSixMonthsData={lastSixMonthsData}
+        expenses={expenses}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
+        formatCurrency={formatCurrency}
+        currencySymbol={currencySymbol}
+      />
 
       <BudgetAlert overBudgetCategories={overBudgetCategories} />
 
