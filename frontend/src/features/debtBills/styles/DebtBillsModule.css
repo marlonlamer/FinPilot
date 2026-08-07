@@ -91,25 +91,90 @@
   font-size: 20px;
 }
 
-.debt-bill-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.debt-bill-search-filters {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
   margin-bottom: 18px;
+  align-items: flex-end;
 }
 
-.filter-pill {
-  background: #f8fafc;
-  color: #334155;
-  padding: 10px 14px;
-  border-radius: 999px;
-  font-size: 13px;
-  cursor: pointer;
+.debt-search-input {
+  min-width: 0;
 }
 
-.filter-pill.active {
-  background: #ffedd5;
-  color: #c2410c;
+.debt-search-input input {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #0f172a;
+  background: #ffffff;
+}
+
+.debt-search-input input:focus {
+  outline: 2px solid rgba(255, 122, 0, 0.15);
+  border-color: #ff7a00;
+}
+
+.debt-filter-controls {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.debt-filter-controls label {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  color: #475569;
+  gap: 6px;
+}
+
+.debt-filter-controls select {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #0f172a;
+}
+
+.debt-empty-state {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 24px;
+  color: #475569;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .debt-bill-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .debt-filter-controls {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .debt-bill-search-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .debt-filter-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .debt-bill-item-details,
+  .debt-bill-item-footer,
+  .bill-card-body,
+  .bill-card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .debt-bill-list {
