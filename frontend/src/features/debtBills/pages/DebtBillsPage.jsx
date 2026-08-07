@@ -11,6 +11,62 @@ const summaryCards = [
   { label: "Next payment", value: "$620.00", note: "Due in 5 days" },
 ];
 
+const debtTrackerItems = [
+  {
+    id: "d1",
+    name: "Auto Loan",
+    debtType: "Loan",
+    amountDue: "$1,250.00",
+    remainingBalance: "$12,500.00",
+    nextPaymentDate: "Sep 10",
+    status: "Due Soon",
+    repaymentPercentage: "24%",
+  },
+  {
+    id: "d2",
+    name: "Credit Card",
+    debtType: "Card",
+    amountDue: "$320.00",
+    remainingBalance: "$4,750.00",
+    nextPaymentDate: "Sep 7",
+    status: "Overdue",
+    repaymentPercentage: "13%",
+  },
+  {
+    id: "d3",
+    name: "Mortgage",
+    debtType: "Home Loan",
+    amountDue: "$850.00",
+    remainingBalance: "$143,200.00",
+    nextPaymentDate: "Sep 15",
+    status: "On Track",
+    repaymentPercentage: "42%",
+  },
+];
+
+const billsItems = [
+  {
+    id: "b1",
+    name: "Electric bill",
+    debtType: "Subscription",
+    amountDue: "$78.50",
+    remainingBalance: "$78.50",
+    nextPaymentDate: "Sep 12",
+    status: "Upcoming",
+    repaymentPercentage: "0%",
+  },
+  {
+    id: "b2",
+    name: "Streaming Service",
+    debtType: "Subscription",
+    amountDue: "$15.99",
+    remainingBalance: "$15.99",
+    nextPaymentDate: "Sep 20",
+    status: "On Track",
+    repaymentPercentage: "0%",
+  },
+];
+
 export default function DebtBillsPage() {
   return (
     <div className="debt-bills-root">
@@ -20,13 +76,13 @@ export default function DebtBillsPage() {
       <section className="debt-section">
         <h2>Debt Tracker</h2>
         <DebtBillFilters />
-        <DebtBillList />
+        <DebtBillList items={debtTrackerItems} />
       </section>
 
       <section className="debt-section">
         <h2>Bills & Subscriptions</h2>
         <DebtBillFilters />
-        <DebtBillList />
+        <DebtBillList items={billsItems} />
       </section>
     </div>
   );
