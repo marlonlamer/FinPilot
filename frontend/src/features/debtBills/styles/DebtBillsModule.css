@@ -209,6 +209,103 @@
   border-radius: 999px;
 }
 
+.bill-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bill-card-header,
+.bill-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.bill-card-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.bill-card-category {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.bill-card-amount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.bill-card-body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.bill-card-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.bill-card-label {
+  color: #94a3b8;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.bill-card-autopay {
+  color: #475569;
+  background: #f8fafc;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bill-status-pill {
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bill-status-active {
+  background: #e9f7ef;
+  color: #157f37;
+}
+
+.bill-status-upcoming {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.bill-status-paused {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.bill-status-cancelled {
+  background: #fff1f2;
+  color: #9f1239;
+}
+
+.bill-status-overdue {
+  background: #ffede5;
+  color: #c2410c;
+}
+
 @media (max-width: 900px) {
   .debt-bills-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

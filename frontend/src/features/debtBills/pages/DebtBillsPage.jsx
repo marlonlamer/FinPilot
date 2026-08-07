@@ -2,6 +2,7 @@ import DebtBillsHeader from "../components/DebtBillsHeader";
 import DebtBillsSummary from "../components/DebtBillsSummary";
 import DebtBillFilters from "../components/DebtBillFilters";
 import DebtBillList from "../components/DebtBillList";
+import BillCard from "../components/BillCard";
 import "../styles/DebtBillsModule.css";
 
 const summaryCards = [
@@ -47,23 +48,58 @@ const debtTrackerItems = [
 const billsItems = [
   {
     id: "b1",
-    name: "Electric bill",
-    debtType: "Subscription",
-    amountDue: "$78.50",
-    remainingBalance: "$78.50",
-    nextPaymentDate: "Sep 12",
-    status: "Upcoming",
-    repaymentPercentage: "0%",
+    name: "Utility Provider",
+    category: "Electricity",
+    amount: "$78.50",
+    billingCycle: "Monthly",
+    nextBillingDate: "Sep 12",
+    paymentMethod: "Visa •••• 2104",
+    status: "Active",
+    autoPay: true,
   },
   {
     id: "b2",
-    name: "Streaming Service",
-    debtType: "Subscription",
-    amountDue: "$15.99",
-    remainingBalance: "$15.99",
-    nextPaymentDate: "Sep 20",
-    status: "On Track",
-    repaymentPercentage: "0%",
+    name: "Streaming Plus",
+    category: "Entertainment",
+    amount: "$15.99",
+    billingCycle: "Monthly",
+    nextBillingDate: "Sep 20",
+    paymentMethod: "Mastercard •••• 0119",
+    status: "Upcoming",
+    autoPay: false,
+  },
+  {
+    id: "b3",
+    name: "Home Internet",
+    category: "Internet",
+    amount: "$63.00",
+    billingCycle: "Monthly",
+    nextBillingDate: "Oct 1",
+    paymentMethod: "Amex •••• 4321",
+    status: "Paused",
+    autoPay: false,
+  },
+  {
+    id: "b4",
+    name: "Gym Membership",
+    category: "Health",
+    amount: "$42.00",
+    billingCycle: "Monthly",
+    nextBillingDate: "Sep 18",
+    paymentMethod: "Visa •••• 9876",
+    status: "Cancelled",
+    autoPay: false,
+  },
+  {
+    id: "b5",
+    name: "Phone Plan",
+    category: "Mobile",
+    amount: "$89.99",
+    billingCycle: "Monthly",
+    nextBillingDate: "Aug 30",
+    paymentMethod: "Visa •••• 3344",
+    status: "Overdue",
+    autoPay: true,
   },
 ];
 
@@ -82,7 +118,11 @@ export default function DebtBillsPage() {
       <section className="debt-section">
         <h2>Bills & Subscriptions</h2>
         <DebtBillFilters />
-        <DebtBillList items={billsItems} />
+        <div className="debt-bill-list">
+          {billsItems.map((item) => (
+            <BillCard key={item.id} {...item} />
+          ))}
+        </div>
       </section>
     </div>
   );
