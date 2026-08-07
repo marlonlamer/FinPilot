@@ -5,14 +5,13 @@ import DebtBillList from "../components/DebtBillList";
 import BillCard from "../components/BillCard";
 import DebtBillSearchFilters from "../components/DebtBillSearchFilters";
 import useDebtFilters from "../hooks/useDebtFilters";
+import useDebtSummary from "../hooks/useDebtSummary";
+import { formatCurrency as formatCurrencyValue, getCurrencySymbol } from "../../../utils/formatCurrency";
 import "../styles/DebtBillsModule.css";
 
-const summaryCards = [
-  { label: "Total debt", value: "$48,320.00", note: "All open balances" },
-  { label: "Outstanding", value: "$39,120.00", note: "Remaining repayment" },
-  { label: "Overdue", value: "$1,840.00", note: "Past due amount" },
-  { label: "Next payment", value: "$620.00", note: "Due in 5 days" },
-];
+const currencyCode = "USD";
+const currencySymbol = getCurrencySymbol(currencyCode);
+const formatCurrency = (value) => formatCurrencyValue(value, { currencyCode, currencySymbol });
 
 const debtTrackerItems = [
   {
@@ -113,14 +112,16 @@ export default function DebtBillsPage() {
   const [debtSortBy, setDebtSortBy] = useState("Due date");
   const [billSortBy, setBillSortBy] = useState("Due date");
 
-  const filteredDebtTrackerItems = useDebtFilters(debtTrackerItems, {
+  const { normalizedDebtItems, normalizedBillItems, debtSummary, billSummary } = useDebtSummary(debtTrackerItems, billsItems);
+
+  const filteredDebtTrackerItems = useDebtFilters(normalizedDebtItems, {
     searchQuery: debtSearch,
     filters: debtFilters,
     sortBy: debtSortBy,
     section: "debt",
   });
 
-  const filteredBillsItems = useDebtFilters(billsItems, {
+  const filteredBillsItems = useDebtFilters(normalizedBillItems, {
     searchQuery: billSearch,
     filters: billFilters,
     sortBy: billSortBy,
@@ -135,10 +136,25 @@ export default function DebtBillsPage() {
     setBillFilters((prev) => ({ ...prev, [field]: value }));
   };
 
+  const debtSummaryCards = [
+    { label: "Total debt", value: formatCurrency(debtSummary.totalDebt), note: "All open balances" },
+    { label: "Outstanding", value: formatCurrency(debtSummary.outstandingBalance), note: "Remaining repayment" },
+    { label: "Overdue", value: formatCurrency(debtSummary.overdueAmount), note: "Past due amount" },
+    { label: "Next payment", value: debtSummary.nextPaymentDate ? debtSummary.nextPaymentDate.toLocaleDateString() : "—", note: "Next upcoming debt payment" },
+  ];
+
+  const billSummaryCards = [
+    { label: "Monthly recurring", value: formatCurrency(billSummary.monthlyRecurringCost), note: "Estimated active recurring bills" },
+    { label: "Annual recurring", value: formatCurrency(billSummary.estimatedAnnualCost), note: "Estimated yearly recurring cost" },
+    { label: "Active subscriptions", value: `${billSummary.activeSubscriptions}`, note: "Currently active bills" },
+    { label: "Upcoming bills", value: `${billSummary.upcomingBills}`, note: "Scheduled bills arriving soon" },
+  ];
+
   return (
     <div className="debt-bills-root">
       <DebtBillsHeader title="Debt & Bills" subtitle="Track loans, credit cards, and recurring payments in one place." />
-      <DebtBillsSummary cards={summaryCards} />
+      <DebtBillsSummary cards={debtSummaryCards} />
+      <DebtBillsSummary cards={billSummaryCards} />
 
       <section className="debt-section">
         <h2>Debt Tracker</h2>
