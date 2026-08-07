@@ -1,9 +1,5 @@
-function DebtBills() {
-  return (
-    <div>
-      <h1>Debt Bills</h1>
-    </div>
-  );
-}
+import DebtBillsPage from "../../features/debtBills/pages/DebtBillsPage";
 
-export default DebtBills;
+export default function DebtBills(props) {
+  return <DebtBillsPage {...props} />;
+}
