@@ -1,0 +1,251 @@
+.debt-bills-root {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 20px 16px 32px;
+  color: #0f172a;
+}
+
+.debt-bills-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.debt-bills-header h1 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.debt-bills-header p {
+  margin: 8px 0 0;
+  color: #475569;
+  max-width: 620px;
+  line-height: 1.6;
+}
+
+.debt-bills-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dbb-btn {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dbb-btn-primary {
+  background: #ff7a00;
+  color: #fff;
+}
+
+.dbb-btn-secondary {
+  background: #fff;
+  color: #0f172a;
+  border-color: #e2e8f0;
+}
+
+.debt-bills-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.debt-summary-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.debt-summary-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 10px;
+}
+
+.debt-summary-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.debt-summary-note {
+  margin-top: 6px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.debt-section {
+  margin-bottom: 32px;
+}
+
+.debt-section h2 {
+  margin: 0 0 16px;
+  font-size: 20px;
+}
+
+.debt-bill-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.filter-pill {
+  background: #f8fafc;
+  color: #334155;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.filter-pill.active {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.debt-bill-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.debt-bill-item-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+}
+
+.debt-bill-item-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.debt-bill-item-title {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.debt-bill-item-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.debt-bill-item-amount {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.debt-bill-item-details {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  color: #475569;
+  font-size: 13px;
+}
+
+.debt-bill-item-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.debt-bill-status {
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.debt-bill-status-overdue {
+  background: #ffede5;
+  color: #c2410c;
+}
+
+.debt-bill-status-due-soon {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.debt-bill-status-on-track {
+  background: #e9f7ef;
+  color: #15803d;
+}
+
+.debt-bill-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.debt-bill-progress-bar {
+  flex: 1;
+  background: #f1f5f9;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.debt-bill-progress-fill {
+  background: #ff7a00;
+  height: 100%;
+  border-radius: 999px;
+}
+
+@media (max-width: 900px) {
+  .debt-bills-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .debt-bill-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .debt-bills-root {
+    padding: 16px 12px 24px;
+  }
+
+  .debt-bills-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .debt-bills-header-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .debt-bills-summary-grid,
+  .debt-bill-list {
+    grid-template-columns: 1fr;
+  }
+
+  .debt-bill-item-details {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .debt-bill-item-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
