@@ -9,6 +9,8 @@ const dashboardRoutes = require("./routes/dashboard.routes");
 const reportsRoutes = require("./routes/reports.routes");
 const userRoutes = require("./routes/user.routes");
 const budgetsRoutes = require("./routes/budgets.routes");
+const debtRoutes = require("./routes/debt.routes");
+const billRoutes = require("./routes/bill.routes");
 
 const app = express();
 
@@ -54,5 +56,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportsRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/budgets", budgetsRoutes);
+app.use("/api/debts", debtRoutes);
+app.use("/api/bills", billRoutes);
 
 module.exports = app;
