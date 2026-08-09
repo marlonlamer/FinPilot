@@ -58,6 +58,48 @@ model SavingsTransaction {
   @@index([savingsId])
 }
 
+model Debt {
+  id               Int       @id @default(autoincrement())
+  name             String
+  debtType         String
+  originalAmount   Decimal
+  remainingBalance Decimal
+  minimumPayment   Decimal?
+  dueDate          DateTime?
+  paymentFrequency String?
+  status           String    @default("active")
+  notes            String?
+  account          String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  userId           Int
+  user             User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Bill {
+  id               Int       @id @default(autoincrement())
+  name             String
+  category         String
+  amount           Decimal
+  billingFrequency String    @default("monthly")
+  nextBillingDate  DateTime?
+  paymentMethod    String?
+  autoPay          Boolean   @default(false)
+  status           String    @default("active")
+  notes            String?
+  account          String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  userId           Int
+  user             User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
 model User {
   id        Int       @id @default(autoincrement())
   name      String   @default("")
@@ -78,6 +120,8 @@ model User {
   savings   Savings[]
   savingsTransactions SavingsTransaction[]
   budgets   Budget[]
+  debts     Debt[]
+  bills     Bill[]
 }
 
 model Budget {
