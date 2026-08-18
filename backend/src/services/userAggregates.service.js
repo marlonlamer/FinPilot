@@ -9,10 +9,20 @@ async function recalcUserAggregates(userId, prismaClient) {
   if (!user) throw new Error('User not found');
 
   const monthlyBudgetRemaining = (user.monthlyBudget || 0) - (user.monthlySpent || 0);
-  const totalNetWorth = (user.availableBalance || 0) + (user.totalSavings || 0);
+
+  const debtAgg = await db.debt.aggregate({
+    where: { userId: id, status: { not: 'paid' } },
+    _sum: { remainingBalance: true }
+  });
+  const totalDebt = (debtAgg && debtAgg._sum && debtAgg._sum.remainingBalance)
+    ? Number(debtAgg._sum.remainingBalance)
+    : 0;
+
+  // Net worth = Available Balance + Total Savings - Total Outstanding Debt Liabilities
+  const totalNetWorth = (user.availableBalance || 0) + (user.totalSavings || 0) - totalDebt;
 
   await db.user.updateMany({ where: { id }, data: { monthlyBudgetRemaining, totalNetWorth } });
-  return { monthlyBudgetRemaining, totalNetWorth };
+  return { monthlyBudgetRemaining, totalNetWorth, totalDebt };
 }
 
 async function recalcAllUsers(prismaClient) {
@@ -22,3 +32,4 @@ async function recalcAllUsers(prismaClient) {
 }
 
 module.exports = { recalcUserAggregates, recalcAllUsers };
+

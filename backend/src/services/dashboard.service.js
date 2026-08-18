@@ -10,16 +10,20 @@ const getDashboard = async (userId) => {
 
   const totalExpenses = (totalExpensesAgg._sum && totalExpensesAgg._sum.amount) || 0;
   const totalIncome = (totalIncomeAgg._sum && totalIncomeAgg._sum.amount) || 0;
-  // derive total savings from transactions (source of truth) to avoid stale stored `currentAmount`
+  // Derive total savings from transactions (source of truth) to avoid stale stored `currentAmount`
   const savingsAgg = await prisma.savingsTransaction.aggregate({ where: { userId }, _sum: { amount: true } });
   const totalSavings = (savingsAgg && savingsAgg._sum && savingsAgg._sum.amount) ? Number(savingsAgg._sum.amount) : 0;
+
+  // Derive total debt liabilities (where status is not 'paid')
+  const debtAgg = await prisma.debt.aggregate({ where: { userId: Number(userId), status: { not: "paid" } }, _sum: { remainingBalance: true } });
+  const totalDebt = (debtAgg && debtAgg._sum && debtAgg._sum.remainingBalance) ? Number(debtAgg._sum.remainingBalance) : 0;
 
   // Also fetch user's stored totals (availableBalance, totalSavings) for convenience
   const user = await prisma.user.findUnique({ where: { id: Number(userId) } });
   const userTotalSavings = user && user.totalSavings != null ? Number(user.totalSavings) : totalSavings;
   const userAvailable = user && user.availableBalance != null ? Number(user.availableBalance) : 0;
   const monthlyBudgetRemaining = user && user.monthlyBudgetRemaining != null ? Number(user.monthlyBudgetRemaining) : ((user && user.monthlyBudget != null ? Number(user.monthlyBudget) : 0) - (user && user.monthlySpent != null ? Number(user.monthlySpent) : 0));
-  const totalNetWorth = user && user.totalNetWorth != null ? Number(user.totalNetWorth) : (userAvailable + userTotalSavings);
+  const totalNetWorth = userAvailable + userTotalSavings - totalDebt;
 
   // Monthly summary for last 6 months
   const now = new Date();
@@ -65,7 +69,7 @@ const getDashboard = async (userId) => {
   transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return {
-    totals: { totalExpenses, totalIncome, totalSavings: userTotalSavings, availableBalance: userAvailable, monthlyBudgetRemaining, totalNetWorth },
+    totals: { totalExpenses, totalIncome, totalSavings: userTotalSavings, availableBalance: userAvailable, monthlyBudgetRemaining, totalNetWorth, totalDebt },
     savings: savingsList,
     expensesByCategory: expensesByCategory.map((c) => ({ category: c.category, total: (c._sum && c._sum.amount) || 0 })),
     monthlySummary: months,

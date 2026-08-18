@@ -5,6 +5,7 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Expense {
@@ -75,6 +76,7 @@ model Debt {
 
   userId           Int
   user             User      @relation(fields: [userId], references: [id])
+  payments         DebtPayment[]
 
   @@index([userId])
 }
@@ -122,6 +124,7 @@ model User {
   budgets   Budget[]
   debts     Debt[]
   bills     Bill[]
+  debtPayments DebtPayment[]
 }
 
 model Budget {
@@ -138,6 +141,22 @@ model Budget {
   @@index([userId])
   @@unique([userId, category, month])
 }
+
+model DebtPayment {
+  id        Int      @id @default(autoincrement())
+  debtId    Int
+  debt      Debt     @relation(fields: [debtId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  amount    Decimal
+  date      DateTime @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([debtId])
+}
+
 
 
 

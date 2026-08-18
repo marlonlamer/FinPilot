@@ -8,11 +8,21 @@ const createError = (message, statusCode = 500) => {
 
 const getDebts = async (req, res) => {
   try {
-    const debts = await debtService.getAllDebts(req.userId);
+    const debts = await debtService.getAllDebts(req.userId, req.query);
     res.json(debts);
   } catch (error) {
     console.error("Get debts error:", error);
     res.status(error.statusCode || 500).json({ error: error.message || "Failed to fetch debts" });
+  }
+};
+
+const getDebtSummary = async (req, res) => {
+  try {
+    const summary = await debtService.getDebtsSummary(req.userId);
+    res.json(summary);
+  } catch (error) {
+    console.error("Get debt summary error:", error);
+    res.status(error.statusCode || 500).json({ error: error.message || "Failed to fetch debt summary" });
   }
 };
 
@@ -101,10 +111,27 @@ const deleteDebt = async (req, res) => {
   }
 };
 
+const payDebt = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw createError("Invalid debt id", 400);
+    }
+
+    const result = await debtService.payDebt(id, req.body, req.userId);
+    res.json(result);
+  } catch (error) {
+    console.error("Pay debt error:", error);
+    res.status(error.statusCode || 500).json({ error: error.message || "Failed to process debt payment" });
+  }
+};
+
 module.exports = {
   getDebts,
+  getDebtSummary,
   getDebtById,
   createDebt,
   updateDebt,
-  deleteDebt
+  deleteDebt,
+  payDebt
 };

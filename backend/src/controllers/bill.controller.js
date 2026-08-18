@@ -8,11 +8,21 @@ const createError = (message, statusCode = 500) => {
 
 const getBills = async (req, res) => {
   try {
-    const bills = await billService.getAllBills(req.userId);
+    const bills = await billService.getAllBills(req.userId, req.query);
     res.json(bills);
   } catch (error) {
     console.error("Get bills error:", error);
     res.status(error.statusCode || 500).json({ error: error.message || "Failed to fetch bills" });
+  }
+};
+
+const getBillSummary = async (req, res) => {
+  try {
+    const summary = await billService.getBillsSummary(req.userId);
+    res.json(summary);
+  } catch (error) {
+    console.error("Get bill summary error:", error);
+    res.status(error.statusCode || 500).json({ error: error.message || "Failed to fetch bill summary" });
   }
 };
 
@@ -101,10 +111,27 @@ const deleteBill = async (req, res) => {
   }
 };
 
+const payBill = async (req, res) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw createError("Invalid bill id", 400);
+    }
+
+    const result = await billService.payBill(id, req.body, req.userId);
+    res.json(result);
+  } catch (error) {
+    console.error("Pay bill error:", error);
+    res.status(error.statusCode || 500).json({ error: error.message || "Failed to process bill payment" });
+  }
+};
+
 module.exports = {
   getBills,
+  getBillSummary,
   getBillById,
   createBill,
   updateBill,
-  deleteBill
+  deleteBill,
+  payBill
 };
