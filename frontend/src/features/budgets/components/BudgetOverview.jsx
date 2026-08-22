@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import "../styles/BudgetOverview.css";
-import FormModal from "../../../components/FormModal/FormModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import BudgetSummaryCard from "./BudgetSummaryCard";
 import BudgetCategoryItem from "./BudgetCategoryItem";
 import BudgetCategoryList from "./BudgetCategoryList";
+import BudgetModal from "./BudgetModal";
 import { api } from "../../../services/api";
 import { formatYearMonth } from "../../../utils/dateUtils";
 import { clampPercentage } from "../../../utils/clampPercentage";
@@ -18,6 +18,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
   const [editOpen, setEditOpen] = useState(false);
   const [editInitial, setEditInitial] = useState({});
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, category: null, id: null });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (externalAddOpen) {
@@ -33,44 +34,47 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
   }
 
   const handleAdd = async ({ category, amount }) => {
-    const cat = String(category || "").trim();
-    const num = Number(amount || 0);
-    if (!cat) return window.alert('Category name is required');
+    setIsSubmitting(true);
     try {
       const month = (selectedYear != null && selectedMonth != null)
         ? formatYearMonth(selectedYear, selectedMonth)
         : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
-      const t = toast.loading('Adding budget...');
-      await api.post('/budgets', { category: cat, budgetLimit: num, month });
+      const t = toast.loading('Creating budget...');
+      await api.post('/budgets', { category, budgetLimit: amount, month });
       setAddOpen(false);
       await refresh();
-      toast.success('Budget added successfully', { id: t });
+      toast.success('Budget created successfully', { id: t });
     } catch (e) {
       console.error(e);
-      toast.error('Failed to add budget');
+      toast.error('Failed to create budget');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleEdit = async ({ category, amount }) => {
+    setIsSubmitting(true);
     try {
       const id = editInitial.id;
       if (id) {
         const t = toast.loading('Updating budget...');
-        await api.put(`/budgets/${id}`, { category, budgetLimit: Number(amount || 0) });
+        await api.put(`/budgets/${id}`, { category, budgetLimit: amount });
         toast.success('Budget updated successfully', { id: t });
       } else {
         const month = (selectedYear != null && selectedMonth != null)
           ? formatYearMonth(selectedYear, selectedMonth)
           : (() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`; })();
-        const t = toast.loading('Adding budget...');
-        await api.post('/budgets', { category, budgetLimit: Number(amount || 0), month });
-        toast.success('Budget added successfully', { id: t });
+        const t = toast.loading('Creating budget...');
+        await api.post('/budgets', { category, budgetLimit: amount, month });
+        toast.success('Budget created successfully', { id: t });
       }
       setEditOpen(false);
       await refresh();
     } catch (e) {
       console.error(e);
       toast.error('Failed to update budget');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -142,7 +146,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
                     currencySymbol={currencySymbol}
                     formatCurrency={formatCurrency}
                     progressPercent={clampPercentage(pct || 0)}
-                    onEdit={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: e.budget }); setEditOpen(true); }}
+                    onEdit={() => { const meta = budgetsMeta[e.category] || null; setEditInitial({ id: meta ? meta.id : null, category: e.category, amount: String(e.budget) }); setEditOpen(true); }}
                     onDelete={() => { const meta = budgetsMeta[e.category] || null; setDeleteConfirm({ open: true, category: e.category, id: meta ? meta.id : null }); }}
                   />
                 );
@@ -150,24 +154,23 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
             </BudgetCategoryList>
           )}
 
-          <FormModal
+          <BudgetModal
             open={addOpen}
-            title="Add Budget"
-            fields={[{ name: 'category', label: 'Category Name' }, { name: 'amount', label: 'Budget Amount', type: 'number' }]}
-            initialValues={{ category: '', amount: '' }}
-            onCancel={() => setAddOpen(false)}
+            mode="create"
+            onClose={() => setAddOpen(false)}
             onSubmit={handleAdd}
-            submitLabel="Add"
+            currencySymbol={currencySymbol}
+            isLoading={isSubmitting}
           />
 
-          <FormModal
+          <BudgetModal
             open={editOpen}
-            title="Edit Budget"
-            fields={[{ name: 'category', label: 'Category Name' }, { name: 'amount', label: 'Budget Amount', type: 'number' }]}
-            initialValues={{ category: editInitial.category || '', amount: editInitial.amount || '' }}
-            onCancel={() => setEditOpen(false)}
+            mode="edit"
+            onClose={() => setEditOpen(false)}
             onSubmit={handleEdit}
-            submitLabel="Save"
+            initialData={editInitial}
+            currencySymbol={currencySymbol}
+            isLoading={isSubmitting}
           />
 
           <ConfirmModal

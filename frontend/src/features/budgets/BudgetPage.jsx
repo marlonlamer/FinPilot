@@ -25,6 +25,7 @@ export default function BudgetPage(props) {
       budgetsMeta={budgetsMeta}
       isLoading={isLoading}
       error={error}
+      onBudgetsUpdated={loadBudgets}
     />
   );
 }
