@@ -5,6 +5,8 @@ import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import BudgetSummaryCard from "./BudgetSummaryCard";
 import BudgetCategoryItem from "./BudgetCategoryItem";
 import BudgetCategoryList from "./BudgetCategoryList";
+import BudgetHeader from "./BudgetHeader";
+import "./BudgetHeader.css";
 import { api } from "../../../services/api";
 import { formatYearMonth } from "../../../utils/dateUtils";
 import { clampPercentage } from "../../../utils/clampPercentage";
@@ -107,6 +109,12 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
 
       {!isLoading && !error && (
         <>
+          <BudgetHeader 
+            onAddBudget={() => setAddOpen(true)}
+            showAddButton={showAddButton}
+            readOnly={readOnly}
+          />
+
           {showSummary && (
             <BudgetSummaryCard
               monthlyBudget={monthlyBudget}
@@ -115,7 +123,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
               budgetColor={budgetColor}
               currencySymbol={currencySymbol}
               formatCurrency={formatCurrency}
-              showAddButton={showAddButton}
+              showAddButton={false}
               readOnly={readOnly}
               progressPercent={clampPercentage(pct)}
               onAddBudget={() => setAddOpen(true)}
