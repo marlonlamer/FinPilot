@@ -8,6 +8,7 @@ import ExpensesHeader from "../components/ExpensesHeader";
 import ExpenseStats from "../components/ExpenseStats";
 import BudgetAlert from "../components/BudgetAlert";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
+import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 
 export default function ExpensesPage({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -131,15 +132,9 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
               <label className="form-label">Category</label>
                <select className="modern-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required>
                 <option value="">Select category</option>
-                <option value="Food">🍔 Food</option>
-                <option value="Transportation">🚗 Transportation</option>
-                <option value="Rent">🏠 Rent</option>
-                <option value="Shopping">🛍️ Shopping</option>
-                <option value="Bills">💡 Bills</option>
-                <option value="Health">🩺 Health</option>
-                <option value="Entertainment">🎬 Entertainment</option>
-                <option value="Education">🎓 Education</option>
-                <option value="Other">➕ Other</option>
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
+                ))}
               </select>
               <label className="form-label">Description</label>
                <input className="modern-input form-full" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />

@@ -18,6 +18,13 @@ export default function BudgetPage(props) {
     loadBudgets();
   }, [loadBudgets]);
 
+  const handleBudgetsUpdated = async () => {
+    await loadBudgets();
+    if (typeof props.onBudgetsUpdated === "function") {
+      await props.onBudgetsUpdated();
+    }
+  };
+
   return (
     <BudgetOverview
       {...props}
@@ -25,6 +32,7 @@ export default function BudgetPage(props) {
       budgetsMeta={budgetsMeta}
       isLoading={isLoading}
       error={error}
+      onBudgetsUpdated={handleBudgetsUpdated}
     />
   );
 }
