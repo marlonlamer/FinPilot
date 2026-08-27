@@ -1,6 +1,7 @@
 import BudgetOverview from "./components/BudgetOverview";
 import { useBudgets } from "./hooks/useBudgets";
-import { useEffect } from "react";
+import { budgetService } from "./services/budgetServices";
+import { useEffect, useMemo } from "react";
 
 export default function BudgetPage(props) {
   const {
@@ -18,8 +19,13 @@ export default function BudgetPage(props) {
     loadBudgets();
   }, [loadBudgets]);
 
+  const totals = useMemo(
+    () => budgetService.totalsFromBudgets(perCategoryBudgets, budgetsMeta),
+    [perCategoryBudgets, budgetsMeta]
+  );
+
   const handleBudgetsUpdated = async () => {
-    await loadBudgets();
+    await loadBudgets({ silent: true });
     if (typeof props.onBudgetsUpdated === "function") {
       await props.onBudgetsUpdated();
     }
@@ -30,6 +36,9 @@ export default function BudgetPage(props) {
       {...props}
       budgets={perCategoryBudgets}
       budgetsMeta={budgetsMeta}
+      monthlyBudget={totals.totalBudget}
+      budgetRemaining={totals.totalRemaining}
+      percentBudgetUsed={totals.percentUsed}
       isLoading={isLoading}
       error={error}
       onBudgetsUpdated={handleBudgetsUpdated}

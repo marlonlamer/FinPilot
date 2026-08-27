@@ -16,10 +16,12 @@ export function useBudgets({selectedYear, selectedMonth}) {
     setBudgetsMeta(meta);
   };
 
-  const loadBudgets = useCallback(async () => {
+  const loadBudgets = useCallback(async ({ silent = false } = {}) => {
     const startTime = Date.now();
-    setIsLoading(true);
-    setError(null);
+    if (!silent) {
+      setIsLoading(true);
+      setError(null);
+    }
 
     try {
       const list = await budgetService.getBudgets(monthKey);
@@ -28,15 +30,22 @@ export function useBudgets({selectedYear, selectedMonth}) {
         budgets,
         meta,
       });
+      if (silent) setError(null);
     } catch (err) {
-      setError(err.message || "Failed to load budgets");
-    } finally {
-      const elapsed = Date.now() - startTime;
-      const delay = MIN_SKELETON_MS - elapsed;
-      if (delay > 0) {
-        await new Promise((resolve) => setTimeout(resolve, delay));
+      if (!silent) {
+        setError(err.message || "Failed to load budgets");
+      } else {
+        console.warn("Failed to refresh budgets", err);
       }
-      setIsLoading(false);
+    } finally {
+      if (!silent) {
+        const elapsed = Date.now() - startTime;
+        const delay = MIN_SKELETON_MS - elapsed;
+        if (delay > 0) {
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+        setIsLoading(false);
+      }
     }
   }, [monthKey]);
 
