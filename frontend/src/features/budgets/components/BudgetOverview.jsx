@@ -6,16 +6,18 @@ import BudgetCategoryItem from "./BudgetCategoryItem";
 import BudgetCategoryList from "./BudgetCategoryList";
 import BudgetHeader from "./BudgetHeader";
 import BudgetModal from "./BudgetModal";
+import BudgetHealth from "./OverallProgress";
 import "./BudgetHeader.css";
+import "./OverallProgress.css";
 import { api } from "../../../services/api";
 import { formatYearMonth } from "../../../utils/dateUtils";
 import { clampPercentage } from "../../../utils/clampPercentage";
 import toast from 'react-hot-toast';
 import BudgetSkeleton from "./BudgetSkeleton";
 
-export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor , currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true, isLoading = false, error = null }) {
-  const pct = percentBudgetUsed || 0;
+export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, currencySymbol = "₱", formatCurrency, budgets = {}, budgetsMeta = {}, onBudgetsUpdated = () => {}, readOnly = false, externalAddOpen = false, onExternalAddHandled = () => {}, showAddButton = true, selectedYear = null, selectedMonth = null, showSummary = true, showCategoryList = true, isLoading = false, error = null }) {
   const localBudgets = budgets || {};
+  const pct = percentBudgetUsed || 0;
   const [budgetModal, setBudgetModal] = useState({ open: false, mode: "create" });
   const [editInitial, setEditInitial] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -124,17 +126,25 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
             readOnly={readOnly}
           />
 
+          <BudgetHealth
+            monthlyBudget={monthlyBudget}
+            percentBudgetUsed={percentBudgetUsed}
+            budgetRemaining={budgetRemaining}
+            selectedYear={selectedYear}
+            selectedMonth={selectedMonth}
+            currencySymbol={currencySymbol}
+            formatCurrency={formatCurrency}
+          />
+
           {showSummary && (
             <BudgetSummaryCard
               monthlyBudget={monthlyBudget}
               percentBudgetUsed={percentBudgetUsed}
               budgetRemaining={budgetRemaining}
-              budgetColor={budgetColor}
               currencySymbol={currencySymbol}
               formatCurrency={formatCurrency}
               showAddButton={false}
               readOnly={readOnly}
-              progressPercent={clampPercentage(pct)}
               onAddBudget={openCreateModal}
             />
           )}
