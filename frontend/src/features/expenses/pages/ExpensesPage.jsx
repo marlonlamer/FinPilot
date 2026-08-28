@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from "react";
-import BudgetOverview from "../../budgets/components/BudgetOverview";
+import React, { useMemo } from "react";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -10,7 +9,7 @@ import BudgetAlert from "../components/BudgetAlert";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 
-export default function ExpensesPage({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function ExpensesPage({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -78,24 +77,14 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
 
   const recurring = useMemo(() => expenses.filter(e => e.recurring), [expenses]);
   const nonRecurring = useMemo(() => expenses.filter(e => !e.recurring), [expenses]);
-  const [externalAddOpen, setExternalAddOpen] = useState(false);
-
   const handleAddExpense = () => {
     setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
     setExpenseModalOpen(true);
   };
 
-  const handleAddBudget = () => {
-    setExternalAddOpen(true);
-    setTimeout(() => {
-      const el = document.querySelector('.budget-list') || document.querySelector('.budget-overview');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
-
   return (
     <div className="expenses-root">
-      <ExpensesHeader onAddExpense={handleAddExpense} onAddBudget={handleAddBudget} />
+      <ExpensesHeader onAddExpense={handleAddExpense} />
 
       <ExpensesAnalytics
         lastSixMonthsData={lastSixMonthsData}
@@ -178,26 +167,6 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
           </div>
         </div>
       )}
-
-      <h3 className="section-title">Budget Status</h3>
-      <BudgetOverview
-        monthlyBudget={monthlyBudget}
-        percentBudgetUsed={percentBudgetUsed}
-        budgetRemaining={budgetRemaining}
-        budgetColor={budgetColor}
-        overBudgetCategories={overBudgetCategories}
-        COLORS={COLORS}
-        currencySymbol={currencySymbol}
-        formatCurrency={formatCurrency}
-        budgets={budgets}
-        budgetsMeta={budgetsMeta}
-        onBudgetsUpdated={onBudgetsUpdated}
-        externalAddOpen={externalAddOpen}
-        showAddButton={false}
-        onExternalAddHandled={() => setExternalAddOpen(false)}
-        selectedYear={selectedYear}
-        selectedMonth={selectedMonth}
-      />
 
       <h3 className="section-title">Recurring Expenses</h3>
       {recurring.length > 0 ? (
