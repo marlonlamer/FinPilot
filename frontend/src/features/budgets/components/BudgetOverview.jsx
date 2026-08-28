@@ -9,6 +9,7 @@ import BudgetModal from "./BudgetModal";
 import BudgetHealth from "./OverallProgress";
 import "./BudgetHeader.css";
 import "./OverallProgress.css";
+import "./BudgetCategoryItem.css";
 import { api } from "../../../services/api";
 import { formatYearMonth } from "../../../utils/dateUtils";
 import { clampPercentage } from "../../../utils/clampPercentage";
@@ -150,7 +151,7 @@ export default function BudgetOverview({ monthlyBudget, percentBudgetUsed, budge
           )}
 
           {showCategoryList && (
-            <BudgetCategoryList hasItems={entries.length > 0}>
+            <BudgetCategoryList hasItems={entries.length > 0} onAddBudget={openCreateModal}>
               {entries.map((e) => {
                 const meta = budgetsMeta[e.category] || {};
                 const spent = Number(meta.budgetSpent || 0);
