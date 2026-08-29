@@ -1,5 +1,4 @@
-import React, { useMemo, useState } from "react";
-import BudgetOverview from "../../budgets/components/BudgetOverview";
+import React, { useMemo } from "react";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import "./ExpensesModule.css";
 import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -8,8 +7,9 @@ import ExpensesHeader from "../components/ExpensesHeader";
 import ExpenseStats from "../components/ExpenseStats";
 import BudgetAlert from "../components/BudgetAlert";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
+import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 
-export default function ExpensesPage({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, monthlyBudget, percentBudgetUsed, budgetRemaining, budgetColor, COLORS, editingExpenseId, cancelExpenseEdit, budgets, budgetsMeta = {}, onBudgetsUpdated = () => {}, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function ExpensesPage({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -77,24 +77,14 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
 
   const recurring = useMemo(() => expenses.filter(e => e.recurring), [expenses]);
   const nonRecurring = useMemo(() => expenses.filter(e => !e.recurring), [expenses]);
-  const [externalAddOpen, setExternalAddOpen] = useState(false);
-
   const handleAddExpense = () => {
     setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
     setExpenseModalOpen(true);
   };
 
-  const handleAddBudget = () => {
-    setExternalAddOpen(true);
-    setTimeout(() => {
-      const el = document.querySelector('.budget-list') || document.querySelector('.budget-overview');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
-
   return (
     <div className="expenses-root">
-      <ExpensesHeader onAddExpense={handleAddExpense} onAddBudget={handleAddBudget} />
+      <ExpensesHeader onAddExpense={handleAddExpense} />
 
       <ExpensesAnalytics
         lastSixMonthsData={lastSixMonthsData}
@@ -131,15 +121,9 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
               <label className="form-label">Category</label>
                <select className="modern-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required>
                 <option value="">Select category</option>
-                <option value="Food">🍔 Food</option>
-                <option value="Transportation">🚗 Transportation</option>
-                <option value="Rent">🏠 Rent</option>
-                <option value="Shopping">🛍️ Shopping</option>
-                <option value="Bills">💡 Bills</option>
-                <option value="Health">🩺 Health</option>
-                <option value="Entertainment">🎬 Entertainment</option>
-                <option value="Education">🎓 Education</option>
-                <option value="Other">➕ Other</option>
+                {EXPENSE_CATEGORIES.map((c) => (
+                  <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
+                ))}
               </select>
               <label className="form-label">Description</label>
                <input className="modern-input form-full" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
@@ -183,26 +167,6 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
           </div>
         </div>
       )}
-
-      <h3 className="section-title">Budget Status</h3>
-      <BudgetOverview
-        monthlyBudget={monthlyBudget}
-        percentBudgetUsed={percentBudgetUsed}
-        budgetRemaining={budgetRemaining}
-        budgetColor={budgetColor}
-        overBudgetCategories={overBudgetCategories}
-        COLORS={COLORS}
-        currencySymbol={currencySymbol}
-        formatCurrency={formatCurrency}
-        budgets={budgets}
-        budgetsMeta={budgetsMeta}
-        onBudgetsUpdated={onBudgetsUpdated}
-        externalAddOpen={externalAddOpen}
-        showAddButton={false}
-        onExternalAddHandled={() => setExternalAddOpen(false)}
-        selectedYear={selectedYear}
-        selectedMonth={selectedMonth}
-      />
 
       <h3 className="section-title">Recurring Expenses</h3>
       {recurring.length > 0 ? (

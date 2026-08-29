@@ -68,23 +68,6 @@
   color: #64748b;
 }
 
-.budget-section {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-  margin-top: 20px;
-}
-
-.budget-summary-column {
-  flex: 1;
-  min-width: 0;
-}
-
-.budget-category-column {
-  width: 420px;
-  flex-shrink: 0;
-}
-
 .chart-section {
   margin-top: 22px;
 }
@@ -144,13 +127,6 @@
     height: 300px; 
   }
 
-  .budget-section {
-    flex-direction: column;
-  }
-
-  .budget-category-column {
-    width: 100%;
-  }
 }
 
 @media (max-width:600px){

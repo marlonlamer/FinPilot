@@ -9,8 +9,6 @@ import {
   Legend
 } from "recharts";
 import ExpenseDistribution from "../../../components/ExpenseDistribution/ExpenseDistribution";
-import BudgetOverview from "../../budgets/components/BudgetOverview";
-import BudgetCategoryList from "../../budgets/components/BudgetCategoryList";
 import DashboardHeader from "../components/DashboardHeader";
 import DashboardSummaryCards from "../components/DashboardSummaryCards";
 import { getCurrentUser } from "../../../services/api";
@@ -22,13 +20,9 @@ export default function Dashboard(props) {
     computedTotalSavings, 
     monthlyIncomeTotal,
     monthlyExpenseTotal,
-    monthlyBudget,
     combinedLineData,
     pieData,
     overBudgetCategories,
-    percentBudgetUsed,
-    budgetColor,
-    budgetRemaining,
     COLORS,
     currencySymbol = "₱",
     formatCurrency,
@@ -37,7 +31,6 @@ export default function Dashboard(props) {
     totalBudgetRemaining = 0,
   } = props;
   const { availableBalance, selectedYear, selectedMonth } = props;
-  const { budgets, onBudgetsUpdated, budgetsMeta } = props;
 
   const user = getCurrentUser() || {};
   const displayName = user.name || user.email || "";
@@ -102,34 +95,6 @@ export default function Dashboard(props) {
         monthlyExpensesDisplay={monthlyExpensesDisplay}
         totalNetWorthDisplay={totalNetWorthDisplay}
       />
-
-      {/* Budget Overview (left) and Budgets by Category (right) */}
-      <div className="budget-section">
-        <div className="budget-summary-column">
-          <BudgetOverview
-            monthlyBudget={monthlyBudget}
-            percentBudgetUsed={percentBudgetUsed}
-            budgetRemaining={budgetRemaining}
-            budgetColor={budgetColor}
-            overBudgetCategories={overBudgetCategories}
-            COLORS={COLORS}
-            currencySymbol={currencySymbol}
-            formatCurrency={formatCurrency}
-            budgets={budgets}
-            budgetsMeta={budgetsMeta}
-            onBudgetsUpdated={onBudgetsUpdated}
-            readOnly={true}
-            showAddButton={false}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            showSummary={true}
-            showCategoryList={false}
-          />
-        </div>
-        <div className="budget-category-column">
-          <BudgetCategoryList />
-        </div>
-      </div>
 
       <div className="chart-section">
         <h2>Expenses vs Income Per Month</h2>

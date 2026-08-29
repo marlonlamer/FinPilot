@@ -1,0 +1,162 @@
+.budget-summary-card {
+  min-width: 0;
+  padding: 1.15rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.budget-summary-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.budget-summary-metrics {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.budget-summary-metric {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
+}
+
+.budget-summary-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 10px;
+}
+
+.budget-summary-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.budget-summary-label {
+  margin: 0 0 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.budget-summary-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.budget-summary-support {
+  margin-top: 0.25rem;
+  font-size: 0.8125rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+
+.budget-summary-metric--budget .budget-summary-icon {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.budget-summary-metric--spent .budget-summary-icon {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.budget-summary-metric--spent .budget-summary-support {
+  color: #2563eb;
+}
+
+.budget-summary-metric--remaining .budget-summary-icon {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.budget-summary-metric--remaining.is-available .budget-summary-value {
+  color: #059669;
+}
+
+.budget-summary-metric--remaining.is-overspent .budget-summary-value,
+.budget-summary-metric--remaining.is-overspent .budget-summary-support {
+  color: #dc2626;
+}
+
+.budget-summary-metric--remaining.is-overspent .budget-summary-support {
+  font-weight: 600;
+}
+
+.budget-summary-metric--used .budget-summary-icon {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+@media (min-width: 768px) {
+  .budget-summary-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.9rem;
+  }
+
+  .budget-summary-value {
+    font-size: 1.35rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .budget-summary-card {
+    padding: 1.25rem;
+  }
+
+  .budget-summary-metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .budget-summary-value {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .budget-summary-card {
+    padding: 0.95rem;
+  }
+}
+
+@media (max-width: 320px) {
+  .budget-summary-card {
+    padding: 0.8rem;
+  }
+
+  .budget-summary-metric {
+    padding: 0.75rem 0.8rem;
+    gap: 0.65rem;
+  }
+
+  .budget-summary-icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .budget-summary-value {
+    font-size: 1.125rem;
+  }
+}

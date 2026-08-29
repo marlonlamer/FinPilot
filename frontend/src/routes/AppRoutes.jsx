@@ -198,8 +198,9 @@ function AppController() {
 		try {
 			const uid = getCurrentUserId();
 			if (!uid) return;
-	
-			const list = await api.get('/budgets', { params: { month: monthKey } });
+
+			const month = formatYearMonth(selectedYear, selectedMonth);
+			const list = await api.get('/budgets', { params: { month } });
             const { budgets, meta } = budgetService.mapBudgets(list);
 
 			setPerCategoryBudgets(budgets);
@@ -207,6 +208,11 @@ function AppController() {
 		} catch (e) {
 			console.warn('Failed to fetch budgets', e);
 		}
+	};
+
+	const refreshBudgetData = async () => {
+		await fetchBudgets();
+		await fetchBudgetSummary();
 	};
 
 	useEffect(() => {
@@ -634,21 +640,13 @@ function AppController() {
 							savingsRate={savingsRate}
 							dateFilter={dateFilter}
 							setDateFilter={setDateFilter}
-							monthlyBudget={monthlyBudgetValue}
-							setMonthlyBudget={setMonthlyBudgetForCurrentMonth}
 							combinedLineData={combinedLineData}
 							pieData={pieData}
 							overBudgetCategories={overBudgetCategories}
-							percentBudgetUsed={percentBudgetUsed}
-							budgetColor={budgetColor}
-							budgetRemaining={budgetRemaining}
 							COLORS={COLORS}
 							currencySymbol={currencySymbol}
 							formatCurrency={formatCurrency}
 							  expenses={expenses}
-							budgets={perCategoryBudgets}
-							budgetsMeta={budgetsMeta}
-							onBudgetsUpdated={fetchBudgets}
 							totalMonthlyBudget={budgetSummary.totalMonthlyBudget}
 							totalBudgetSpent={budgetSummary.totalBudgetSpent}
 							totalBudgetRemaining={budgetSummary.totalBudgetRemaining}
@@ -668,14 +666,6 @@ function AppController() {
 							editingExpenseId={editingExpenseId}
 							cancelExpenseEdit={cancelExpenseEdit}
 							budgets={perCategoryBudgets}
-							budgetsMeta={budgetsMeta}
-							onBudgetsUpdated={fetchBudgets}
-							monthlyBudget={monthlyBudgetValue}
-							percentBudgetUsed={percentBudgetUsed}
-							budgetRemaining={monthlyRemainingValue}
-							budgetColor={budgetColor}
-							overBudgetCategories={overBudgetCategories}
-							COLORS={COLORS}
 							selectedYear={selectedYear}
 							selectedMonth={selectedMonth}
 							currencySymbol={currencySymbol}
@@ -701,7 +691,7 @@ function AppController() {
 
 						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} selectedYear={selectedYear} selectedMonth={selectedMonth} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
-						<Route path="budget" element={<Budget budgets={perCategoryBudgets} budgetsMeta={budgetsMeta} onBudgetsUpdated={fetchBudgets} monthlyBudget={monthlyBudgetValue} setMonthlyBudget={setMonthlyBudgetForCurrentMonth} percentBudgetUsed={percentBudgetUsed} budgetRemaining={budgetRemaining} budgetColor={budgetColor} overBudgetCategories={overBudgetCategories} COLORS={COLORS} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="budget" element={<Budget budgets={perCategoryBudgets} budgetsMeta={budgetsMeta} onBudgetsUpdated={refreshBudgetData} monthlyBudget={monthlyBudgetValue} setMonthlyBudget={setMonthlyBudgetForCurrentMonth} percentBudgetUsed={percentBudgetUsed} budgetRemaining={budgetRemaining} budgetColor={budgetColor} overBudgetCategories={overBudgetCategories} COLORS={COLORS} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="debt-bills" element={<DebtBills selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 

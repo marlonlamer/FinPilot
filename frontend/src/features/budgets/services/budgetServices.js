@@ -25,4 +25,22 @@ export const budgetService = {
     }
     return { budgets, meta };
   },
+
+  totalsFromBudgets(budgets = {}, meta = {}) {
+    const categories = Object.keys(budgets || {});
+    let totalBudget = 0;
+    let totalSpent = 0;
+
+    categories.forEach((category) => {
+      totalBudget += Number(budgets[category] || 0);
+      totalSpent += Number((meta[category] && meta[category].budgetSpent) || 0);
+    });
+
+    return {
+      totalBudget,
+      totalSpent,
+      totalRemaining: totalBudget - totalSpent,
+      percentUsed: totalBudget > 0 ? (totalSpent / totalBudget) * 100 : null,
+    };
+  },
 };
