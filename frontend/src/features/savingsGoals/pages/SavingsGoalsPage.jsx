@@ -4,13 +4,15 @@ import FormModal from "../../../components/FormModal/FormModal";
 import "./SavingsGoalsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../../services/api";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
-import SavingsControls from "../components/SavingsControls";
 import SavingsSummaryPanel from "../components/SavingsSummaryPanel";
 import toast from 'react-hot-toast';
 
 export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("Selected Month");
+  const [goalFilter, setGoalFilter] = useState("all");
+  const [sortValue, setSortValue] = useState("newest");
+  const [viewMode, setViewMode] = useState("list");
 
   const [newGoal, setNewGoal] = useState({
     goalName: "",
@@ -421,6 +423,33 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
   const viewTotals = computeTotals(viewHistory);
   const summaryTotals = computeTotals(allHistory);
 
+  const filteredGoals = useMemo(() => {
+    const nextGoals = [...goals];
+    const mapped = nextGoals.filter((goal) => {
+      const savedAmount = Number(goal.savedAmount || 0);
+      const targetAmount = Number(goal.targetAmount || 0);
+      if (goalFilter === "in-progress") return savedAmount < targetAmount;
+      if (goalFilter === "completed") return savedAmount >= targetAmount;
+      return true;
+    });
+
+    mapped.sort((a, b) => {
+      if (sortValue === "progress") {
+        const progressA = Number(a.targetAmount || 0) > 0 ? (Number(a.savedAmount || 0) / Number(a.targetAmount || 0)) : 0;
+        const progressB = Number(b.targetAmount || 0) > 0 ? (Number(b.savedAmount || 0) / Number(b.targetAmount || 0)) : 0;
+        return progressB - progressA;
+      }
+
+      if (sortValue === "target") {
+        return Number(b.targetAmount || 0) - Number(a.targetAmount || 0);
+      }
+
+      return new Date(b.startDate || b.targetDate || 0) - new Date(a.startDate || a.targetDate || 0);
+    });
+
+    return mapped;
+  }, [goals, goalFilter, sortValue]);
+
   const openAddGoal = () => {
     setNewGoal(prev => ({ ...prev, startDate: new Date().toISOString().slice(0, 10) }));
     setIsModalOpen(true);
@@ -428,15 +457,22 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
 
   return (
     <div className="savings-root">
-      <h2>Savings</h2>
-      {dashboardTotals && (
-        <div style={{ marginBottom: 12 }}>
-          <div><strong>Monthly Budget Remaining:</strong> {currencySymbol}{Number(dashboardTotals.monthlyBudgetRemaining || 0).toFixed(2)}</div>
-          <div><strong>Total Net Worth:</strong> {currencySymbol}{Number(dashboardTotals.totalNetWorth || 0).toFixed(2)}</div>
+      <header className="savings-page-header">
+        <div className="savings-page-header-content">
+          <h1 className="savings-page-header-title">Savings Goals</h1>
+          <p className="savings-page-header-description">
+            Plan for your dreams. Save today, achieve tomorrow.
+          </p>
         </div>
-      )}
-
-      <SavingsControls activeTab={activeTab} onTabChange={setActiveTab} onAddGoal={openAddGoal} />
+        <button
+          type="button"
+          className="savings-page-header-button"
+          onClick={openAddGoal}
+          aria-label="Add new savings goal"
+        >
+          + Add Saving Goal
+        </button>
+      </header>
 
       {isModalOpen && (
         <div className="savings-modal-overlay">
@@ -519,93 +555,93 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         </div>
       )}
 
-      {activeTab !== 'Summary' ? (
-        <>
-          <div className="savings-stats">
-            <div className="savings-stat">Available Balance: <strong>{formatCurrency ? formatCurrency(availableBalance) : `${currencySymbol}${Number(availableBalance).toFixed(2)}`}</strong></div>
-            <div className="savings-stat">{activeTab === 'Selected Month' ? 'This Month Deposits' : 'Total Deposits'}: <strong>{formatCurrency ? formatCurrency(viewTotals.deposits) : `${currencySymbol}${Number(viewTotals.deposits).toFixed(2)}`}</strong></div>
-            <div className="savings-stat">{activeTab === 'Selected Month' ? 'This Month Withdrawals' : 'Total Withdrawals'}: <strong>{formatCurrency ? formatCurrency(viewTotals.withdrawals) : `${currencySymbol}${Number(viewTotals.withdrawals).toFixed(2)}`}</strong></div>
+      <div className="savings-goals-content">
+        {filteredGoals.length === 0 ? (
+          <div className="savings-empty-state">
+            <p>No saving goals yet.</p>
           </div>
+        ) : (
+          <div className={viewMode === "grid" ? "savings-goals-grid" : "savings-goals-list"}>
+            {filteredGoals.map((goal) => {
+              const t = parseFloat(goal.targetAmount) || 0;
+              const s = parseFloat(goal.savedAmount) || 0;
+              const pct = t > 0 ? Math.min(100, (s / t) * 100) : 0;
+              const historyForDisplay = Array.isArray(goal.history)
+                ? goal.history.filter((h) => {
+                    if (activeTab !== 'Selected Month') return true;
+                    const d = new Date(h.date);
+                    return d.getFullYear() === (Number(selectedYear) || new Date().getFullYear()) && d.getMonth() === Number(selectedMonth);
+                  })
+                : [];
+              const remainingAmount = Math.max(0, t - s);
+              const remainingTimeText = (() => {
+                if (!goal.targetDate) return 'No target date';
+                const diff = new Date(goal.targetDate) - new Date();
+                if (isNaN(diff)) return 'Invalid date';
+                if (diff < 0) return 'Target date passed';
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const months = Math.floor(days / 30);
+                const remDays = days % 30;
+                if (months > 0) return `${months} month${months > 1 ? 's' : ''}${remDays > 0 ? ` ${remDays} day${remDays > 1 ? 's' : ''}` : ''} left`;
+                return `${days} day${days > 1 ? 's' : ''} left`;
+              })();
 
-          <p>Total Savings: {formatCurrency ? formatCurrency(viewTotals.net) : `${currencySymbol}${Number(viewTotals.net).toFixed(2)}`}</p>
-        </>
-      ) : (
-        <SavingsSummaryPanel
-          totalDepositsDisplay={formatCurrency ? formatCurrency(summaryTotals.deposits) : `${currencySymbol}${Number(summaryTotals.deposits).toFixed(2)}`}
-          totalWithdrawalsDisplay={formatCurrency ? formatCurrency(summaryTotals.withdrawals) : `${currencySymbol}${Number(summaryTotals.withdrawals).toFixed(2)}`}
-          netSavingsDisplay={formatCurrency ? formatCurrency(summaryTotals.net) : `${currencySymbol}${Number(summaryTotals.net).toFixed(2)}`}
-        />
-      )}
-
-      <div className="savings-list-container">
-        {goals.length === 0 && <p>No saving goals yet.</p>}
-          {goals.map(goal => {
-          const t = parseFloat(goal.targetAmount) || 0;
-          const s = parseFloat(goal.savedAmount) || 0;
-          const pct = t > 0 ? Math.min(100, (s / t) * 100) : 0;
-          const historyForDisplay = Array.isArray(goal.history) ? goal.history.filter(h => {
-            if (activeTab !== 'Selected Month') return true;
-            const d = new Date(h.date);
-            return d.getFullYear() === (Number(selectedYear) || new Date().getFullYear()) && d.getMonth() === Number(selectedMonth);
-          }) : [];
-          const remainingAmount = Math.max(0, t - s);
-          const remainingTimeText = (() => {
-            if (!goal.targetDate) return 'No target date';
-            const diff = new Date(goal.targetDate) - new Date();
-            if (isNaN(diff)) return 'Invalid date';
-            if (diff < 0) return 'Target date passed';
-            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const months = Math.floor(days / 30);
-            const remDays = days % 30;
-            if (months > 0) return `${months} month${months > 1 ? 's' : ''}${remDays > 0 ? ` ${remDays} day${remDays > 1 ? 's' : ''}` : ''} left`;
-            return `${days} day${days > 1 ? 's' : ''} left`;
-          })();
-          return (
-            <div key={goal.id} className="savings-goal-card">
-              <div className="savings-goal-header">
-                <div>
-                  <strong>{goal.goalName}</strong>
-                  <div className="savings-goal-dates">
-                    {(goal.startDate || goal.targetDate) ? `${goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''}${goal.startDate && goal.targetDate ? ' → ' : ''}${goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''}` : ''}
-                  </div>
-                </div>
-                <div className="savings-goal-meta">
-                  <div>Target: {formatCurrency ? formatCurrency(t) : `${currencySymbol}${Number(t).toFixed(2)}`}</div>
-                  <div>Saved: {formatCurrency ? formatCurrency(s) : `${currencySymbol}${Number(s).toFixed(2)}`}</div>
-                  <div>Remaining: {formatCurrency ? formatCurrency(remainingAmount) : `${currencySymbol}${Number(remainingAmount).toFixed(2)}`}</div>
-                  <div className="savings-goal-time">Time Left: {remainingTimeText}</div>
-                </div>
-              </div>
-
-              <div className="savings-progress-wrap">
-                <div className="savings-progress">
-                  <div className="savings-progress-fill" style={{ width: `${pct}%` }} />
-                </div>
-                <div className="savings-progress-label">{pct.toFixed(1)}% complete</div>
-              </div>
-              <div className="savings-goal-actions">
-                <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Deposit</button>
-                <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
-                <button className="btn" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', targetAmount: goal.targetAmount || '', targetDate: goal.targetDate || '' } })}>Edit</button>
-                <button className="btn" onClick={() => setConfirm({ open: true, message: "Delete this saving goal? This cannot be undone.", onConfirm: () => handleDelete(goal.id) })}>Delete</button>
-              </div>
-
-
-                  {activeTab !== 'Summary' && historyForDisplay && historyForDisplay.length > 0 && (
-                <div className="savings-history">
-                  <strong>History</strong>
-                  <div className="savings-history-list">
-                    {/* Render savings history using shared TransactionFeed; map entries to include goal context */}
+              return (
+                <div key={goal.id} className="savings-goal-card">
+                  <div className="savings-goal-header">
                     <div>
-                      <TransactionFeed transactions={(historyForDisplay || []).slice().reverse().map(entry => ({ ...entry, id: `s-${entry.id}`, goalName: goal.goalName, savingsId: goal.id, type: Number(entry.amount) > 0 ? 'savings_deposit' : 'savings_withdraw' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+                      <strong>{goal.goalName}</strong>
+                      <div className="savings-goal-dates">
+                        {(goal.startDate || goal.targetDate)
+                          ? `${goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''}${goal.startDate && goal.targetDate ? ' → ' : ''}${goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''}`
+                          : ''}
+                      </div>
+                    </div>
+                    <div className="savings-goal-meta">
+                      <div>Target: {formatCurrency ? formatCurrency(t) : `${currencySymbol}${Number(t).toFixed(2)}`}</div>
+                      <div>Saved: {formatCurrency ? formatCurrency(s) : `${currencySymbol}${Number(s).toFixed(2)}`}</div>
+                      <div>Remaining: {formatCurrency ? formatCurrency(remainingAmount) : `${currencySymbol}${Number(remainingAmount).toFixed(2)}`}</div>
+                      <div className="savings-goal-time">Time Left: {remainingTimeText}</div>
                     </div>
                   </div>
-                </div>
-              )}
 
-            </div>
-          );
-        })}
+                  <div className="savings-progress-wrap">
+                    <div className="savings-progress">
+                      <div className="savings-progress-fill" style={{ width: `${pct}%` }} />
+                    </div>
+                    <div className="savings-progress-label">{pct.toFixed(1)}% complete</div>
+                  </div>
+
+                  <div className="savings-goal-actions">
+                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Deposit</button>
+                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
+                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', targetAmount: goal.targetAmount || '', targetDate: goal.targetDate || '' } })}>Edit</button>
+                    <button className="btn" onClick={() => setConfirm({ open: true, message: "Delete this saving goal? This cannot be undone.", onConfirm: () => handleDelete(goal.id) })}>Delete</button>
+                  </div>
+
+                  {activeTab !== 'Summary' && historyForDisplay && historyForDisplay.length > 0 && (
+                    <div className="savings-history">
+                      <strong>History</strong>
+                      <div className="savings-history-list">
+                        <TransactionFeed
+                          transactions={(historyForDisplay || []).slice().reverse().map((entry) => ({
+                            ...entry,
+                            id: `s-${entry.id}`,
+                            goalName: goal.goalName,
+                            savingsId: goal.id,
+                            type: Number(entry.amount) > 0 ? 'savings_deposit' : 'savings_withdraw'
+                          }))}
+                          currencySymbol={currencySymbol}
+                          formatCurrency={formatCurrency}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
       <ConfirmModal
         open={confirm.open}
