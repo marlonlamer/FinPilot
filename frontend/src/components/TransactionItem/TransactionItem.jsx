@@ -21,7 +21,7 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
   const t = String((item.type || '')).toLowerCase();
   if (t.includes('income')) typeLabel = 'Income';
   else if (t.includes('expense')) typeLabel = 'Expense';
-  else if (t.includes('deposit') || (item.savingsId && Number(item.amount) > 0)) typeLabel = 'Deposit';
+  else if (t.includes('deposit') || (item.savingsId && Number(item.amount) > 0)) typeLabel = 'Add Savings';
   else if (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0)) typeLabel = 'Withdraw';
 
   const displayName = item.category || item.source || item.goalName || `Savings ${item.savingsId || ''}`;

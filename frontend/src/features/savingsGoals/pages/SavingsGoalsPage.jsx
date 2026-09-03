@@ -6,6 +6,7 @@ import { api, getCurrentUserId, setCurrentUser } from "../../../services/api";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import SavingsSummaryPanel from "../components/SavingsSummaryPanel";
 import toast from 'react-hot-toast';
+import { Edit2, Trash2 } from "lucide-react";
 
 export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -241,7 +242,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
     }
 
     try {
-        const t = toast.loading(isDeposit ? 'Adding deposit...' : 'Processing withdrawal...');
+        const t = toast.loading(isDeposit ? 'Adding savings...' : 'Processing withdrawal...');
         const body = { savingsId: goalId, amount: Math.abs(Number(amount)), note };
       if (isDeposit) {
         await api.post('/savings/deposit', body);
@@ -259,7 +260,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
       // refresh dashboard totals in parent
       try { if (typeof onSavingsUpdated === 'function') await onSavingsUpdated(); } catch (e) { console.warn('onSavingsUpdated failed', e); }
       console.debug('Refetched savings and balances from server');
-        toast.success(isDeposit ? 'Deposit added successfully' : 'Withdrawal processed successfully', { id: t });
+        toast.success(isDeposit ? 'Savings added successfully' : 'Withdrawal processed successfully', { id: t });
     } catch (e) {
       // if server fails, do not rely on local-only mutations
         toast.error('Failed to process transaction');
@@ -272,7 +273,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
     const amt = Number(amount || 0);
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const avail = Number(availableBalance || 0);
-    if (amt > avail) return window.alert("Insufficient available balance for this deposit.");
+    if (amt > avail) return window.alert("Insufficient available balance for these savings.");
     addHistoryEntry(modalState.goalId, Math.abs(amt), note || "");
     setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
@@ -573,7 +574,6 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
                     return d.getFullYear() === (Number(selectedYear) || new Date().getFullYear()) && d.getMonth() === Number(selectedMonth);
                   })
                 : [];
-              const remainingAmount = Math.max(0, t - s);
               const remainingTimeText = (() => {
                 if (!goal.targetDate) return 'No target date';
                 const diff = new Date(goal.targetDate) - new Date();
@@ -589,34 +589,49 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
               return (
                 <div key={goal.id} className="savings-goal-card">
                   <div className="savings-goal-header">
-                    <div>
-                      <strong>{goal.goalName}</strong>
-                      <div className="savings-goal-dates">
-                        {(goal.startDate || goal.targetDate)
-                          ? `${goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''}${goal.startDate && goal.targetDate ? ' → ' : ''}${goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''}`
-                          : ''}
-                      </div>
+                    <div className="savings-goal-heading">
+                      <h3 className="savings-goal-name">{goal.goalName}</h3>
+                      {goal.notes && <p className="savings-goal-notes">{goal.notes}</p>}
                     </div>
-                    <div className="savings-goal-meta">
-                      <div>Target: {formatCurrency ? formatCurrency(t) : `${currencySymbol}${Number(t).toFixed(2)}`}</div>
-                      <div>Saved: {formatCurrency ? formatCurrency(s) : `${currencySymbol}${Number(s).toFixed(2)}`}</div>
-                      <div>Remaining: {formatCurrency ? formatCurrency(remainingAmount) : `${currencySymbol}${Number(remainingAmount).toFixed(2)}`}</div>
-                      <div className="savings-goal-time">Time Left: {remainingTimeText}</div>
+                    <div className="savings-goal-deadline">
+                      <div className="savings-goal-time">{remainingTimeText}</div>
+                      {(goal.startDate || goal.targetDate) && (
+                        <div className="savings-goal-dates">
+                          {`${goal.startDate ? new Date(goal.startDate).toLocaleDateString() : ''}${goal.startDate && goal.targetDate ? ' → ' : ''}${goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : ''}`}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="savings-goal-amounts">
+                    <div className="savings-goal-saved">
+                      <span className="savings-goal-label">Saved</span>
+                      <strong>{formatCurrency ? formatCurrency(s) : `${currencySymbol}${Number(s).toFixed(2)}`}</strong>
+                    </div>
+                    <div className="savings-goal-target-metric">
+                      <span className="savings-goal-label">Target</span>
+                      <strong>{formatCurrency ? formatCurrency(t) : `${currencySymbol}${Number(t).toFixed(2)}`}</strong>
                     </div>
                   </div>
 
                   <div className="savings-progress-wrap">
-                    <div className="savings-progress">
+                    <div className="savings-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={pct} aria-label={`${goal.goalName} progress`}>
                       <div className="savings-progress-fill" style={{ width: `${pct}%` }} />
                     </div>
                     <div className="savings-progress-label">{pct.toFixed(1)}% complete</div>
                   </div>
 
                   <div className="savings-goal-actions">
-                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Deposit</button>
+                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Add Savings</button>
                     <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
-                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', targetAmount: goal.targetAmount || '', targetDate: goal.targetDate || '' } })}>Edit</button>
-                    <button className="btn" onClick={() => setConfirm({ open: true, message: "Delete this saving goal? This cannot be undone.", onConfirm: () => handleDelete(goal.id) })}>Delete</button>
+                    <span className="savings-goal-icon-actions">
+                      <button className="btn savings-goal-icon-button" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', targetAmount: goal.targetAmount || '', targetDate: goal.targetDate || '' } })} aria-label={`Edit ${goal.goalName}`} title="Edit goal">
+                        <Edit2 size={16} aria-hidden="true" />
+                      </button>
+                      <button className="btn savings-goal-icon-button savings-goal-delete-button" onClick={() => setConfirm({ open: true, message: "Delete this saving goal? This cannot be undone.", onConfirm: () => handleDelete(goal.id) })} aria-label={`Delete ${goal.goalName}`} title="Delete goal">
+                        <Trash2 size={16} aria-hidden="true" />
+                      </button>
+                    </span>
                   </div>
 
                   {activeTab !== 'Summary' && historyForDisplay && historyForDisplay.length > 0 && (
@@ -653,7 +668,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         open={modalState.open}
         title={(() => {
           const goal = goals.find(g => g.id === modalState.goalId) || {};
-          if (modalState.mode === 'deposit') return `Deposit to ${goal.goalName || 'goal'}`;
+          if (modalState.mode === 'deposit') return `Add Savings to ${goal.goalName || 'goal'}`;
           if (modalState.mode === 'withdraw') return `Withdraw from ${goal.goalName || 'goal'}`;
           return `Edit ${goal.goalName || 'goal'}`;
         })()}
@@ -675,7 +690,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
           if (modalState.mode === 'withdraw') return handleWithdrawConfirm(values);
           return handleEditConfirm(values);
         }}
-        submitLabel={modalState.mode === 'withdraw' ? 'Withdraw' : modalState.mode === 'deposit' ? 'Deposit' : 'Save'}
+        submitLabel={modalState.mode === 'withdraw' ? 'Withdraw' : modalState.mode === 'deposit' ? 'Add Savings' : 'Save'}
       />
       <FormModal
         open={editEntryModal.open}
