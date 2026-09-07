@@ -36,6 +36,8 @@ model Savings {
   currentAmount Float    @default(0)
   startDate    DateTime @default(now())
   targetDate   DateTime?
+  category     String?
+  notes        String?
 
   userId       Int
   user         User     @relation(fields: [userId], references: [id])

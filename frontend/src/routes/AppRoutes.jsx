@@ -22,6 +22,7 @@ import ProtectedRoute from "./ProtectedRoutes";
 import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
 import { formatCurrency as formatCurrencyValue, getCurrencySymbol } from "../utils/formatCurrency";
 import { formatYearMonth } from "../utils/dateUtils";
+import { budgetService } from "../features/budgets/services/budgetServices";
 
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx

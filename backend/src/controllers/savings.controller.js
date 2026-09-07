@@ -105,7 +105,7 @@ const deleteTransaction = async (req, res) => {
 };
 
 const createSavings = async (req, res) => {
-  const { name, targetAmount, currentAmount, startDate, targetDate } = req.body;
+  const { name, targetAmount, currentAmount, startDate, targetDate, category, notes } = req.body;
 
   if (!name || targetAmount == null) {
     return res.status(400).json({ error: "Name and targetAmount are required" });
@@ -118,6 +118,8 @@ const createSavings = async (req, res) => {
       currentAmount: currentAmount != null ? Number(currentAmount) : 0,
       startDate: startDate || undefined,
       targetDate: targetDate || undefined,
+      category: category || null,
+      notes: notes || null,
       userId: req.userId
     });
     const parsed = { ...savings, history: typeof savings.history === 'string' ? (savings.history ? JSON.parse(savings.history) : []) : (savings.history || []) };
@@ -140,7 +142,7 @@ const deleteSavings = async (req, res) => {
 };
 
 const updateSavings = async (req, res) => {
-  const { name, targetAmount, currentAmount, startDate, targetDate, historyEntry } = req.body;
+  const { name, targetAmount, currentAmount, startDate, targetDate, category, notes, historyEntry } = req.body;
   try {
     if (historyEntry) {
       const updated = await savingsService.updateSavings(req.params.id, { historyEntry, currentAmount }, req.userId);
@@ -153,7 +155,9 @@ const updateSavings = async (req, res) => {
       targetAmount,
       currentAmount,
       startDate,
-      targetDate
+      targetDate,
+      category,
+      notes
     }, req.userId);
     const parsed = { ...updated, history: typeof updated.history === 'string' ? (updated.history ? JSON.parse(updated.history) : []) : (updated.history || []) };
     res.json(parsed);

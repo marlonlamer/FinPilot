@@ -1,15 +1,17 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import FormModal from "../../../components/FormModal/FormModal";
 import "./SavingsGoalsModule.css";
 import { api, getCurrentUserId, setCurrentUser } from "../../../services/api";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import SavingsSummaryPanel from "../components/SavingsSummaryPanel";
+import SavingsGoalModal from "../components/SavingsGoalModal";
 import toast from 'react-hot-toast';
 import { Edit2, Trash2 } from "lucide-react";
 
 export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGoalSubmitting, setIsGoalSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("Selected Month");
   const [goalFilter, setGoalFilter] = useState("all");
   const [sortValue, setSortValue] = useState("newest");
@@ -17,20 +19,22 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
 
   const [newGoal, setNewGoal] = useState({
     goalName: "",
+    category: "",
     targetAmount: "",
     savedAmount: "",
     startDate: "",
     targetDate: "",
-    monthlySuggestion: "",
     notes: ""
   });
 
   const [goals, setGoals] = useState([]);
   const [dashboardTotals, setDashboardTotals] = useState(null);
+  const savingsFetchSequence = useRef(0);
 
   const fetchSavings = async () => {
     const uid = getCurrentUserId();
     if (!uid) return;
+    const requestSequence = ++savingsFetchSequence.current;
     try {
       // fetch savings list and authoritative transactions, then reconcile
       const sList = await api.get('/savings');
@@ -44,12 +48,14 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         savedAmount: s.currentAmount, // server-calculated from transactions
         startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0,10) : '',
         targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : '',
-        monthlySuggestion: '',
-        notes: '',
+        category: s.category || '',
+        notes: s.notes || '',
         history: Array.isArray(txList) ? txList.filter(t => Number(t.savingsId) === Number(s.id)).map(h => ({ ...h, date: h.date || h.createdAt || h.transactionDate || h.timestamp || h.created_at || h.time })) : [],
         userId: uid
       }));
-      setGoals(mapped);
+      if (requestSequence === savingsFetchSequence.current) {
+        setGoals(mapped);
+      }
     } catch (e) {
       console.error(e);
     }
@@ -86,35 +92,11 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
 
   // no localStorage persistence: server is the source of truth
 
-    const handleNewGoalChange = (e) => {
-    setNewGoal({ ...newGoal, [e.target.name]: e.target.value });
-  };
+  const handleAddGoal = async (values) => {
+    const target = Number(values.targetAmount);
+    const saved = Number(values.savedAmount || 0);
 
-  const calculateMonthlySuggestion = () => {
-    const target = Number(newGoal.targetAmount || 0);
-    const saved = Number(newGoal.savedAmount || 0);
-    const date = newGoal.targetDate;
-
-    if (!target || !date) return "";
-
-    const remaining = target - saved;
-    const months = Math.max(
-      1,
-      (new Date(date) - new Date()) / (1000 * 60 * 60 * 24 * 30)
-    );
-
-    return Math.ceil(remaining / months);
-  };
-
-  const handleAddGoal = (e) => {
-    e.preventDefault();
-
-    const target = Number(newGoal.targetAmount);
-    const saved = Number(newGoal.savedAmount || 0);
-
-    if (!newGoal.goalName || !target || !newGoal.targetDate) {
-      return alert("Please fill required fields.");
-    }
+    if (!values.goalName || !target) return;
 
     if (saved > target) {
       return alert("Saved amount cannot exceed target.");
@@ -130,31 +112,34 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
       }
     }
 
-    const startDateVal = newGoal.startDate || new Date().toISOString().slice(0,10);
+    const startDateVal = values.startDate || new Date().toISOString().slice(0,10);
 
     const initialHistory = saved > 0 ? [{ id: Date.now() + 1, date: startDateVal, amount: Number(saved), note: "Initial deposit" }] : [];
 
     const uid = getCurrentUserId();
+    setIsGoalSubmitting(true);
 
-    if (uid) {
-      const t = toast.loading('Creating savings goal...');
-      api.post('/savings', {
-        name: newGoal.goalName,
-        targetAmount: target,
-        currentAmount: saved,
-        startDate: startDateVal,
-        targetDate: newGoal.targetDate
-      })
-      .then(s => {
+    try {
+      if (uid) {
+        const t = toast.loading('Creating savings goal...');
+        const s = await api.post('/savings', {
+          name: values.goalName,
+          category: values.category,
+          notes: values.notes,
+          targetAmount: target,
+          currentAmount: saved,
+          startDate: startDateVal,
+          targetDate: values.targetDate || undefined
+        });
         const newEntry = {
           id: s.id,
           goalName: s.name,
           targetAmount: s.targetAmount,
           savedAmount: s.currentAmount,
           startDate: s.startDate ? new Date(s.startDate).toISOString().slice(0,10) : startDateVal,
-          targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : newGoal.targetDate,
-          monthlySuggestion: calculateMonthlySuggestion(),
-          notes: newGoal.notes,
+          targetDate: s.targetDate ? new Date(s.targetDate).toISOString().slice(0,10) : values.targetDate,
+          category: s.category || values.category,
+          notes: s.notes || values.notes,
           history: [],
           userId: uid
         };
@@ -162,49 +147,39 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         setGoals(prev => [...prev, newEntry]);
         if (initialHistory.length > 0) {
           const entry = initialHistory[0];
-          api.post('/savings/deposit', { savingsId: s.id, amount: entry.amount, note: entry.note })
-            .then(() => { fetchSavings(); try { adjustAvailableBalance && adjustAvailableBalance(-entry.amount); } catch (e) { console.warn('adjustAvailableBalance failed', e); } })
-            .catch(() => fetchSavings());
-          try { if (typeof onSavingsUpdated === 'function') onSavingsUpdated(); } catch (e) {}
+          await api.post('/savings/deposit', { savingsId: s.id, amount: entry.amount, note: entry.note });
+          try { adjustAvailableBalance && adjustAvailableBalance(-entry.amount); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
+          if (typeof onSavingsUpdated === 'function') await onSavingsUpdated();
+          else await fetchSavings();
         } else {
-          fetchSavings();
-          try { if (typeof onSavingsUpdated === 'function') onSavingsUpdated(); } catch (e) {}
+          if (typeof onSavingsUpdated === 'function') await onSavingsUpdated();
+          else await fetchSavings();
         }
         toast.success('Savings goal added successfully', { id: t });
-      }).catch((err) => {
-        toast.error('Failed to save savings goal');
-        console.error('Failed to create saving on server, falling back to local state', err);
+      } else {
         const newEntry = {
           id: Date.now(),
-          goalName: newGoal.goalName,
+          goalName: values.goalName,
           targetAmount: target,
           savedAmount: saved,
           startDate: startDateVal,
-          targetDate: newGoal.targetDate,
-          monthlySuggestion: calculateMonthlySuggestion(),
-          notes: newGoal.notes,
+          targetDate: values.targetDate,
+          category: values.category,
+          notes: values.notes,
           history: initialHistory,
           userId: uid
         };
         setGoals(prev => [...prev, newEntry]);
-      });
-    } else {
-      const newEntry = {
-        id: Date.now(),
-        goalName: newGoal.goalName,
-        targetAmount: target,
-        savedAmount: saved,
-        startDate: startDateVal,
-        targetDate: newGoal.targetDate,
-        monthlySuggestion: calculateMonthlySuggestion(),
-        notes: newGoal.notes,
-        history: initialHistory,
-        userId: null
-      };
-      setGoals(prev => [...prev, newEntry]);
-      if (saved > 0) {
-        try { adjustAvailableBalance && adjustAvailableBalance(-Number(saved)); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
+        if (saved > 0) {
+          try { adjustAvailableBalance && adjustAvailableBalance(-Number(saved)); } catch (e) { console.warn('adjustAvailableBalance failed', e); }
+        }
       }
+    } catch (err) {
+      toast.error('Failed to save savings goal');
+      console.error('Failed to create saving on server', err);
+      return;
+    } finally {
+      setIsGoalSubmitting(false);
     }
 
     if (saved > 0) {
@@ -213,11 +188,11 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
 
     setNewGoal({
       goalName: "",
+      category: "",
       targetAmount: "",
       savedAmount: "",
       startDate: "",
       targetDate: "",
-      monthlySuggestion: "",
       notes: ""
     });
 
@@ -288,20 +263,24 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
     setModalState({ open: false, mode: null, goalId: null, initial: {} });
   };
 
-  const handleEditConfirm = ({ goalName, targetAmount, targetDate }) => {
+  const handleEditConfirm = async ({ goalName, category, targetAmount, startDate, targetDate, notes }) => {
     const uid = getCurrentUserId();
-    const data = { name: goalName, targetAmount: Number(targetAmount), targetDate };
+    const data = { name: goalName, category, notes, targetAmount: Number(targetAmount), startDate, targetDate };
+    setIsGoalSubmitting(true);
     if (uid) {
       const t = toast.loading('Updating savings goal...');
-      api.put(`/savings/${modalState.goalId}`, data).then(updated => {
-        setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: updated.name, targetAmount: updated.targetAmount, targetDate: updated.targetDate ? new Date(updated.targetDate).toISOString().slice(0,10) : g.targetDate } : g));
+      api.put(`/savings/${modalState.goalId}`, data).then(async updated => {
+        setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: updated.name, category: updated.category || category, notes: updated.notes || notes, targetAmount: updated.targetAmount, startDate: updated.startDate ? new Date(updated.startDate).toISOString().slice(0,10) : g.startDate, targetDate: updated.targetDate ? new Date(updated.targetDate).toISOString().slice(0,10) : g.targetDate } : g));
+        if (typeof onSavingsUpdated === 'function') await onSavingsUpdated();
+        else await fetchSavings();
         toast.success('Savings goal updated successfully', { id: t });
       }).catch(() => {
         toast.error('Failed to update savings goal', { id: t });
-        setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, targetAmount: Number(targetAmount) || g.targetAmount, targetDate: targetDate || g.targetDate } : g));
-      }).finally(() => setModalState({ open: false, mode: null, goalId: null, initial: {} }));
+        setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, category: category || g.category, notes, targetAmount: Number(targetAmount) || g.targetAmount, startDate: startDate || g.startDate, targetDate: targetDate || g.targetDate } : g));
+      }).finally(() => { setIsGoalSubmitting(false); setModalState({ open: false, mode: null, goalId: null, initial: {} }); });
     } else {
-      setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, targetAmount: Number(targetAmount) || g.targetAmount, targetDate: targetDate || g.targetDate } : g));
+      setGoals(prev => prev.map(g => g.id === modalState.goalId ? { ...g, goalName: goalName || g.goalName, category: category || g.category, notes, targetAmount: Number(targetAmount) || g.targetAmount, startDate: startDate || g.startDate, targetDate: targetDate || g.targetDate } : g));
+      setIsGoalSubmitting(false);
       setModalState({ open: false, mode: null, goalId: null, initial: {} });
     }
   };
@@ -475,86 +454,16 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         </button>
       </header>
 
-      {isModalOpen && (
-        <div className="savings-modal-overlay">
-          <div className="savings-modal">
-            <h3>Add Saving Goal</h3>
-
-            <form onSubmit={handleAddGoal}>
-
-              <label className="savings-form-label">Goal Name</label>
-              <input
-                type="text"
-                name="goalName"
-                placeholder="Enter goal name"
-                value={newGoal.goalName}
-                onChange={handleNewGoalChange}
-                required
-              />
-
-              <label className="savings-form-label">Target Amount</label>
-              <input
-                type="number"
-                name="targetAmount"
-                placeholder="Enter target amount"
-                value={newGoal.targetAmount}
-                onChange={handleNewGoalChange}
-                required
-              />
-
-              <label className="savings-form-label">Saved Amount</label>
-              <input
-                type="number"
-                name="savedAmount"
-                placeholder="Enter saved amount"
-                value={newGoal.savedAmount}
-                onChange={handleNewGoalChange}
-              />
-
-              <label className="savings-form-label">Start Date</label>
-              <input
-                type="date"
-                name="startDate"
-                value={newGoal.startDate}
-                onChange={handleNewGoalChange}
-              />
-
-              <label className="savings-form-label">Target Date</label>
-              <input
-                type="date"
-                name="targetDate"
-                value={newGoal.targetDate}
-                onChange={handleNewGoalChange}
-                required
-              />
-
-              <label className="savings-form-label">Monthly Suggestion</label>
-              <input
-                type="number"
-                placeholder="Monthly Suggestion"
-                value={calculateMonthlySuggestion()}
-                readOnly
-              />
-
-              <label className="savings-form-label">Notes(Optional)</label>
-              <textarea
-                name="notes"
-                placeholder="Enter a helpful message"
-                value={newGoal.notes}
-                onChange={handleNewGoalChange}
-              />
-
-              <div className="savings-modal-actions">
-                <button type="button" onClick={() => setIsModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="submit">Save</button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
+      <SavingsGoalModal
+        key={`create-${isModalOpen}`}
+        open={isModalOpen}
+        mode="create"
+        initialValues={newGoal}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleAddGoal}
+        isSubmitting={isGoalSubmitting}
+        currencySymbol={currencySymbol}
+      />
 
       <div className="savings-goals-content">
         {filteredGoals.length === 0 ? (
@@ -590,6 +499,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
                 <div key={goal.id} className="savings-goal-card">
                   <div className="savings-goal-header">
                     <div className="savings-goal-heading">
+                      {goal.category && <div className="savings-goal-category">{goal.category}</div>}
                       <h3 className="savings-goal-name">{goal.goalName}</h3>
                       {goal.notes && <p className="savings-goal-notes">{goal.notes}</p>}
                     </div>
@@ -625,7 +535,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
                     <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Add Savings</button>
                     <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
                     <span className="savings-goal-icon-actions">
-                      <button className="btn savings-goal-icon-button" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', targetAmount: goal.targetAmount || '', targetDate: goal.targetDate || '' } })} aria-label={`Edit ${goal.goalName}`} title="Edit goal">
+                      <button className="btn savings-goal-icon-button" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', category: goal.category || '', targetAmount: goal.targetAmount || '', startDate: goal.startDate || '', targetDate: goal.targetDate || '', notes: goal.notes || '' } })} aria-label={`Edit ${goal.goalName}`} title="Edit goal">
                         <Edit2 size={16} aria-hidden="true" />
                       </button>
                       <button className="btn savings-goal-icon-button savings-goal-delete-button" onClick={() => setConfirm({ open: true, message: "Delete this saving goal? This cannot be undone.", onConfirm: () => handleDelete(goal.id) })} aria-label={`Delete ${goal.goalName}`} title="Delete goal">
@@ -664,8 +574,18 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         onConfirm={() => { confirm.onConfirm && confirm.onConfirm(); setConfirm({ open: false }); }}
         onCancel={() => setConfirm({ open: false })}
       />
+      <SavingsGoalModal
+        key={`edit-${modalState.goalId || 'new'}`}
+        open={modalState.open && modalState.mode === 'edit'}
+        mode="edit"
+        initialValues={modalState.initial}
+        onClose={() => setModalState({ open: false, mode: null, goalId: null, initial: {} })}
+        onSubmit={handleEditConfirm}
+        isSubmitting={isGoalSubmitting}
+        currencySymbol={currencySymbol}
+      />
       <FormModal
-        open={modalState.open}
+        open={modalState.open && (modalState.mode === 'deposit' || modalState.mode === 'withdraw')}
         title={(() => {
           const goal = goals.find(g => g.id === modalState.goalId) || {};
           if (modalState.mode === 'deposit') return `Add Savings to ${goal.goalName || 'goal'}`;
