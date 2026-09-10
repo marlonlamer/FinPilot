@@ -105,6 +105,16 @@
   font-size: 12px;
 }
 
+.transfer-available-amount {
+  margin: -14px 0 20px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.transfer-available-amount strong {
+  color: #334155;
+}
+
 .transfer-source-list {
   display: grid;
   gap: 8px;
@@ -203,4 +213,3 @@
     white-space: normal;
   }
 }
-

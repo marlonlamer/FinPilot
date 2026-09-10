@@ -260,14 +260,19 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
     }
   };
 
-  const handleWithdrawConfirm = ({ amount, note }) => {
+  const handleWithdrawConfirm = async ({ amount, sourceLabel }) => {
     const goal = goals.find(g => g.id === modalState.goalId);
     const amt = Number(amount || 0);
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const currentSaved = Number(goal?.savedAmount || 0);
     if (amt > currentSaved) return window.alert("Insufficient saved amount for this withdrawal.");
-    addHistoryEntry(modalState.goalId, -Math.abs(amt), note || "");
-    setModalState({ open: false, mode: null, goalId: null, initial: {} });
+    setIsTransactionSubmitting(true);
+    try {
+      await addHistoryEntry(modalState.goalId, -Math.abs(amt), `Transfer to ${sourceLabel}`);
+      setModalState({ open: false, mode: null, goalId: null, initial: {} });
+    } finally {
+      setIsTransactionSubmitting(false);
+    }
   };
 
   const handleEditConfirm = async ({ goalName, category, targetAmount, startDate, targetDate, notes }) => {
@@ -540,7 +545,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
 
                   <div className="savings-goal-actions">
                     <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', sourceId: '' } })}>Add Savings</button>
-                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
+                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', sourceId: '' } })}>Withdraw</button>
                     <span className="savings-goal-icon-actions">
                       <button className="btn savings-goal-icon-button" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', category: goal.category || '', targetAmount: goal.targetAmount || '', startDate: goal.startDate || '', targetDate: goal.targetDate || '', notes: goal.notes || '' } })} aria-label={`Edit ${goal.goalName}`} title="Edit goal">
                         <Edit2 size={16} aria-hidden="true" />
@@ -603,31 +608,19 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         isSubmitting={isTransactionSubmitting}
         currencySymbol={currencySymbol}
       />
-      <FormModal
+      <TransferSourceModal
         open={modalState.open && modalState.mode === 'withdraw'}
         title={(() => {
           const goal = goals.find(g => g.id === modalState.goalId) || {};
-          if (modalState.mode === 'withdraw') return `Withdraw from ${goal.goalName || 'goal'}`;
-          return `Edit ${goal.goalName || 'goal'}`;
+          return `Withdraw from ${goal.goalName || 'goal'}`;
         })()}
         initialValues={modalState.initial}
-        fields={(() => {
-          if (modalState.mode === 'withdraw') return [
-            { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
-            { name: 'note', label: 'Note (optional)', type: 'textarea', placeholder: 'Note' }
-          ];
-          return [
-            { name: 'goalName', label: 'Goal name', type: 'text' },
-            { name: 'targetAmount', label: 'Target amount', type: 'number' },
-            { name: 'targetDate', label: 'Target date', type: 'date' }
-          ];
-        })()}
+        direction="to"
+        maxAmount={Number((goals.find(g => g.id === modalState.goalId) || {}).savedAmount || 0)}
         onCancel={() => setModalState({ open: false, mode: null, goalId: null, initial: {} })}
-        onSubmit={(values) => {
-          if (modalState.mode === 'withdraw') return handleWithdrawConfirm(values);
-          return handleEditConfirm(values);
-        }}
-        submitLabel="Withdraw"
+        onSubmit={handleWithdrawConfirm}
+        isSubmitting={isTransactionSubmitting}
+        currencySymbol={currencySymbol}
       />
       <FormModal
         open={editEntryModal.open}

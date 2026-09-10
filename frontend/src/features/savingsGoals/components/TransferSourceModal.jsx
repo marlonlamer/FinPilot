@@ -14,11 +14,20 @@ export default function TransferSourceModal({
   onCancel,
   onSubmit,
   isSubmitting = false,
-  currencySymbol = "₱"
+  currencySymbol = "₱",
+  direction = "from",
+  maxAmount = null
 }) {
   const [amount, setAmount] = useState(initialValues.amount || "");
   const [sourceId, setSourceId] = useState(initialValues.sourceId || "");
   const [error, setError] = useState("");
+  const isTransferTo = direction === "to";
+  const transferLabel = isTransferTo ? "Transfer To" : "Transfer From";
+  const transferDescription = isTransferTo
+    ? "Choose where this withdrawal will be sent."
+    : "Choose where this contribution will come from.";
+  const actionLabel = isTransferTo ? "Withdraw" : "Add Savings";
+  const submittingLabel = isTransferTo ? "Withdrawing..." : "Adding...";
 
   useEffect(() => {
     if (open) {
@@ -36,10 +45,14 @@ export default function TransferSourceModal({
       setError("Enter an amount greater than zero.");
       return;
     }
+    if (maxAmount != null && parsedAmount > Number(maxAmount)) {
+      setError(`Enter an amount no greater than ${currencySymbol}${Number(maxAmount).toFixed(2)}.`);
+      return;
+    }
 
     const source = TRANSFER_SOURCES.find(item => item.id === sourceId);
     if (!source) {
-      setError("Select a transfer source.");
+      setError(`Select a transfer ${isTransferTo ? "destination" : "source"}.`);
       return;
     }
 
@@ -56,7 +69,7 @@ export default function TransferSourceModal({
       <div className="transfer-modal" role="dialog" aria-modal="true" aria-labelledby="transfer-modal-title" onMouseDown={event => event.stopPropagation()}>
         <div className="transfer-modal-header">
           <div>
-            <span className="transfer-modal-eyebrow">Savings contribution</span>
+            <span className="transfer-modal-eyebrow">{isTransferTo ? "Savings withdrawal" : "Savings contribution"}</span>
             <h2 id="transfer-modal-title">{title}</h2>
           </div>
           <button type="button" className="transfer-modal-close" onClick={onCancel} aria-label="Close Add Savings modal">×</button>
@@ -81,15 +94,20 @@ export default function TransferSourceModal({
               autoFocus
             />
           </div>
+          {maxAmount != null && (
+            <p className="transfer-available-amount">
+              Available savings: <strong>{currencySymbol}{Number(maxAmount).toFixed(2)}</strong>
+            </p>
+          )}
 
           <div className="transfer-source-heading">
             <div>
-              <label className="transfer-modal-label">Transfer From</label>
-              <p>Choose where this contribution will come from.</p>
+              <label className="transfer-modal-label">{transferLabel}</label>
+              <p>{transferDescription}</p>
             </div>
           </div>
 
-          <div className="transfer-source-list" role="radiogroup" aria-label="Transfer source">
+          <div className="transfer-source-list" role="radiogroup" aria-label={transferLabel}>
             {TRANSFER_SOURCES.map(source => {
               const selected = source.id === sourceId;
               return (
@@ -123,11 +141,10 @@ export default function TransferSourceModal({
         <div className="transfer-modal-footer">
           <button type="button" className="btn" onClick={onCancel} disabled={isSubmitting}>Cancel</button>
           <button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={isSubmitting}>
-            {isSubmitting ? "Adding..." : "Add Savings"}
+            {isSubmitting ? submittingLabel : actionLabel}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
