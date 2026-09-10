@@ -1,0 +1,206 @@
+.transfer-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.transfer-modal {
+  width: min(100%, 470px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+}
+
+.transfer-modal-header,
+.transfer-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+}
+
+.transfer-modal-header {
+  border-bottom: 1px solid #eef2f7;
+}
+
+.transfer-modal-header h2 {
+  margin: 3px 0 0;
+  color: #172033;
+  font-size: 20px;
+}
+
+.transfer-modal-eyebrow {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.transfer-modal-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  place-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  background: #fff;
+  color: #64748b;
+  font-size: 23px;
+  line-height: 1;
+}
+
+.transfer-modal-body {
+  padding: 20px;
+}
+
+.transfer-modal-label {
+  display: block;
+  margin-bottom: 8px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.transfer-amount-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.transfer-amount-field:focus-within {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.transfer-amount-field input {
+  width: 100%;
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+  outline: 0;
+  color: #172033;
+  font-size: 18px;
+}
+
+.transfer-source-heading p {
+  margin: -2px 0 12px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.transfer-source-list {
+  display: grid;
+  gap: 8px;
+}
+
+.transfer-source-option {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #fff;
+  color: #172033;
+  text-align: left;
+}
+
+.transfer-source-option:hover,
+.transfer-source-option.is-selected {
+  border-color: #0f766e;
+  background: #f0fdfa;
+}
+
+.transfer-source-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  border-radius: 9px;
+  background: #e6fffb;
+  color: #0f766e;
+  font-weight: 800;
+}
+
+.transfer-source-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.transfer-source-copy strong {
+  font-size: 14px;
+}
+
+.transfer-source-copy small {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.transfer-source-check {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  flex: 0 0 20px;
+  place-items: center;
+  border: 1px solid #cbd5e1;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 12px;
+}
+
+.transfer-source-option.is-selected .transfer-source-check {
+  border-color: #0f766e;
+  background: #0f766e;
+}
+
+.transfer-modal-error {
+  margin: 12px 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.transfer-modal-footer {
+  justify-content: flex-end;
+  border-top: 1px solid #eef2f7;
+}
+
+@media (max-width: 480px) {
+  .transfer-modal-overlay {
+    padding: 12px;
+  }
+
+  .transfer-modal-header,
+  .transfer-modal-body,
+  .transfer-modal-footer {
+    padding: 16px;
+  }
+
+  .transfer-source-copy small {
+    white-space: normal;
+  }
+}
+

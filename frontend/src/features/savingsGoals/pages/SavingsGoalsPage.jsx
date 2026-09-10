@@ -6,12 +6,14 @@ import { api, getCurrentUserId, setCurrentUser } from "../../../services/api";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import SavingsSummaryPanel from "../components/SavingsSummaryPanel";
 import SavingsGoalModal from "../components/SavingsGoalModal";
+import TransferSourceModal from "../components/TransferSourceModal";
 import toast from 'react-hot-toast';
 import { Edit2, Trash2 } from "lucide-react";
 
 export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, availableBalance = 0, adjustAvailableBalance = () => {}, selectedYear, selectedMonth, setSelectedMonth, onSavingsUpdated, savingsHistory = [] }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGoalSubmitting, setIsGoalSubmitting] = useState(false);
+  const [isTransactionSubmitting, setIsTransactionSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState("Selected Month");
   const [goalFilter, setGoalFilter] = useState("all");
   const [sortValue, setSortValue] = useState("newest");
@@ -244,13 +246,18 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
   };
   const [modalState, setModalState] = useState({ open: false, mode: null, goalId: null, initial: {} });
 
-  const handleDepositConfirm = ({ amount, note }) => {
+  const handleDepositConfirm = async ({ amount, sourceLabel }) => {
     const amt = Number(amount || 0);
     if (isNaN(amt) || amt <= 0) return window.alert("Please enter a positive number.");
     const avail = Number(availableBalance || 0);
     if (amt > avail) return window.alert("Insufficient available balance for these savings.");
-    addHistoryEntry(modalState.goalId, Math.abs(amt), note || "");
-    setModalState({ open: false, mode: null, goalId: null, initial: {} });
+    setIsTransactionSubmitting(true);
+    try {
+      await addHistoryEntry(modalState.goalId, Math.abs(amt), `Transfer from ${sourceLabel}`);
+      setModalState({ open: false, mode: null, goalId: null, initial: {} });
+    } finally {
+      setIsTransactionSubmitting(false);
+    }
   };
 
   const handleWithdrawConfirm = ({ amount, note }) => {
@@ -532,7 +539,7 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
                   </div>
 
                   <div className="savings-goal-actions">
-                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', note: '' } })}>Add Savings</button>
+                    <button className="btn" onClick={() => setModalState({ open: true, mode: 'deposit', goalId: goal.id, initial: { amount: '', sourceId: '' } })}>Add Savings</button>
                     <button className="btn" onClick={() => setModalState({ open: true, mode: 'withdraw', goalId: goal.id, initial: { amount: '', note: '' } })}>Withdraw</button>
                     <span className="savings-goal-icon-actions">
                       <button className="btn savings-goal-icon-button" onClick={() => setModalState({ open: true, mode: 'edit', goalId: goal.id, initial: { goalName: goal.goalName || '', category: goal.category || '', targetAmount: goal.targetAmount || '', startDate: goal.startDate || '', targetDate: goal.targetDate || '', notes: goal.notes || '' } })} aria-label={`Edit ${goal.goalName}`} title="Edit goal">
@@ -584,17 +591,28 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         isSubmitting={isGoalSubmitting}
         currencySymbol={currencySymbol}
       />
-      <FormModal
-        open={modalState.open && (modalState.mode === 'deposit' || modalState.mode === 'withdraw')}
+      <TransferSourceModal
+        open={modalState.open && modalState.mode === 'deposit'}
         title={(() => {
           const goal = goals.find(g => g.id === modalState.goalId) || {};
-          if (modalState.mode === 'deposit') return `Add Savings to ${goal.goalName || 'goal'}`;
+          return `Add Savings to ${goal.goalName || 'goal'}`;
+        })()}
+        initialValues={modalState.initial}
+        onCancel={() => setModalState({ open: false, mode: null, goalId: null, initial: {} })}
+        onSubmit={handleDepositConfirm}
+        isSubmitting={isTransactionSubmitting}
+        currencySymbol={currencySymbol}
+      />
+      <FormModal
+        open={modalState.open && modalState.mode === 'withdraw'}
+        title={(() => {
+          const goal = goals.find(g => g.id === modalState.goalId) || {};
           if (modalState.mode === 'withdraw') return `Withdraw from ${goal.goalName || 'goal'}`;
           return `Edit ${goal.goalName || 'goal'}`;
         })()}
         initialValues={modalState.initial}
         fields={(() => {
-          if (modalState.mode === 'deposit' || modalState.mode === 'withdraw') return [
+          if (modalState.mode === 'withdraw') return [
             { name: 'amount', label: 'Amount', type: 'number', placeholder: 'Amount' },
             { name: 'note', label: 'Note (optional)', type: 'textarea', placeholder: 'Note' }
           ];
@@ -606,11 +624,10 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
         })()}
         onCancel={() => setModalState({ open: false, mode: null, goalId: null, initial: {} })}
         onSubmit={(values) => {
-          if (modalState.mode === 'deposit') return handleDepositConfirm(values);
           if (modalState.mode === 'withdraw') return handleWithdrawConfirm(values);
           return handleEditConfirm(values);
         }}
-        submitLabel={modalState.mode === 'withdraw' ? 'Withdraw' : modalState.mode === 'deposit' ? 'Add Savings' : 'Save'}
+        submitLabel="Withdraw"
       />
       <FormModal
         open={editEntryModal.open}
