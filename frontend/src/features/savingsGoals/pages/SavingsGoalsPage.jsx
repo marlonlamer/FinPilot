@@ -8,6 +8,7 @@ import SavingsSummaryPanel from "../components/SavingsSummaryPanel";
 import SavingsGoalModal from "../components/SavingsGoalModal";
 import TransferSourceModal from "../components/TransferSourceModal";
 import SavingsAccountSelector from "../components/SavingsAccountSelector";
+import VisualSavingsAccounts from "../components/VisualSavingsAccounts";
 import toast from 'react-hot-toast';
 import { Edit2, Trash2 } from "lucide-react";
 
@@ -469,6 +470,8 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
           </button>
         </div>
       </header>
+
+      <VisualSavingsAccounts />
 
       <SavingsGoalModal
         key={`create-${isModalOpen}`}
