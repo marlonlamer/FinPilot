@@ -1,0 +1,236 @@
+.visual-bank-card-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1110;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.visual-bank-card-modal {
+  width: min(100%, 520px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+}
+
+.visual-bank-card-modal-header,
+.visual-bank-card-modal-body,
+.visual-bank-card-modal-footer {
+  padding: 18px 20px;
+}
+
+.visual-bank-card-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.visual-bank-card-modal-eyebrow {
+  color: #0f766e;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.visual-bank-card-modal-header h2 {
+  margin: 4px 0 4px;
+  color: #172033;
+  font-size: 20px;
+}
+
+.visual-bank-card-modal-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.visual-bank-card-modal-close {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  background: #fff;
+  color: #64748b;
+}
+
+.visual-bank-card-type-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.visual-bank-card-type-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #fff;
+  color: #475569;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.visual-bank-card-type-option:hover,
+.visual-bank-card-type-option.is-selected {
+  border-color: #0f766e;
+  background: #f0fdfa;
+  color: #0f766e;
+}
+
+.visual-bank-card-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.visual-bank-card-form-grid label {
+  display: grid;
+  gap: 6px;
+}
+
+.visual-bank-card-form-grid label > span {
+  color: #334155;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.visual-bank-card-form-grid label small {
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.visual-bank-card-form-grid input,
+.visual-bank-card-form-grid select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+  font-size: 13px;
+}
+
+.visual-bank-card-form-grid input:focus,
+.visual-bank-card-form-grid select:focus {
+  border-color: #0f766e;
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.visual-bank-card-form-grid select:disabled {
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.visual-bank-card-full-field {
+  grid-column: 1 / -1;
+}
+
+.visual-bank-card-balance-field {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-left: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.visual-bank-card-balance-field:focus-within {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.visual-bank-card-balance-field input {
+  border: 0;
+  box-shadow: none;
+}
+
+.visual-bank-card-primary-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.visual-bank-card-primary-toggle > span {
+  display: grid;
+  gap: 3px;
+}
+
+.visual-bank-card-primary-toggle strong {
+  color: #334155;
+  font-size: 13px;
+}
+
+.visual-bank-card-primary-toggle small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.visual-bank-card-primary-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #0f766e;
+}
+
+.visual-bank-card-modal-error {
+  margin: 12px 0 0;
+  color: #b91c1c;
+  font-size: 12px;
+}
+
+.visual-bank-card-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid #eef2f7;
+}
+
+@media (max-width: 520px) {
+  .visual-bank-card-modal-overlay {
+    padding: 12px;
+  }
+
+  .visual-bank-card-modal-header,
+  .visual-bank-card-modal-body,
+  .visual-bank-card-modal-footer {
+    padding: 16px;
+  }
+
+  .visual-bank-card-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .visual-bank-card-full-field {
+    grid-column: auto;
+  }
+}
+

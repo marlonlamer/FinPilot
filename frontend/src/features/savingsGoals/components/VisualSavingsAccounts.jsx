@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Building2, CreditCard, MoreHorizontal, Plus, Smartphone, Wallet } from "lucide-react";
 import "./VisualSavingsAccounts.css";
+import VisualBankCardModal from "./VisualBankCardModal";
 
 const MOCK_ACCOUNTS = [
   {
@@ -42,7 +43,7 @@ const MOCK_ACCOUNTS = [
 ];
 
 export default function VisualSavingsAccounts() {
-  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   return (
     <section className="visual-savings-accounts" aria-labelledby="visual-savings-accounts-title">
@@ -52,7 +53,7 @@ export default function VisualSavingsAccounts() {
           <h2 id="visual-savings-accounts-title">Your Savings Cards &amp; Accounts</h2>
           <p>Keep your savings sources visible in one simple view.</p>
         </div>
-        <button type="button" className="visual-savings-add-button" onClick={() => setShowComingSoon(true)}>
+        <button type="button" className="visual-savings-add-button" onClick={() => setShowAddModal(true)}>
           <Plus size={16} aria-hidden="true" />
           Add Visual Bank Card
         </button>
@@ -86,17 +87,7 @@ export default function VisualSavingsAccounts() {
         ))}
       </div>
 
-      {showComingSoon && (
-        <div className="visual-savings-coming-soon-overlay" role="presentation" onMouseDown={() => setShowComingSoon(false)}>
-          <div className="visual-savings-coming-soon" role="dialog" aria-modal="true" aria-labelledby="visual-savings-coming-soon-title" onMouseDown={event => event.stopPropagation()}>
-            <span className="visual-savings-coming-soon-icon" aria-hidden="true"><CreditCard size={20} /></span>
-            <h2 id="visual-savings-coming-soon-title">Visual Bank Cards are coming soon</h2>
-            <p>Account linking will be available in a future update. These cards are mock data for now.</p>
-            <button type="button" className="btn btn-primary" onClick={() => setShowComingSoon(false)}>Got it</button>
-          </div>
-        </div>
-      )}
+      <VisualBankCardModal open={showAddModal} onClose={() => setShowAddModal(false)} />
     </section>
   );
 }
-
