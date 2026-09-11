@@ -1,0 +1,176 @@
+.savings-account-selector {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.savings-account-trigger {
+  display: inline-flex;
+  min-height: 48px;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 11px 6px 7px;
+  border: 1px solid #dbe4ef;
+  border-radius: 11px;
+  background: #fff;
+  color: #172033;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  text-align: left;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.savings-account-trigger:hover,
+.savings-account-trigger.is-open {
+  border-color: #94a3b8;
+  box-shadow: 0 5px 14px rgba(15, 23, 42, 0.08);
+}
+
+.savings-account-trigger-icon,
+.savings-account-option-icon {
+  display: grid;
+  place-items: center;
+  color: #0f766e;
+}
+
+.savings-account-trigger-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: #e6fffb;
+}
+
+.savings-account-trigger-copy {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.savings-account-trigger-copy strong {
+  font-size: 13px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.savings-account-trigger-copy small {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #64748b;
+  font-size: 11px;
+}
+
+.savings-account-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #16a34a;
+}
+
+.savings-account-chevron {
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.savings-account-trigger.is-open .savings-account-chevron {
+  transform: rotate(180deg);
+}
+
+.savings-account-popover {
+  position: absolute;
+  top: calc(100% + 9px);
+  right: 0;
+  z-index: 20;
+  width: min(300px, calc(100vw - 32px));
+  padding: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.14);
+}
+
+.savings-account-popover-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 9px 10px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.savings-account-popover-heading svg {
+  color: #16a34a;
+}
+
+.savings-account-options {
+  display: grid;
+  gap: 2px;
+}
+
+.savings-account-option,
+.savings-account-manage {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 9px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #172033;
+  text-align: left;
+}
+
+.savings-account-option:hover,
+.savings-account-manage:hover {
+  background: #f8fafc;
+}
+
+.savings-account-option > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.savings-account-option strong {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.savings-account-option small {
+  color: #64748b;
+  font-size: 11px;
+}
+
+.savings-account-manage {
+  margin-top: 5px;
+  border-top: 1px solid #eef2f7;
+  border-radius: 0 0 9px 9px;
+  color: #0f766e;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .savings-account-selector {
+    width: 100%;
+  }
+
+  .savings-account-trigger {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .savings-account-popover {
+    right: auto;
+    left: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .savings-account-popover {
+    width: min(300px, calc(100vw - 24px));
+  }
+}
+

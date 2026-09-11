@@ -7,6 +7,7 @@ import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed
 import SavingsSummaryPanel from "../components/SavingsSummaryPanel";
 import SavingsGoalModal from "../components/SavingsGoalModal";
 import TransferSourceModal from "../components/TransferSourceModal";
+import SavingsAccountSelector from "../components/SavingsAccountSelector";
 import toast from 'react-hot-toast';
 import { Edit2, Trash2 } from "lucide-react";
 
@@ -456,14 +457,17 @@ export default function SavingsGoals({ currencySymbol = "₱", formatCurrency, a
             Plan for your dreams. Save today, achieve tomorrow.
           </p>
         </div>
-        <button
-          type="button"
-          className="savings-page-header-button"
-          onClick={openAddGoal}
-          aria-label="Add new savings goal"
-        >
-          + Add Saving Goal
-        </button>
+        <div className="savings-page-header-actions">
+          <SavingsAccountSelector />
+          <button
+            type="button"
+            className="savings-page-header-button"
+            onClick={openAddGoal}
+            aria-label="Add new savings goal"
+          >
+            + Add Saving Goal
+          </button>
+        </div>
       </header>
 
       <SavingsGoalModal
