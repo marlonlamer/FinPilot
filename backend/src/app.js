@@ -5,6 +5,7 @@ const expenseRoutes = require("./routes/expense.routes");
 const incomeRoutes = require("./routes/income.routes");
 const authRoutes = require("./routes/auth.routes");
 const savingsRoutes = require("./routes/savings.routes");
+const savingsAccountRoutes = require("./routes/savingsAccount.routes");
 const dashboardRoutes = require("./routes/dashboard.routes");
 const reportsRoutes = require("./routes/reports.routes");
 const userRoutes = require("./routes/user.routes");
@@ -49,6 +50,7 @@ app.get("/", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/incomes", incomeRoutes);
+app.use("/api/savings/accounts", savingsAccountRoutes);
 app.use("/api/savings", savingsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/reports", reportsRoutes);
