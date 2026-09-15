@@ -2,19 +2,21 @@ import React from 'react';
 import '../TransactionFeed/TransactionFeed.css';
 
 export default function TransactionItem({ item, currencySymbol = '₱', formatCurrency }) {
-  const getIcon = (category) => {
-    if (!category) return '💳';
-    const key = String(category).toLowerCase();
-    if (key.includes('food') || key.includes('restaurant')) return '🍔';
+  const getIcon = (category, type) => {
+    const key = String(category || type || '').toLowerCase();
+    if (key.includes('food') || key.includes('restaurant')) return '🍽';
     if (key.includes('salary') || key.includes('pay')) return '💼';
     if (key.includes('savings') || key.includes('deposit')) return '🏦';
     if (key.includes('withdraw') || key.includes('atm')) return '🏧';
     if (key.includes('transport')) return '🚗';
-    if (key.includes('shopping')) return '🛍️';
+    if (key.includes('shopping')) return '🛍';
+    if (key.includes('income')) return '↗';
+    if (key.includes('expense')) return '↘';
     return '💳';
   };
 
   const date = item.date ? new Date(item.date) : null;
+  const formattedDate = date ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
   const time = date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
 
   let typeLabel = 'Transaction';
@@ -24,10 +26,11 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
   else if (t.includes('deposit') || (item.savingsId && Number(item.amount) > 0)) typeLabel = 'Deposit';
   else if (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0)) typeLabel = 'Withdraw';
 
-  const displayName = item.category || item.source || item.goalName || `Savings ${item.savingsId || ''}`;
+  const categoryText = item.category || item.source || item.goalName || 'General';
+  const titleText = item.description || item.notes || item.category || item.source || item.goalName || 'Transaction';
+  const accountText = item.source || item.account || item.paymentSource || item.method || 'Cash';
 
   const amountVal = Number(item.amount || 0);
-  // Determine sign based on transaction type (not stored sign)
   const isPositiveByType = (() => {
     if (!t) return amountVal > 0;
     if (t.includes('income')) return true;
@@ -37,7 +40,9 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
     return amountVal > 0;
   })();
 
-  const amountDisplay = formatCurrency ? (isPositiveByType ? `+ ${formatCurrency(Math.abs(amountVal))}` : `- ${formatCurrency(Math.abs(amountVal))}`) : (isPositiveByType ? `+ ${currencySymbol}${Math.abs(amountVal).toFixed(2)}` : `- ${currencySymbol}${Math.abs(amountVal).toFixed(2)}`);
+  const amountDisplay = formatCurrency
+    ? (isPositiveByType ? `+${formatCurrency(Math.abs(amountVal))}` : `-${formatCurrency(Math.abs(amountVal))}`)
+    : (isPositiveByType ? `+${currencySymbol}${Math.abs(amountVal).toFixed(2)}` : `-${currencySymbol}${Math.abs(amountVal).toFixed(2)}`);
 
   let amountClass = 'amount-expense';
   if (t.includes('income')) amountClass = 'amount-income';
@@ -45,16 +50,45 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
   else if (t.includes('savings_withdraw') || t.includes('withdraw')) amountClass = 'amount-withdraw';
   else if (t.includes('expense')) amountClass = 'amount-expense';
 
+  const isIncome = t.includes('income') || (t.includes('deposit') && !t.includes('withdraw')) || (item.savingsId && Number(item.amount) > 0);
+  const isExpense = t.includes('expense') || (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0));
+
   return (
     <div className="transaction-item">
       <div className="transaction-left">
-        <div className="category-icon">{getIcon(displayName)}</div>
+        <div className={`category-icon ${isIncome ? 'income' : isExpense ? 'expense' : 'savings'}`}>
+          {getIcon(categoryText, item.type)}
+        </div>
+
         <div className="transaction-content">
-          <div className="transaction-name">{displayName}</div>
-          <div className="transaction-meta">{typeLabel} • {date ? `${date.toLocaleDateString()} • ${time}` : time}</div>
+          <div className="transaction-headerRow">
+            <div className="transaction-name">{titleText}</div>
+            <div className={"transaction-right " + amountClass}>{amountDisplay}</div>
+          </div>
+
+          <div className="transaction-metaLine">
+            <span>{isIncome ? 'Income' : isExpense ? 'Expense' : typeLabel}</span>
+            <span className="transaction-dot">•</span>
+            <span>{categoryText}</span>
+            <span className="transaction-dot">•</span>
+            <span>{formattedDate}</span>
+            {time ? <>
+              <span className="transaction-dot">•</span>
+              <span>{time}</span>
+            </> : null}
+          </div>
+
+          <div className="transaction-accountRow">
+            <span>{accountText}</span>
+          </div>
         </div>
       </div>
-      <div className={"transaction-right " + amountClass}>{amountDisplay}</div>
+
+      <div className="transaction-actions" aria-label="Transaction actions">
+        <button type="button" className="transaction-actionButton" title="View">👁</button>
+        <button type="button" className="transaction-actionButton" title="Edit">✎</button>
+        <button type="button" className="transaction-actionButton" title="Delete">🗑</button>
+      </div>
     </div>
   );
 }
