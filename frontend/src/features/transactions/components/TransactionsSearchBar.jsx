@@ -1,18 +1,15 @@
 export default function TransactionsSearchBar({
   value,
   onChange,
-  monthValue,
-  onMonthChange,
+  monthLabel,
   typeValue,
   onTypeChange,
   categoryValue,
-  onCategoryChange
+  onCategoryChange,
+  categoryOptions,
+  hasActiveFilters,
+  onReset
 }) {
-  const monthOptions = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
-  ];
-
   return (
     <div className="transactions-toolbar">
       <label className="transactions-field transactions-field--search">
@@ -25,14 +22,10 @@ export default function TransactionsSearchBar({
         />
       </label>
 
-      <label className="transactions-field">
+      <div className="transactions-field transactions-field--month" aria-label="Active month">
         <span>Month</span>
-        <select className="transactions-select" value={monthValue} onChange={onMonthChange}>
-          {monthOptions.map((month, index) => (
-            <option key={month} value={String(index)}>{month}</option>
-          ))}
-        </select>
-      </label>
+        <div className="transactions-monthValue">{monthLabel}</div>
+      </div>
 
       <label className="transactions-field">
         <span>Type</span>
@@ -48,13 +41,17 @@ export default function TransactionsSearchBar({
         <span>Category</span>
         <select className="transactions-select" value={categoryValue} onChange={onCategoryChange}>
           <option value="all">All Categories</option>
-          <option value="salary">Salary</option>
-          <option value="food">Food</option>
-          <option value="transport">Transport</option>
-          <option value="shopping">Shopping</option>
-          <option value="savings">Savings</option>
+          {categoryOptions.map(category => (
+            <option key={category.value} value={category.value}>{category.label}</option>
+          ))}
         </select>
       </label>
+
+      {hasActiveFilters ? (
+        <button type="button" className="transactions-resetButton" onClick={onReset}>
+          Clear filters
+        </button>
+      ) : null}
     </div>
   );
 }

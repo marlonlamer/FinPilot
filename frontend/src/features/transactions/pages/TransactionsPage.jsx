@@ -3,11 +3,6 @@ import "./TransactionsModule.css";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import TransactionsSearchBar from "../components/TransactionsSearchBar";
 
-const monthOptions = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
 const quickFilters = [
   { key: "all", label: "All" },
   { key: "income", label: "Income" },
@@ -19,7 +14,6 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedMonthFilter, setSelectedMonthFilter] = useState(String(selectedMonth ?? new Date().getMonth()));
 
   const inSelectedMonth = useCallback((itemDate) => {
     if (!itemDate) return false;
@@ -31,11 +25,14 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
   }, [selectedYear, selectedMonth]);
 
   const matchesSearch = useCallback((item) => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.trim().toLowerCase();
     const checks = [
       item.category,
       item.source,
+      item.account,
+      item.paymentSource,
+      item.paymentMethod,
       item.description,
       item.notes,
       String(item.amount),
@@ -43,6 +40,34 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
     ];
     return checks.some(v => v && String(v).toLowerCase().includes(q));
   }, [searchQuery]);
+
+  const categoryOptions = useMemo(() => {
+    const sourceItems = [...(incomes || []), ...(expenses || []), ...(savingsHistory || [])];
+    const categories = sourceItems
+      .map(item => item.category)
+      .filter(category => category && String(category).trim())
+      .map(category => String(category).trim());
+    return [...new Set(categories)]
+      .sort((a, b) => a.localeCompare(b))
+      .map(category => ({ value: category.toLowerCase(), label: category }));
+  }, [incomes, expenses, savingsHistory]);
+
+  const categoryLookup = useMemo(
+    () => new Set(categoryOptions.filter(option => option.value === selectedCategory).map(option => option.value)),
+    [categoryOptions, selectedCategory]
+  );
+
+  const matchesType = useCallback((item) => {
+    if (selectedFilter === "all") return true;
+    if (selectedFilter === "income") return item.type === "income";
+    if (selectedFilter === "expense") return item.type === "expense";
+    return item.type === "savings_deposit" || item.type === "savings_withdraw";
+  }, [selectedFilter]);
+
+  const matchesCategory = useCallback((item) => {
+    if (selectedCategory === "all") return true;
+    return categoryLookup.has(String(item.category || "").trim().toLowerCase());
+  }, [categoryLookup, selectedCategory]);
 
   const displayedList = useMemo(() => {
     const mapIncome = (i) => ({ ...i, type: "income" });
@@ -64,12 +89,12 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
       ...filteredSavings
     ];
 
-    return list.filter(matchesSearch).sort((a, b) => {
+    return list.filter(item => matchesSearch(item) && matchesType(item) && matchesCategory(item)).sort((a, b) => {
       const aDate = new Date(a.date || 0).getTime();
       const bDate = new Date(b.date || 0).getTime();
       return bDate - aDate;
     });
-  }, [incomes, expenses, savingsHistory, inSelectedMonth, matchesSearch]);
+  }, [incomes, expenses, savingsHistory, inSelectedMonth, matchesSearch, matchesType, matchesCategory]);
 
   const totals = useMemo(() => {
     const income = (incomes || []).filter(i => inSelectedMonth(i.date)).reduce((sum, item) => sum + Number(item.amount || 0), 0);
@@ -87,6 +112,19 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
     return `${currencySymbol}${Number(value || 0).toFixed(2)}`;
   };
 
+  const monthLabel = new Date(
+    typeof selectedYear === "number" ? selectedYear : new Date().getFullYear(),
+    typeof selectedMonth === "number" ? selectedMonth : new Date().getMonth(),
+    1
+  ).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+  const hasActiveFilters = Boolean(searchQuery.trim()) || selectedFilter !== "all" || selectedCategory !== "all";
+  const resetFilters = () => {
+    setSearchQuery("");
+    setSelectedFilter("all");
+    setSelectedCategory("all");
+  };
+
   return (
     <div className="transactions-page">
       <header className="transactions-page__header">
@@ -101,12 +139,14 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
       <TransactionsSearchBar
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        monthValue={selectedMonthFilter}
-        onMonthChange={e => setSelectedMonthFilter(e.target.value)}
+        monthLabel={monthLabel}
         typeValue={selectedFilter}
         onTypeChange={e => setSelectedFilter(e.target.value)}
         categoryValue={selectedCategory}
         onCategoryChange={e => setSelectedCategory(e.target.value)}
+        categoryOptions={categoryOptions}
+        hasActiveFilters={hasActiveFilters}
+        onReset={resetFilters}
       />
 
       <div className="transactions-page__content">
