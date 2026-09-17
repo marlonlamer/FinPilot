@@ -22,6 +22,7 @@ import ProtectedRoute from "./ProtectedRoutes";
 import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
 import { formatCurrency as formatCurrencyValue, getCurrencySymbol } from "../utils/formatCurrency";
 import { formatYearMonth } from "../utils/dateUtils";
+import { budgetService } from "../features/budgets/services/budgetServices";
 
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
@@ -393,6 +394,58 @@ function AppController() {
 		}
 	};
 
+	const createExpenseFromTransactions = async (payload) => {
+		const t = toast.loading('Adding expense...');
+		try {
+			const newExpense = await api.post("/expenses", { ...payload, userId: getCurrentUserId() });
+			setExpenses(prev => [newExpense, ...prev]);
+			toast.success('Expense added successfully', { id: t });
+			return newExpense;
+		} catch (error) {
+			toast.error('Failed to add expense', { id: t });
+			throw error;
+		}
+	};
+
+	const updateExpenseFromTransactions = async (id, payload) => {
+		const t = toast.loading('Updating expense...');
+		try {
+			const updated = await api.put(`/expenses/${id}`, { ...payload, userId: getCurrentUserId() });
+			setExpenses(prev => prev.map(item => (item.id === id ? updated : item)));
+			toast.success('Expense updated successfully', { id: t });
+			return updated;
+		} catch (error) {
+			toast.error('Failed to update expense', { id: t });
+			throw error;
+		}
+	};
+
+	const createIncomeFromTransactions = async (payload) => {
+		const t = toast.loading('Adding income...');
+		try {
+			const newIncome = await api.post("/incomes", { ...payload, userId: getCurrentUserId() });
+			setIncomes(prev => [newIncome, ...prev]);
+			toast.success('Income added successfully', { id: t });
+			return newIncome;
+		} catch (error) {
+			toast.error('Failed to add income', { id: t });
+			throw error;
+		}
+	};
+
+	const updateIncomeFromTransactions = async (id, payload) => {
+		const t = toast.loading('Updating income...');
+		try {
+			const updated = await api.put(`/incomes/${id}`, { ...payload, userId: getCurrentUserId() });
+			setIncomes(prev => prev.map(item => (item.id === id ? updated : item)));
+			toast.success('Income updated successfully', { id: t });
+			return updated;
+		} catch (error) {
+			toast.error('Failed to update income', { id: t });
+			throw error;
+		}
+	};
+
 	const openEditExpense = (expense) => {
 		setForm({
 			amount: expense.amount || "",
@@ -689,7 +742,7 @@ function AppController() {
 							formatCurrency={formatCurrency}
 						/>} />
 
-						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} selectedYear={selectedYear} selectedMonth={selectedMonth} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} selectedYear={selectedYear} selectedMonth={selectedMonth} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} onCreateExpense={createExpenseFromTransactions} onCreateIncome={createIncomeFromTransactions} onUpdateExpense={updateExpenseFromTransactions} onUpdateIncome={updateIncomeFromTransactions} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="budget" element={<Budget budgets={perCategoryBudgets} budgetsMeta={budgetsMeta} onBudgetsUpdated={refreshBudgetData} monthlyBudget={monthlyBudgetValue} setMonthlyBudget={setMonthlyBudgetForCurrentMonth} percentBudgetUsed={percentBudgetUsed} budgetRemaining={budgetRemaining} budgetColor={budgetColor} overBudgetCategories={overBudgetCategories} COLORS={COLORS} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 

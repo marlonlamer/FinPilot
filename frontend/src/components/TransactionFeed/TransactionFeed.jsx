@@ -2,7 +2,18 @@ import React, { useMemo } from 'react';
 import TransactionItem from '../TransactionItem/TransactionItem';
 import './TransactionFeed.css';
 
-export default function TransactionFeed({ transactions = [], currencySymbol = '₱', formatCurrency }) {
+export default function TransactionFeed({
+  transactions = [],
+  currencySymbol = '₱',
+  formatCurrency,
+  deleteExpense,
+  deleteIncome,
+  openEditExpense,
+  openEditIncome,
+  onViewTransaction,
+  onEditTransaction,
+  onDeleteTransaction
+}) {
   const sorted = useMemo(() => (transactions || []).slice().sort((a,b) => {
     const ad = new Date(a.date || 0).getTime();
     const bd = new Date(b.date || 0).getTime();
@@ -38,7 +49,18 @@ export default function TransactionFeed({ transactions = [], currencySymbol = '�
           <ul className="transaction-group-list">
             {items.map(it => (
               <li key={`${it.type || 't'}-${it.id}`}>
-                <TransactionItem item={it} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+                <TransactionItem
+                  item={it}
+                  currencySymbol={currencySymbol}
+                  formatCurrency={formatCurrency}
+                  deleteExpense={deleteExpense}
+                  deleteIncome={deleteIncome}
+                  openEditExpense={openEditExpense}
+                  openEditIncome={openEditIncome}
+                  onView={onViewTransaction}
+                  onEdit={onEditTransaction}
+                  onDelete={onDeleteTransaction}
+                />
               </li>
             ))}
           </ul>

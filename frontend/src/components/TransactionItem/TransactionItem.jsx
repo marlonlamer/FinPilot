@@ -1,20 +1,18 @@
 import React from 'react';
 import '../TransactionFeed/TransactionFeed.css';
 
-export default function TransactionItem({ item, currencySymbol = '₱', formatCurrency }) {
-  const getIcon = (category, type) => {
-    const key = String(category || type || '').toLowerCase();
-    if (key.includes('food') || key.includes('restaurant')) return '🍽';
-    if (key.includes('salary') || key.includes('pay')) return '💼';
-    if (key.includes('savings') || key.includes('deposit')) return '🏦';
-    if (key.includes('withdraw') || key.includes('atm')) return '🏧';
-    if (key.includes('transport')) return '🚗';
-    if (key.includes('shopping')) return '🛍';
-    if (key.includes('income')) return '↗';
-    if (key.includes('expense')) return '↘';
-    return '💳';
-  };
-
+export default function TransactionItem({
+  item,
+  currencySymbol = '₱',
+  formatCurrency,
+  onView,
+  onEdit,
+  onDelete,
+  deleteExpense,
+  deleteIncome,
+  openEditExpense,
+  openEditIncome
+}) {
   const date = item.date ? new Date(item.date) : null;
   const formattedDate = date ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
   const time = date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
@@ -23,7 +21,7 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
   const t = String((item.type || '')).toLowerCase();
   if (t.includes('income')) typeLabel = 'Income';
   else if (t.includes('expense')) typeLabel = 'Expense';
-  else if (t.includes('deposit') || (item.savingsId && Number(item.amount) > 0)) typeLabel = 'Deposit';
+  else if (t.includes('deposit') || (item.savingsId && Number(item.amount) > 0)) typeLabel = 'Add Savings';
   else if (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0)) typeLabel = 'Withdraw';
 
   const categoryText = item.category || item.source || item.goalName || 'General';
@@ -52,18 +50,43 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
 
   const isIncome = t.includes('income') || (t.includes('deposit') && !t.includes('withdraw')) || (item.savingsId && Number(item.amount) > 0);
   const isExpense = t.includes('expense') || (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0));
+  const isSavings = t.includes('savings_') || t.includes('deposit') || t.includes('withdraw');
+
+  const arrow = isIncome ? '↑' : isExpense ? '↓' : '•';
+
+  const viewTransaction = () => {
+    if (typeof onView === 'function') onView(item);
+  };
+  const editTransaction = () => {
+    if (isSavings) return;
+    if (typeof onEdit === 'function') {
+      onEdit(item);
+      return;
+    }
+    if (isIncome && typeof openEditIncome === 'function') openEditIncome(item);
+    if (isExpense && typeof openEditExpense === 'function') openEditExpense(item);
+  };
+  const removeTransaction = () => {
+    if (isSavings) return;
+    if (typeof onDelete === 'function') {
+      onDelete(item);
+      return;
+    }
+    if (isIncome && typeof deleteIncome === 'function') deleteIncome(item.id);
+    if (isExpense && typeof deleteExpense === 'function') deleteExpense(item.id);
+  };
 
   return (
     <div className="transaction-item">
       <div className="transaction-left">
-        <div className={`category-icon ${isIncome ? 'income' : isExpense ? 'expense' : 'savings'}`}>
-          {getIcon(categoryText, item.type)}
+        <div className={`transaction-typeBadge ${isIncome ? 'income' : isExpense ? 'expense' : 'savings'}`}>
+          {arrow}
         </div>
 
         <div className="transaction-content">
           <div className="transaction-headerRow">
             <div className="transaction-name">{titleText}</div>
-            <div className={"transaction-right " + amountClass}>{amountDisplay}</div>
+            <div className={'transaction-right ' + amountClass}>{amountDisplay}</div>
           </div>
 
           <div className="transaction-metaLine">
@@ -85,9 +108,9 @@ export default function TransactionItem({ item, currencySymbol = '₱', formatCu
       </div>
 
       <div className="transaction-actions" aria-label="Transaction actions">
-        <button type="button" className="transaction-actionButton" title="View">👁</button>
-        <button type="button" className="transaction-actionButton" title="Edit">✎</button>
-        <button type="button" className="transaction-actionButton" title="Delete">🗑</button>
+        <button type="button" className="transaction-actionButton" title="View" onClick={viewTransaction}>👁</button>
+        <button type="button" className="transaction-actionButton" title="Edit" onClick={editTransaction} disabled={isSavings}>✎</button>
+        <button type="button" className="transaction-actionButton" title="Delete" onClick={removeTransaction} disabled={isSavings}>🗑</button>
       </div>
     </div>
   );

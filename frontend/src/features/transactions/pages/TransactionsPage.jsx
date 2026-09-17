@@ -1,7 +1,10 @@
 import React, { useMemo, useState, useCallback } from "react";
 import "./TransactionsModule.css";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import TransactionsSearchBar from "../components/TransactionsSearchBar";
+import AddTransactionModal from "../components/AddTransactionModal";
+import ViewTransactionModal from "../components/ViewTransactionModal";
 
 const quickFilters = [
   { key: "all", label: "All" },
@@ -10,10 +13,60 @@ const quickFilters = [
   { key: "savings", label: "Savings" }
 ];
 
-export default function Transactions({ incomes = [], expenses = [], savingsHistory = [], selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function Transactions({
+  incomes = [],
+  expenses = [],
+  savingsHistory = [],
+  selectedYear,
+  selectedMonth,
+  currencySymbol = "₱",
+  formatCurrency,
+  onCreateExpense,
+  onCreateIncome,
+  onUpdateExpense,
+  onUpdateIncome,
+  deleteExpense,
+  deleteIncome,
+  openEditExpense,
+  openEditIncome
+}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+  const [viewedTransaction, setViewedTransaction] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+
+  const openAddTransactionModal = () => {
+    setEditingTransaction(null);
+    setAddModalOpen(true);
+  };
+
+  const handleViewTransaction = (item) => {
+    setViewedTransaction(item);
+  };
+
+  const handleEditTransaction = (item) => {
+    setEditingTransaction(item);
+    setAddModalOpen(true);
+  };
+
+  const handleDeleteRequest = (item) => {
+    setPendingDelete(item);
+  };
+
+  const confirmDeleteTransaction = async () => {
+    if (!pendingDelete) return;
+    const item = pendingDelete;
+    const type = String(item.type || "").toLowerCase();
+    if (type.includes("income")) {
+      if (typeof deleteIncome === "function") await deleteIncome(item.id);
+    } else if (type.includes("expense")) {
+      if (typeof deleteExpense === "function") await deleteExpense(item.id);
+    }
+    setPendingDelete(null);
+  };
 
   const inSelectedMonth = useCallback((itemDate) => {
     if (!itemDate) return false;
@@ -133,7 +186,7 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
           <h1>Transactions</h1>
           <p className="transactions-page__subtitle">Track your income and expenses in one place.</p>
         </div>
-        <button type="button" className="transactions-page__primaryAction">+ Add Transaction</button>
+        <button type="button" className="transactions-page__primaryAction" onClick={openAddTransactionModal}>+ Add Transaction</button>
       </header>
 
       <TransactionsSearchBar
@@ -156,7 +209,18 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
               <h2>Recent Transactions</h2>
               <span>{displayedList.length} items</span>
             </div>
-            <TransactionFeed transactions={displayedList} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+            <TransactionFeed
+              transactions={displayedList}
+              currencySymbol={currencySymbol}
+              formatCurrency={formatCurrency}
+              deleteExpense={deleteExpense}
+              deleteIncome={deleteIncome}
+              openEditExpense={handleEditTransaction}
+              openEditIncome={handleEditTransaction}
+              onViewTransaction={handleViewTransaction}
+              onEditTransaction={handleEditTransaction}
+              onDeleteTransaction={handleDeleteRequest}
+            />
           </section>
         </main>
 
@@ -200,6 +264,36 @@ export default function Transactions({ incomes = [], expenses = [], savingsHisto
           </div>
         </aside>
       </div>
+
+      <AddTransactionModal
+        open={addModalOpen}
+        onClose={() => {
+          setAddModalOpen(false);
+          setEditingTransaction(null);
+        }}
+        onCreateExpense={onCreateExpense}
+        onCreateIncome={onCreateIncome}
+        onUpdateExpense={onUpdateExpense}
+        onUpdateIncome={onUpdateIncome}
+        editingTransaction={editingTransaction}
+        currencySymbol={currencySymbol}
+      />
+
+      <ViewTransactionModal
+        open={Boolean(viewedTransaction)}
+        transaction={viewedTransaction}
+        onClose={() => setViewedTransaction(null)}
+        currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
+      />
+
+      <ConfirmModal
+        open={Boolean(pendingDelete)}
+        message={`Delete this ${pendingDelete && String(pendingDelete.type || "").toLowerCase().includes("income") ? "income" : "expense"} transaction? This action cannot be undone.`}
+        onConfirm={confirmDeleteTransaction}
+        onCancel={() => setPendingDelete(null)}
+        confirmLabel="Delete"
+      />
     </div>
   );
 }

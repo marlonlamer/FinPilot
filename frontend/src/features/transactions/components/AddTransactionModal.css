@@ -1,0 +1,247 @@
+.add-transaction-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.add-transaction-modal {
+  width: min(680px, 100%);
+  max-height: min(760px, calc(100vh - 40px));
+  overflow-y: auto;
+  border: 1px solid #dbe3ef;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.25);
+}
+
+.add-transaction-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 26px 18px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.add-transaction-eyebrow {
+  margin: 0 0 6px;
+  color: #4f46e5;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.add-transaction-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.45rem;
+}
+
+.add-transaction-header p:last-child {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.add-transaction-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.add-transaction-typeSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 20px 26px 4px;
+  padding: 5px;
+  border-radius: 13px;
+  background: #f1f5f9;
+}
+
+.add-transaction-typeSwitch button {
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #64748b;
+  padding: 10px 12px;
+  font-weight: 800;
+}
+
+.add-transaction-typeSwitch button.is-active.expense {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+.add-transaction-typeSwitch button.is-active.income {
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.add-transaction-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  padding: 18px 26px 26px;
+}
+
+.add-transaction-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.add-transaction-field--amount,
+.add-transaction-field:last-of-type,
+.add-transaction-actions,
+.add-transaction-error {
+  grid-column: 1 / -1;
+}
+
+.add-transaction-field > span {
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 750;
+}
+
+.add-transaction-field input,
+.add-transaction-field select,
+.add-transaction-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dbe3ef;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.add-transaction-field textarea {
+  resize: vertical;
+}
+
+.add-transaction-field input:focus,
+.add-transaction-field select:focus,
+.add-transaction-field textarea:focus {
+  outline: none;
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.16);
+}
+
+.add-transaction-amountInput {
+  display: flex;
+  align-items: center;
+  border: 1px solid #dbe3ef;
+  border-radius: 11px;
+  background: #f8fafc;
+  overflow: hidden;
+}
+
+.add-transaction-amountInput span {
+  padding: 10px 0 10px 13px;
+  color: #64748b;
+  font-weight: 800;
+}
+
+.add-transaction-amountInput input {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.add-transaction-dateRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  grid-column: 1 / -1;
+}
+
+.add-transaction-error {
+  margin: 0;
+  color: #b91c1c;
+  font-size: 0.85rem;
+  font-weight: 650;
+}
+
+.add-transaction-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.add-transaction-cancel,
+.add-transaction-save {
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 800;
+}
+
+.add-transaction-cancel {
+  border: 1px solid #dbe3ef;
+  background: #fff;
+  color: #475569;
+}
+
+.add-transaction-save {
+  border: 0;
+  color: #fff;
+}
+
+.add-transaction-save.expense {
+  background: #4f46e5;
+}
+
+.add-transaction-save.income {
+  background: #4f46e5;
+}
+
+@media (max-width: 600px) {
+  .add-transaction-overlay {
+    align-items: flex-start;
+    padding: 10px;
+  }
+
+  .add-transaction-modal {
+    max-height: calc(100vh - 20px);
+    border-radius: 16px;
+  }
+
+  .add-transaction-header,
+  .add-transaction-form {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .add-transaction-typeSwitch {
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .add-transaction-form,
+  .add-transaction-dateRow {
+    grid-template-columns: 1fr;
+  }
+
+  .add-transaction-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 12px 0 0;
+    background: #fff;
+  }
+}

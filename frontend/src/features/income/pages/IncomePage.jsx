@@ -4,6 +4,7 @@ import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed
 import IncomeHeader from "../components/IncomeHeader";
 import IncomeStats from "../components/IncomeStats";
 import SourceBreakdownList from "../components/SourceBreakdownList";
+import { INCOME_CATEGORIES } from "../../../constants/incomeCategories";
 
 export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -70,12 +71,9 @@ export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, ha
               <label className="form-label">Source of Income</label>
               <select className="modern-input" value={incomeForm.category} onChange={e => setIncomeForm({ ...incomeForm, category: e.target.value })}>
                 <option value="">Select Source</option>
-                <option value="Salary">💼 Salary</option>
-                <option value="Freelance">💻 Freelance</option>
-                <option value="Investment">📈 Investment</option>
-                <option value="Business">🏢 Business</option>
-                <option value="Side Hustle">💪 Side Hustle</option>
-                <option value="Other">➕ Other</option>
+                {INCOME_CATEGORIES.map(category => (
+                  <option key={category.value} value={category.value}>{category.icon} {category.label}</option>
+                ))}
               </select>
               <label className="form-label">Description</label>
               <input className="modern-input" placeholder="Description" value={incomeForm.source} onChange={e => setIncomeForm({ ...incomeForm, source: e.target.value })} required />
