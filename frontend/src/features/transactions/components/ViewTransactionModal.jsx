@@ -1,71 +1,90 @@
 import React from "react";
 import "./AddTransactionModal.css";
 
-const isPositive = (value) => Number(value || 0) >= 0;
-
-export default function ViewTransactionModal({ open, transaction, onClose, currencySymbol = "₱", formatCurrency }) {
+export default function ViewTransactionModal({
+  open,
+  transaction,
+  onClose,
+  currencySymbol = "₱",
+  formatCurrency
+}) {
   if (!open || !transaction) return null;
 
   const type = String(transaction.type || "").toLowerCase();
   const isExpense = type.includes("expense") || type.includes("withdraw") || Number(transaction.amount || 0) < 0;
   const isIncome = type.includes("income") || type.includes("deposit") || (!isExpense && Number(transaction.amount || 0) >= 0);
-  const arrow = isIncome ? "↑" : "↓";
-  const title = transaction.description || transaction.note || transaction.category || transaction.source || "Transaction";
+  const title = transaction.description || transaction.title || transaction.note || transaction.category || transaction.source || "Transaction";
   const typeLabel = isIncome ? "Income" : "Expense";
   const amountValue = Number(transaction.amount || 0);
   const formattedAmount = typeof formatCurrency === "function"
-    ? formatCurrency(amountValue)
+    ? formatCurrency(Math.abs(amountValue))
     : `${currencySymbol}${Math.abs(amountValue).toFixed(2)}`;
 
   const date = transaction.date ? new Date(transaction.date) : null;
-  const dateLabel = date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "—";
-  const timeLabel = date && !Number.isNaN(date.getTime()) ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) : "—";
-  const sourceLabel = transaction.source || transaction.account || transaction.paymentSource || transaction.method || "—";
-  const categoryLabel = transaction.category || "—";
-  const merchantLabel = transaction.description || transaction.merchant || transaction.recipient || "—";
-  const notesLabel = transaction.notes || "—";
+  const validDate = date && !Number.isNaN(date.getTime());
+  const dateLabel = validDate
+    ? date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+    : "Not provided";
+  const timeLabel = validDate
+    ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    : "Not provided";
+  const accountLabel = isIncome
+    ? transaction.destination || transaction.destinationAccount || transaction.account || "Not provided"
+    : transaction.paymentSource || transaction.paymentSourceAccount || transaction.account || transaction.source || transaction.method || "Not provided";
+  const categoryLabel = transaction.category || transaction.customCategory || transaction.title || "";
+  const counterpartyLabel = isIncome
+    ? transaction.payer || transaction.payerSource || transaction.description || ""
+    : transaction.merchant || transaction.merchantRecipient || transaction.recipient || transaction.description || "";
+  const notesLabel = transaction.notes || "";
+  const rawTags = transaction.tags || transaction.tag;
+  const tags = Array.isArray(rawTags)
+    ? rawTags.filter(Boolean)
+    : typeof rawTags === "string"
+      ? rawTags.split(",").map((tag) => tag.trim()).filter(Boolean)
+      : [];
 
   return (
     <div className="add-transaction-overlay" onMouseDown={onClose}>
-      <div className="view-transaction-modal" onMouseDown={(event) => event.stopPropagation()}>
+      <div
+        className="view-transaction-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="transaction-details-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
         <div className="add-transaction-header view-header">
           <div>
-            <p className="add-transaction-eyebrow">Transaction</p>
-            <h2>{title}</h2>
+            <h2 id="transaction-details-title">Transaction Details</h2>
           </div>
           <button type="button" className="add-transaction-close" onClick={onClose} aria-label="Close">×</button>
         </div>
 
         <div className="view-transaction-body">
           <div className="view-transaction-summary">
-            <div className={`transaction-typeBadge ${isIncome ? "income" : "expense"}`}>{arrow}</div>
+            <div className={`transaction-typeBadge ${isIncome ? "income" : "expense"}`}>
+              {isIncome ? "↑" : "↓"}
+            </div>
             <div>
               <div className="view-transaction-name">{title}</div>
               <div className="view-transaction-type">{typeLabel}</div>
             </div>
           </div>
 
+          {categoryLabel ? <span className="view-transaction-category">{categoryLabel}</span> : null}
+          <div className={`view-transaction-amount ${isIncome ? "income" : "expense"}`}>
+            {isIncome ? "+" : "-"}{formattedAmount}
+          </div>
+
+          <h3 className="view-transaction-sectionTitle">Transaction information</h3>
           <div className="view-transaction-grid">
             <div className="view-transaction-row">
-              <span>Amount</span>
-              <strong className={isIncome ? "amount-income" : "amount-expense"}>{isIncome ? "+" : "-"}{formattedAmount}</strong>
+              <span>{isIncome ? "Income Category" : "Expense Category"}</span>
+              <strong>{categoryLabel || "Not provided"}</strong>
             </div>
-            {categoryLabel !== "—" ? (
+            {counterpartyLabel ? (
               <div className="view-transaction-row">
-                <span>Category</span>
-                <strong>{categoryLabel}</strong>
-              </div>
-            ) : null}
-            {merchantLabel !== "—" ? (
-              <div className="view-transaction-row">
-                <span>{isIncome ? "Source / Payer" : "Merchant / Recipient"}</span>
-                <strong>{merchantLabel}</strong>
-              </div>
-            ) : null}
-            {sourceLabel !== "—" ? (
-              <div className="view-transaction-row">
-                <span>{isIncome ? "Destination / Account" : "Payment Source"}</span>
-                <strong>{sourceLabel}</strong>
+                <span>{isIncome ? "Payer / Source" : "Merchant / Recipient"}</span>
+                <strong>{counterpartyLabel}</strong>
               </div>
             ) : null}
             <div className="view-transaction-row">
@@ -76,12 +95,30 @@ export default function ViewTransactionModal({ open, transaction, onClose, curre
               <span>Time</span>
               <strong>{timeLabel}</strong>
             </div>
-            {notesLabel !== "—" ? (
-              <div className="view-transaction-row view-transaction-row--full">
-                <span>Notes</span>
-                <strong>{notesLabel}</strong>
+            <div className="view-transaction-row">
+              <span>{isIncome ? "Destination / Account" : "Payment Source / Account"}</span>
+              <strong>{accountLabel}</strong>
+            </div>
+          </div>
+
+          {tags.length > 0 ? (
+            <>
+              <h3 className="view-transaction-sectionTitle">Tags</h3>
+              <div className="view-transaction-tags">
+                {tags.map((tag) => <span className="view-transaction-tag" key={tag}>{tag}</span>)}
               </div>
-            ) : null}
+            </>
+          ) : null}
+
+          {notesLabel ? (
+            <>
+              <h3 className="view-transaction-sectionTitle">Notes</h3>
+              <p className="view-transaction-notes">{notesLabel}</p>
+            </>
+          ) : null}
+
+          <div className="view-transaction-footer">
+            <button type="button" className="view-transaction-done" onClick={onClose}>Done</button>
           </div>
         </div>
       </div>

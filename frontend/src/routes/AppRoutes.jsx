@@ -24,6 +24,20 @@ import { formatCurrency as formatCurrencyValue, getCurrencySymbol } from "../uti
 import { formatYearMonth } from "../utils/dateUtils";
 import { budgetService } from "../features/budgets/services/budgetServices";
 
+const normalizeExpense = (expense = {}) => ({
+	...expense,
+	description: expense.description ?? expense.title ?? "",
+	merchant: expense.merchant ?? expense.recipient ?? expense.description ?? expense.title ?? "",
+	paymentSource: expense.paymentSource ?? expense.paymentSourceAccount ?? expense.account ?? expense.source ?? "",
+});
+
+const normalizeIncome = (income = {}) => ({
+	...income,
+	category: income.category ?? income.title ?? "",
+	payer: income.payer ?? income.payerSource ?? income.description ?? "",
+	destination: income.destination ?? income.destinationAccount ?? income.account ?? "",
+});
+
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
 	const [expenses, setExpenses] = useState([]);
@@ -119,7 +133,7 @@ function AppController() {
 		try {
 			const monthKey = formatYearMonth(selectedYear, selectedMonth);
 			const data = await api.get("/expenses", { params: { month: monthKey } });
-			setExpenses(data);
+			setExpenses(Array.isArray(data) ? data.map(normalizeExpense) : []);
 		} catch (e) {
 			console.warn("Failed to fetch expenses", e);
 		}
@@ -129,7 +143,7 @@ function AppController() {
 		try {
 			const monthKey = formatYearMonth(selectedYear, selectedMonth);
 			const data = await api.get("/incomes", { params: { month: monthKey } });
-			setIncomes(data);
+			setIncomes(Array.isArray(data) ? data.map(normalizeIncome) : []);
 		} catch (e) {
 			console.warn("Failed to fetch incomes", e);
 		}
@@ -259,7 +273,7 @@ function AppController() {
 					recurrence: form.recurrence || undefined,
 					paymentMethod: form.paymentMethod || undefined
 				});
-				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? updated : p)));
+				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? normalizeExpense({ ...updated, ...form, merchant: form.description, paymentSource: form.source, account: form.source }) : p)));
 				toast.success('Expense updated successfully', { id: t });
 			} catch (e) {
 				toast.error('Failed to update expense');
@@ -290,7 +304,7 @@ function AppController() {
 			const t = toast.loading('Adding expense...');
 			const newExpense = await api.post("/expenses", payload);
 
-			setExpenses(prev => [newExpense, ...prev]);
+			setExpenses(prev => [normalizeExpense({ ...newExpense, ...payload, merchant: payload.description, paymentSource: payload.source, account: payload.source }), ...prev]);
 			toast.success('Expense added successfully', { id: t });
 
 		} catch (e) {
@@ -342,7 +356,7 @@ function AppController() {
 					recurring: !!incomeForm.recurring,
 					recurrence: incomeForm.recurrence || undefined
 				});
-				setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? updated : p)));
+				setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? normalizeIncome({ ...updated, ...incomeForm, payer: incomeForm.source, category: incomeForm.category }) : p)));
 				toast.success('Income updated successfully', { id: t });
 			} catch (e) {
 				toast.error('Failed to update income');
@@ -371,7 +385,7 @@ function AppController() {
 			const t = toast.loading('Adding income...');
 			const newIncome = await api.post("/incomes", payload);
 
-			setIncomes(prev => [newIncome, ...prev]);
+			setIncomes(prev => [normalizeIncome({ ...newIncome, ...payload, payer: payload.source, category: payload.category }), ...prev]);
 			toast.success('Income added successfully', { id: t });
 
 		} catch (e) {
@@ -398,7 +412,7 @@ function AppController() {
 		const t = toast.loading('Adding expense...');
 		try {
 			const newExpense = await api.post("/expenses", { ...payload, userId: getCurrentUserId() });
-			setExpenses(prev => [newExpense, ...prev]);
+			setExpenses(prev => [normalizeExpense({ ...newExpense, ...payload, merchant: payload.description, paymentSource: payload.source, account: payload.source }), ...prev]);
 			toast.success('Expense added successfully', { id: t });
 			return newExpense;
 		} catch (error) {
@@ -411,7 +425,7 @@ function AppController() {
 		const t = toast.loading('Updating expense...');
 		try {
 			const updated = await api.put(`/expenses/${id}`, { ...payload, userId: getCurrentUserId() });
-			setExpenses(prev => prev.map(item => (item.id === id ? updated : item)));
+			setExpenses(prev => prev.map(item => (item.id === id ? normalizeExpense({ ...updated, ...payload, merchant: payload.description, paymentSource: payload.source, account: payload.source }) : item)));
 			toast.success('Expense updated successfully', { id: t });
 			return updated;
 		} catch (error) {
@@ -424,7 +438,7 @@ function AppController() {
 		const t = toast.loading('Adding income...');
 		try {
 			const newIncome = await api.post("/incomes", { ...payload, userId: getCurrentUserId() });
-			setIncomes(prev => [newIncome, ...prev]);
+			setIncomes(prev => [normalizeIncome({ ...newIncome, ...payload, payer: payload.description, destination: payload.source, category: payload.category }), ...prev]);
 			toast.success('Income added successfully', { id: t });
 			return newIncome;
 		} catch (error) {
@@ -437,7 +451,7 @@ function AppController() {
 		const t = toast.loading('Updating income...');
 		try {
 			const updated = await api.put(`/incomes/${id}`, { ...payload, userId: getCurrentUserId() });
-			setIncomes(prev => prev.map(item => (item.id === id ? updated : item)));
+			setIncomes(prev => prev.map(item => (item.id === id ? normalizeIncome({ ...updated, ...payload, payer: payload.description, destination: payload.source, category: payload.category }) : item)));
 			toast.success('Income updated successfully', { id: t });
 			return updated;
 		} catch (error) {

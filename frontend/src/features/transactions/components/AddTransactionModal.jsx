@@ -5,14 +5,17 @@ import "./AddTransactionModal.css";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
+const defaultCategory = (isExpense) => (isExpense ? EXPENSE_CATEGORIES[0]?.value : INCOME_CATEGORIES[0]?.value) || "";
+
 const emptyForm = {
   amount: "",
-  category: "",
+  category: defaultCategory(true),
   description: "",
   source: "",
   date: today(),
   time: new Date().toTimeString().slice(0, 5),
-  notes: ""
+  notes: "",
+  customCategory: ""
 };
 
 const normalizeTransactionType = (transaction) => {
@@ -25,19 +28,23 @@ const normalizeTransactionType = (transaction) => {
 };
 
 const toFormValues = (transaction, fallbackType = "expense") => {
-  const type = transaction ? normalizeTransactionType(transaction) : fallbackType;
+  const isExpenseType = transaction ? normalizeTransactionType(transaction) === "expense" : fallbackType === "expense";
+  const categoryOptions = isExpenseType ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const actualCategory = transaction?.category || defaultCategory(isExpenseType);
+  const isCustomCategory = actualCategory && !categoryOptions.some((category) => category.value === actualCategory) && actualCategory !== "Other";
   const dateValue = transaction?.date ? new Date(transaction.date) : null;
   const dateString = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toISOString().slice(0, 10) : today();
   const timeString = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toTimeString().slice(0, 5) : new Date().toTimeString().slice(0, 5);
 
   return {
     amount: transaction?.amount != null ? String(transaction.amount) : "",
-    category: transaction?.category || "",
-    description: transaction?.description || transaction?.merchant || transaction?.source || "",
-    source: transaction?.source || transaction?.account || transaction?.paymentSource || "",
+    category: isCustomCategory ? "Other" : actualCategory || defaultCategory(isExpenseType),
+    description: transaction?.description || transaction?.merchant || transaction?.payer || transaction?.source || "",
+    source: transaction?.destination || transaction?.account || transaction?.paymentSource || transaction?.source || "",
     date: dateString,
     time: timeString,
-    notes: transaction?.notes || ""
+    notes: transaction?.notes || "",
+    customCategory: isCustomCategory ? actualCategory : ""
   };
 };
 
@@ -70,26 +77,37 @@ export default function AddTransactionModal({
   const update = (name, value) => setValues(previous => ({ ...previous, [name]: value }));
 
   const handleTypeChange = (nextType) => {
+    const nextDefaultCategory = defaultCategory(nextType === "expense");
     setTransactionType(nextType);
     setError("");
     setValues(previous => ({
       ...previous,
-      category: "",
+      category: nextDefaultCategory,
       description: "",
-      source: ""
+      source: "",
+      customCategory: ""
     }));
+  };
+
+  const handleCategoryChange = (event) => {
+    const nextCategory = event.target.value;
+    update("category", nextCategory);
+    if (nextCategory !== "Other") {
+      update("customCategory", "");
+    }
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     const amount = Number(values.amount);
+    const selectedCategory = values.category === "Other" ? values.customCategory.trim() : values.category;
 
     if (!Number.isFinite(amount) || amount <= 0) {
       setError("Enter an amount greater than zero.");
       return;
     }
-    if (!values.category) {
-      setError("Select a category.");
+    if (!selectedCategory) {
+      setError(values.category === "Other" ? "Enter a custom category." : "Select a category.");
       return;
     }
     if (!values.source.trim()) {
@@ -100,7 +118,8 @@ export default function AddTransactionModal({
     const date = values.time ? `${values.date}T${values.time}:00` : values.date;
     const payload = {
       amount,
-      category: values.category,
+      category: selectedCategory,
+      customCategory: values.category === "Other" ? selectedCategory : undefined,
       source: values.source.trim(),
       date,
       notes: values.notes.trim(),
@@ -129,7 +148,10 @@ export default function AddTransactionModal({
   };
 
   const isExpense = transactionType === "expense";
-  const categories = isExpense ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const categoryOptions = isExpense ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
+  const categories = values.category && !categoryOptions.some((category) => category.value === values.category)
+    ? [{ value: values.category, label: values.category }, ...categoryOptions]
+    : categoryOptions;
 
   if (!open) return null;
 
@@ -167,13 +189,25 @@ export default function AddTransactionModal({
 
           <label className="add-transaction-field">
             <span>{isExpense ? "Category" : "Income Category"}</span>
-            <select value={values.category} onChange={event => update("category", event.target.value)} required>
-              <option value="">Select category</option>
+            <select value={values.category} onChange={handleCategoryChange} required>
               {categories.map(category => (
                 <option key={category.value} value={category.value}>{category.label}</option>
               ))}
             </select>
           </label>
+
+          {values.category === "Other" ? (
+            <label className="add-transaction-field add-transaction-customCategory">
+              <span>{isExpense ? "Custom expense category" : "Custom income category"}</span>
+              <input
+                type="text"
+                value={values.customCategory}
+                onChange={event => update("customCategory", event.target.value)}
+                placeholder="e.g. Pet Supplies, Gifts, Miscellaneous"
+                required
+              />
+            </label>
+          ) : null}
 
           <label className="add-transaction-field">
             <span>{isExpense ? "Merchant / Recipient" : "Payer / Source"}</span>
