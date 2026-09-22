@@ -8,6 +8,8 @@
   box-sizing: border-box;
   padding: 16px;
   background: rgba(15, 23, 42, 0.46);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
 }
 
 .add-transaction-modal,
@@ -299,9 +301,12 @@
 
 .view-transaction-summary {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 11px;
-  padding-bottom: 15px;
+  gap: 8px;
+  padding: 2px 8px 17px;
+  text-align: center;
+  overflow-wrap: anywhere;
   border-bottom: 1px solid #f1f5f9;
 }
 
@@ -328,21 +333,16 @@
 
 .view-transaction-name {
   color: #111827;
-  font-size: 1.05rem;
-  font-weight: 750;
+  max-width: 100%;
+  font-size: 1.12rem;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
-.view-transaction-type {
-  margin-top: 3px;
-  color: #64748b;
-  font-size: 0.78rem;
-}
-
 .view-transaction-amount {
-  margin: 15px 0 0;
-  font-size: 1.45rem;
-  font-weight: 800;
+  margin: 1px 0 0;
+  font-size: 1.58rem;
+  font-weight: 850;
   letter-spacing: -0.03em;
 }
 
@@ -356,13 +356,14 @@
 
 .view-transaction-category {
   display: inline-flex;
-  margin-top: 10px;
-  padding: 4px 8px;
+  max-width: 100%;
+  padding: 5px 10px;
   border-radius: 999px;
   background: #eef2ff;
   color: #4338ca;
-  font-size: 0.72rem;
-  font-weight: 700;
+  font-size: 0.78rem;
+  font-weight: 750;
+  overflow-wrap: anywhere;
 }
 
 .view-transaction-sectionTitle {

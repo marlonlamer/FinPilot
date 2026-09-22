@@ -13,8 +13,6 @@ export default function ViewTransactionModal({
   const type = String(transaction.type || "").toLowerCase();
   const isExpense = type.includes("expense") || type.includes("withdraw") || Number(transaction.amount || 0) < 0;
   const isIncome = type.includes("income") || type.includes("deposit") || (!isExpense && Number(transaction.amount || 0) >= 0);
-  const title = transaction.description || transaction.title || transaction.note || transaction.category || transaction.source || "Transaction";
-  const typeLabel = isIncome ? "Income" : "Expense";
   const amountValue = Number(transaction.amount || 0);
   const formattedAmount = typeof formatCurrency === "function"
     ? formatCurrency(Math.abs(amountValue))
@@ -61,18 +59,15 @@ export default function ViewTransactionModal({
 
         <div className="view-transaction-body">
           <div className="view-transaction-summary">
-            <div className={`transaction-typeBadge ${isIncome ? "income" : "expense"}`}>
-              {isIncome ? "↑" : "↓"}
+            <span className="view-transaction-category">
+              {categoryLabel || "Uncategorized"}
+            </span>
+            <div className="view-transaction-name">
+              {counterpartyLabel || "Transaction"}
             </div>
-            <div>
-              <div className="view-transaction-name">{title}</div>
-              <div className="view-transaction-type">{typeLabel}</div>
+            <div className={`view-transaction-amount ${isIncome ? "income" : "expense"}`}>
+              {isIncome ? "+" : "-"}{formattedAmount}
             </div>
-          </div>
-
-          {categoryLabel ? <span className="view-transaction-category">{categoryLabel}</span> : null}
-          <div className={`view-transaction-amount ${isIncome ? "income" : "expense"}`}>
-            {isIncome ? "+" : "-"}{formattedAmount}
           </div>
 
           <h3 className="view-transaction-sectionTitle">Transaction information</h3>
