@@ -11,12 +11,17 @@
 }
 
 .transaction-group-label {
-  font-size: 0.82rem;
+  display: flex;
+  align-items: center;
+  gap: 30px;
+  font-size: 0.78rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  color: #475569;
-  margin: 0 0 10px;
-  padding: 0 4px;
+  letter-spacing: 0.04em;
+  color: #334155;
+  margin: 0 0 7px;
+  padding: 0 4px 7px;
+  border-bottom: 1px solid #e2e8f0;
+  text-transform: capitalize;
 }
 
 .transaction-group-list {
@@ -39,8 +44,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 12px 6px;
+  gap: 18px;
+  padding: 13px 6px;
   border-radius: 14px;
   transition: background .15s ease, transform .15s ease;
 }
@@ -52,7 +57,7 @@
 .transaction-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   min-width: 0;
   flex: 1;
 }
@@ -104,7 +109,7 @@
 }
 
 .transaction-name {
-  font-size: 0.98rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #0f172a;
   overflow: hidden;
@@ -120,8 +125,20 @@
   flex-wrap: wrap;
   gap: 6px;
   color: #64748b;
-  font-size: 0.78rem;
+  font-size: 0.70rem;
   line-height: 1.4;
+}
+
+.transaction-category {
+  padding: 0 5px;
+  border: 1px solid #e2e8f0;
+  border-radius: 50px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.70rem;
+  font-weight: 750;
+  white-space: nowrap;
+  
 }
 
 .transaction-accountRow {
@@ -136,8 +153,49 @@
 .transaction-right {
   font-weight: 800;
   white-space: nowrap;
-  font-size: 0.97rem;
+  font-size: 1rem;
   letter-spacing: -0.02em;
+}
+
+.transaction-rightColumn {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  justify-content: end;
+  gap: 20px;
+  flex-shrink: 0;
+}
+
+.transaction-kind {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.transaction-kind.income {
+  border-color: #bbf7d0;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.transaction-kind.expense {
+  border-color: #fecaca;
+  background: #fff1f2;
+  color: #b91c1c;
+}
+
+.transaction-kind.savings {
+  border-color: #c7d2fe;
+  background: #eef6ff;
+  color: #0f766e;
 }
 
 .amount-income {
@@ -160,7 +218,6 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-left: 12px;
   flex-shrink: 0;
 }
 
@@ -202,7 +259,7 @@
 @media (max-width: 700px) {
   .transaction-item {
     align-items: flex-start;
-    gap: 10px;
+    gap: 8px;
     padding: 12px 4px;
   }
 
@@ -222,20 +279,72 @@
     align-items: flex-start;
   }
 
+  .transaction-rightColumn {
+    grid-template-columns: auto auto;
+    gap: 6px 8px;
+    min-width: 0;
+    justify-items: end;
+  }
+
+  .transaction-kind {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
   .transaction-right {
-    width: 100%;
-    text-align: left;
-    margin-top: 2px;
+    grid-column: 1 / -1;
+    grid-row: 1;
+    text-align: right;
+    font-size: 0.95rem;
   }
 
   .transaction-actions {
-    padding-left: 0;
-    align-self: flex-start;
+    grid-column: 1 / -1;
+    grid-row: 3;
+    justify-self: end;
+  }
+
+  .transaction-name {
+    font-size: 0.50rem;
+  }
+
+  .transaction-category {
+    font-size: 0.72rem;
   }
 
   .transaction-metaLine,
   .transaction-accountRow {
     gap: 4px;
     font-size: 0.72rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .transaction-item {
+    gap: 7px;
+  }
+
+  .transaction-left {
+    gap: 8px;
+  }
+
+  .transaction-typeBadge {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    font-size: 16px;
+  }
+
+  .transaction-name {
+    font-size: 0.9rem;
+  }
+
+  .transaction-category {
+    font-size: 0.72rem;
+  }
+
+  .transaction-actionButton {
+    width: 27px;
+    height: 27px;
   }
 }

@@ -26,8 +26,9 @@ export default function TransactionFeed({
     const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
     const labelFor = (d) => {
       if (!d) return 'Unknown';
-      if (d.toDateString() === now.toDateString()) return 'Today';
-      if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+      const dateLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+      if (d.toDateString() === now.toDateString()) return `Today • ${dateLabel}`;
+      if (d.toDateString() === yesterday.toDateString()) return `Yesterday • ${dateLabel}`;
       return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     };
     sorted.forEach(item => {

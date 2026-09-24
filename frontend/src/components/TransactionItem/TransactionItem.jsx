@@ -14,15 +14,13 @@ export default function TransactionItem({
   openEditIncome
 }) {
   const date = item.date ? new Date(item.date) : null;
-  const formattedDate = date ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown date';
   const time = date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
 
   let typeLabel = 'Transaction';
   const t = String((item.type || '')).toLowerCase();
   if (t.includes('income')) typeLabel = 'Income';
   else if (t.includes('expense')) typeLabel = 'Expense';
-  else if (t.includes('deposit') || (item.savingsId && Number(item.amount) > 0)) typeLabel = 'Add Savings';
-  else if (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0)) typeLabel = 'Withdraw';
+  else if (t.includes('deposit') || t.includes('withdraw') || item.savingsId) typeLabel = 'Savings';
 
   const categoryText = item.category || item.source || item.goalName || 'General';
   const titleText = item.description || item.notes || item.category || item.source || item.goalName || 'Transaction';
@@ -86,15 +84,10 @@ export default function TransactionItem({
         <div className="transaction-content">
           <div className="transaction-headerRow">
             <div className="transaction-name">{titleText}</div>
-            <div className={'transaction-right ' + amountClass}>{amountDisplay}</div>
           </div>
 
           <div className="transaction-metaLine">
-            <span>{isIncome ? 'Income' : isExpense ? 'Expense' : typeLabel}</span>
-            <span className="transaction-dot">•</span>
-            <span>{categoryText}</span>
-            <span className="transaction-dot">•</span>
-            <span>{formattedDate}</span>
+            <span className="transaction-category">{categoryText}</span>
             {time ? <>
               <span className="transaction-dot">•</span>
               <span>{time}</span>
@@ -107,10 +100,16 @@ export default function TransactionItem({
         </div>
       </div>
 
-      <div className="transaction-actions" aria-label="Transaction actions">
-        <button type="button" className="transaction-actionButton" title="View" onClick={viewTransaction}>👁</button>
-        <button type="button" className="transaction-actionButton" title="Edit" onClick={editTransaction} disabled={isSavings}>✎</button>
-        <button type="button" className="transaction-actionButton" title="Delete" onClick={removeTransaction} disabled={isSavings}>🗑</button>
+      <div className="transaction-rightColumn">
+        <span className={`transaction-kind ${isIncome ? 'income' : isExpense ? 'expense' : 'savings'}`}>
+          {typeLabel}
+        </span>
+        <div className={'transaction-right ' + amountClass}>{amountDisplay}</div>
+        <div className="transaction-actions" aria-label="Transaction actions">
+          <button type="button" className="transaction-actionButton" title="View" onClick={viewTransaction}>👁</button>
+          <button type="button" className="transaction-actionButton" title="Edit" onClick={editTransaction} disabled={isSavings}>✎</button>
+          <button type="button" className="transaction-actionButton" title="Delete" onClick={removeTransaction} disabled={isSavings}>🗑</button>
+        </div>
       </div>
     </div>
   );
