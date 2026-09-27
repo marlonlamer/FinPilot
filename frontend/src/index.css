@@ -30,6 +30,17 @@ body {
   min-height: 100vh;
 }
 
+@media (min-width: 901px) {
+  body {
+    display: block;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+  }
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;

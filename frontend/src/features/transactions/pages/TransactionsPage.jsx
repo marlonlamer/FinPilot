@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import "./TransactionsModule.css";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
@@ -6,11 +6,11 @@ import TransactionsSearchBar from "../components/TransactionsSearchBar";
 import AddTransactionModal from "../components/AddTransactionModal";
 import ViewTransactionModal from "../components/ViewTransactionModal";
 
-const quickFilters = [
-  { key: "all", label: "All" },
-  { key: "income", label: "Income" },
-  { key: "expense", label: "Expenses" },
-  { key: "savings", label: "Savings" }
+const timeframeOptions = [
+  { value: "all", label: "All Time" },
+  { value: "day", label: "By Day" },
+  { value: "month", label: "By Month" },
+  { value: "year", label: "By Year" }
 ];
 
 export default function Transactions({
@@ -33,6 +33,11 @@ export default function Transactions({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedAccount, setSelectedAccount] = useState("all");
+  const [selectedTimeframe, setSelectedTimeframe] = useState("all");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedYearFilter, setSelectedYearFilter] = useState(String(new Date().getFullYear()));
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [viewedTransaction, setViewedTransaction] = useState(null);
@@ -76,6 +81,57 @@ export default function Transactions({
     const m = (typeof selectedMonth === 'number') ? selectedMonth : new Date().getMonth();
     return d.getFullYear() === y && d.getMonth() === m;
   }, [selectedYear, selectedMonth]);
+
+  const accountOptions = useMemo(() => {
+    const values = [
+      ...(incomes || []).map(item => item.account || item.destination || item.destinationAccount || item.payerSource || item.source),
+      ...(expenses || []).map(item => item.account || item.paymentSource || item.paymentSourceAccount || item.source || item.merchant),
+      ...(savingsHistory || []).map(item => item.account || item.source || item.destination || item.paymentSource)
+    ].filter(value => value && String(value).trim());
+
+    const unique = [...new Set(values.map(value => String(value).trim()))].sort((a, b) => a.localeCompare(b));
+    return [{ value: "all", label: "All Accounts" }, ...unique.map(value => ({ value: value.toLowerCase(), label: value }))];
+  }, [incomes, expenses, savingsHistory]);
+
+  const matchesAccount = useCallback((item) => {
+    if (selectedAccount === "all") return true;
+    const itemValue = String(
+      item.account ||
+      item.destination ||
+      item.destinationAccount ||
+      item.paymentSource ||
+      item.paymentSourceAccount ||
+      item.source ||
+      item.payerSource ||
+      item.merchant ||
+      item.recipient ||
+      ""
+    ).trim().toLowerCase();
+    return itemValue === selectedAccount;
+  }, [selectedAccount]);
+
+  const matchesTimeframe = useCallback((item) => {
+    if (selectedTimeframe === "all") return true;
+    const rawDate = item.date || item.createdAt || item.transactionDate || item.timestamp || item.created_at || item.time;
+    if (!rawDate) return false;
+    const date = new Date(rawDate);
+    if (isNaN(date)) return false;
+
+    if (selectedTimeframe === "day") {
+      return date.toISOString().slice(0, 10) === selectedDate;
+    }
+
+    if (selectedTimeframe === "month") {
+      const monthValue = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      return monthValue === selectedMonthFilter;
+    }
+
+    if (selectedTimeframe === "year") {
+      return String(date.getFullYear()) === selectedYearFilter;
+    }
+
+    return true;
+  }, [selectedTimeframe, selectedDate, selectedMonthFilter, selectedYearFilter]);
 
   const matchesSearch = useCallback((item) => {
     if (!searchQuery.trim()) return true;
@@ -142,12 +198,12 @@ export default function Transactions({
       ...filteredSavings
     ];
 
-    return list.filter(item => matchesSearch(item) && matchesType(item) && matchesCategory(item)).sort((a, b) => {
+    return list.filter(item => matchesSearch(item) && matchesType(item) && matchesCategory(item) && matchesAccount(item) && matchesTimeframe(item)).sort((a, b) => {
       const aDate = new Date(a.date || 0).getTime();
       const bDate = new Date(b.date || 0).getTime();
       return bDate - aDate;
     });
-  }, [incomes, expenses, savingsHistory, inSelectedMonth, matchesSearch, matchesType, matchesCategory]);
+  }, [incomes, expenses, savingsHistory, inSelectedMonth, matchesSearch, matchesType, matchesCategory, matchesAccount, matchesTimeframe]);
 
   const totals = useMemo(() => {
     const income = (incomes || []).filter(i => inSelectedMonth(i.date)).reduce((sum, item) => sum + Number(item.amount || 0), 0);
@@ -171,12 +227,30 @@ export default function Transactions({
     1
   ).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-  const hasActiveFilters = Boolean(searchQuery.trim()) || selectedFilter !== "all" || selectedCategory !== "all";
+  const hasActiveFilters = Boolean(searchQuery.trim()) || selectedFilter !== "all" || selectedCategory !== "all" || selectedAccount !== "all" || selectedTimeframe !== "all";
   const resetFilters = () => {
     setSearchQuery("");
     setSelectedFilter("all");
     setSelectedCategory("all");
+    setSelectedAccount("all");
+    setSelectedTimeframe("all");
+    setSelectedDate(new Date().toISOString().slice(0, 10));
+    setSelectedMonthFilter(new Date().toISOString().slice(0, 7));
+    setSelectedYearFilter(String(new Date().getFullYear()));
   };
+
+  useEffect(() => {
+    if (selectedTimeframe === "all") return;
+    if (selectedTimeframe === "day" && !selectedDate) {
+      setSelectedDate(new Date().toISOString().slice(0, 10));
+    }
+    if (selectedTimeframe === "month" && !selectedMonthFilter) {
+      setSelectedMonthFilter(new Date().toISOString().slice(0, 7));
+    }
+    if (selectedTimeframe === "year" && !selectedYearFilter) {
+      setSelectedYearFilter(String(new Date().getFullYear()));
+    }
+  }, [selectedTimeframe, selectedDate, selectedMonthFilter, selectedYearFilter]);
 
   return (
     <div className="transactions-page">
@@ -192,12 +266,6 @@ export default function Transactions({
       <TransactionsSearchBar
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
-        monthLabel={monthLabel}
-        typeValue={selectedFilter}
-        onTypeChange={e => setSelectedFilter(e.target.value)}
-        categoryValue={selectedCategory}
-        onCategoryChange={e => setSelectedCategory(e.target.value)}
-        categoryOptions={categoryOptions}
         hasActiveFilters={hasActiveFilters}
         onReset={resetFilters}
       />
@@ -227,39 +295,94 @@ export default function Transactions({
         <aside className="transactions-page__sidebar">
           <div className="transactions-summaryCard">
             <div className="transactions-summaryCard__header">
-              <h3>Transaction Summary</h3>
+              <h3>Filters</h3>
             </div>
-            <div className="transactions-summaryCard__items">
-              <div className="transactions-summaryCard__item transactions-summaryCard__item--income">
-                <span>Total Income</span>
-                <strong>{formatCurrencyValue(totals.income)}</strong>
-              </div>
-              <div className="transactions-summaryCard__item transactions-summaryCard__item--expense">
-                <span>Total Expenses</span>
-                <strong>{formatCurrencyValue(totals.expenses)}</strong>
-              </div>
-              <div className="transactions-summaryCard__item transactions-summaryCard__item--net">
-                <span>Net Flow</span>
-                <strong>{formatCurrencyValue(totals.net)}</strong>
-              </div>
-            </div>
-          </div>
 
-          <div className="transactions-summaryCard">
-            <div className="transactions-summaryCard__header">
-              <h3>Quick Filters</h3>
-            </div>
-            <div className="transactions-quickFilters">
-              {quickFilters.map((filter) => (
-                <button
-                  key={filter.key}
-                  type="button"
-                  className={`transactions-quickFilter ${selectedFilter === filter.key ? 'is-active' : ''}`}
-                  onClick={() => setSelectedFilter(filter.key)}
+            <div className="transactions-filterStack">
+              <label className="transactions-filterField">
+                <span>Date / Timeframe</span>
+                <select
+                  className="transactions-select"
+                  value={selectedTimeframe}
+                  onChange={e => setSelectedTimeframe(e.target.value)}
                 >
-                  {filter.label}
-                </button>
-              ))}
+                  {timeframeOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              {selectedTimeframe === "day" && (
+                <label className="transactions-filterField">
+                  <span>Date</span>
+                  <input
+                    type="date"
+                    className="transactions-input"
+                    value={selectedDate}
+                    onChange={e => setSelectedDate(e.target.value)}
+                  />
+                </label>
+              )}
+
+              {selectedTimeframe === "month" && (
+                <label className="transactions-filterField">
+                  <span>Month</span>
+                  <input
+                    type="month"
+                    className="transactions-input"
+                    value={selectedMonthFilter}
+                    onChange={e => setSelectedMonthFilter(e.target.value)}
+                  />
+                </label>
+              )}
+
+              {selectedTimeframe === "year" && (
+                <label className="transactions-filterField">
+                  <span>Year</span>
+                  <select
+                    className="transactions-select"
+                    value={selectedYearFilter}
+                    onChange={e => setSelectedYearFilter(e.target.value)}
+                  >
+                    {[...new Set([
+                      ...incomes.map(item => new Date(item.date || Date.now()).getFullYear()),
+                      ...expenses.map(item => new Date(item.date || Date.now()).getFullYear()),
+                      ...(savingsHistory || []).map(item => new Date(item.date || item.createdAt || Date.now()).getFullYear())
+                    ])].sort((a, b) => b - a).map(year => (
+                      <option key={year} value={String(year)}>{year}</option>
+                    ))}
+                  </select>
+                </label>
+              )}
+
+              <label className="transactions-filterField">
+                <span>Type</span>
+                <select className="transactions-select" value={selectedFilter} onChange={e => setSelectedFilter(e.target.value)}>
+                  <option value="all">All Types</option>
+                  <option value="income">Income</option>
+                  <option value="expense">Expenses</option>
+                  <option value="savings">Savings</option>
+                </select>
+              </label>
+
+              <label className="transactions-filterField">
+                <span>Category</span>
+                <select className="transactions-select" value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}>
+                  <option value="all">All Categories</option>
+                  {categoryOptions.map(category => (
+                    <option key={category.value} value={category.value}>{category.label}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="transactions-filterField">
+                <span>Account / Card / Destination</span>
+                <select className="transactions-select" value={selectedAccount} onChange={e => setSelectedAccount(e.target.value)}>
+                  {accountOptions.map(option => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
             </div>
           </div>
         </aside>
