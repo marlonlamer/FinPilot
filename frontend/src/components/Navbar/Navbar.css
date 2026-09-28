@@ -10,6 +10,14 @@
 }
 
 @media (max-width:900px){
+  .navbar {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .navbar > div:last-child {
+    margin-left: auto;
+  }
 
   .menu-button{
     display:block;

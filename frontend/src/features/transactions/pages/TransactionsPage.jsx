@@ -31,6 +31,7 @@ export default function Transactions({
   openEditIncome
 }) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedFlow, setSelectedFlow] = useState("all");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedAccount, setSelectedAccount] = useState("all");
@@ -150,6 +151,27 @@ export default function Transactions({
     return checks.some(v => v && String(v).toLowerCase().includes(q));
   }, [searchQuery]);
 
+  const matchesFlow = useCallback((item) => {
+    if (selectedFlow === "all") return true;
+
+    const type = String(item.type || "").toLowerCase();
+    const direction = String(item.direction || item.flow || item.transactionDirection || "").toLowerCase();
+    const amount = Number(item.amount || 0);
+    const hasSavingsId = Boolean(item.savingsId);
+    const isInflow = type.includes("income") ||
+      (type.includes("deposit") && !type.includes("withdraw")) ||
+      (hasSavingsId && amount > 0) ||
+      ["inflow", "in", "up", "upward"].includes(direction);
+    const isOutflow = type.includes("expense") ||
+      type.includes("withdraw") ||
+      type.includes("debt") ||
+      type.includes("bill") ||
+      (hasSavingsId && amount < 0) ||
+      ["outflow", "out", "down", "downward"].includes(direction);
+
+    return selectedFlow === "inflow" ? isInflow : !isInflow && isOutflow;
+  }, [selectedFlow]);
+
   const categoryOptions = useMemo(() => {
     const sourceItems = [...(incomes || []), ...(expenses || []), ...(savingsHistory || [])];
     const categories = sourceItems
@@ -198,12 +220,12 @@ export default function Transactions({
       ...filteredSavings
     ];
 
-    return list.filter(item => matchesSearch(item) && matchesType(item) && matchesCategory(item) && matchesAccount(item) && matchesTimeframe(item)).sort((a, b) => {
+    return list.filter(item => matchesSearch(item) && matchesFlow(item) && matchesType(item) && matchesCategory(item) && matchesAccount(item) && matchesTimeframe(item)).sort((a, b) => {
       const aDate = new Date(a.date || 0).getTime();
       const bDate = new Date(b.date || 0).getTime();
       return bDate - aDate;
     });
-  }, [incomes, expenses, savingsHistory, inSelectedMonth, matchesSearch, matchesType, matchesCategory, matchesAccount, matchesTimeframe]);
+  }, [incomes, expenses, savingsHistory, inSelectedMonth, matchesSearch, matchesFlow, matchesType, matchesCategory, matchesAccount, matchesTimeframe]);
 
   const totals = useMemo(() => {
     const income = (incomes || []).filter(i => inSelectedMonth(i.date)).reduce((sum, item) => sum + Number(item.amount || 0), 0);
@@ -227,9 +249,10 @@ export default function Transactions({
     1
   ).toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
-  const hasActiveFilters = Boolean(searchQuery.trim()) || selectedFilter !== "all" || selectedCategory !== "all" || selectedAccount !== "all" || selectedTimeframe !== "all";
+  const hasActiveFilters = Boolean(searchQuery.trim()) || selectedFlow !== "all" || selectedFilter !== "all" || selectedCategory !== "all" || selectedAccount !== "all" || selectedTimeframe !== "all";
   const resetFilters = () => {
     setSearchQuery("");
+    setSelectedFlow("all");
     setSelectedFilter("all");
     setSelectedCategory("all");
     setSelectedAccount("all");
@@ -266,6 +289,8 @@ export default function Transactions({
       <TransactionsSearchBar
         value={searchQuery}
         onChange={e => setSearchQuery(e.target.value)}
+        flowValue={selectedFlow}
+        onFlowChange={setSelectedFlow}
         hasActiveFilters={hasActiveFilters}
         onReset={resetFilters}
       />
