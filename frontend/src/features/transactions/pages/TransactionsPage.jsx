@@ -279,9 +279,8 @@ export default function Transactions({
     <div className="transactions-page">
       <header className="transactions-page__header">
         <div className="transactions-page__headerText">
-          <p className="transactions-page__eyebrow">Overview</p>
           <h1>Transactions</h1>
-          <p className="transactions-page__subtitle">Track your income and expenses in one place.</p>
+          <p className="transactions-page__subtitle">Track your income, expenses, debts, bills, and savings in one place.</p>
         </div>
         <button type="button" className="transactions-page__primaryAction" onClick={openAddTransactionModal}>+ Add Transaction</button>
       </header>

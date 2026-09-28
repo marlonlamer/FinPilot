@@ -27,27 +27,21 @@
   flex: 1;
 }
 
-.transactions-page__eyebrow {
-  margin: 0 0 8px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #4f46e5;
-}
-
 .transactions-page__header h1 {
-  margin: 0;
-  font-size: clamp(2rem, 4vw, 2.75rem);
-  line-height: 1.1;
-  letter-spacing: -0.04em;
-  color: #0f172a;
+  margin: 0 0 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: #111827;
 }
 
 .transactions-page__subtitle {
-  margin: 8px 0 0;
-  color: #64748b;
-  font-size: 0.98rem;
+  margin: 0;
+  max-width: 600px;
+  color: #6b7280;
+  font-size: 1rem;
+  line-height: 1.5;
 }
 
 .transactions-page__primaryAction {
@@ -358,6 +352,14 @@
     align-items: stretch;
   }
 
+  .transactions-page__header h1 {
+    font-size: 1.5rem;
+  }
+
+  .transactions-page__subtitle {
+    font-size: 0.95rem;
+  }
+
   .transactions-page__primaryAction {
     width: 100%;
   }
@@ -386,5 +388,25 @@
 
   .transactions-filterStack {
     gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .transactions-page__header h1 {
+    font-size: 1.375rem;
+  }
+
+  .transactions-page__subtitle {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .transactions-page__header h1 {
+    font-size: 1.25rem;
+  }
+
+  .transactions-page__subtitle {
+    font-size: 0.875rem;
   }
 }
