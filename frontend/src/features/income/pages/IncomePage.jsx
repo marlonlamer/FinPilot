@@ -5,6 +5,8 @@ import IncomeHeader from "../components/IncomeHeader";
 import IncomeStats from "../components/IncomeStats";
 import SourceBreakdownList from "../components/SourceBreakdownList";
 import { INCOME_CATEGORIES } from "../../../constants/incomeCategories";
+import "../components/IncomeHeader.css";
+import "../components/IncomeStats.css";
 
 export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const lastMonthTotal = useMemo(() => {
@@ -45,6 +47,8 @@ export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, ha
 
   const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
   const lastMonthDisplay = formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`;
+  const recurringTotal = recurring.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const recurringDisplay = formatCurrency ? formatCurrency(recurringTotal) : `${currencySymbol}${recurringTotal.toFixed(2)}`;
   const recurringCount = recurring.length;
 
   return (
@@ -56,7 +60,7 @@ export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, ha
         }}
       />
 
-      <IncomeStats monthlyDisplay={monthlyDisplay} lastMonthDisplay={lastMonthDisplay} recurringCount={recurringCount} />
+      <IncomeStats monthlyDisplay={monthlyDisplay} lastMonthDisplay={lastMonthDisplay} recurringDisplay={recurringDisplay} recurringCount={recurringCount} />
 
       {incomeModalOpen && (
         <div className="modal-overlay" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>
