@@ -43,16 +43,6 @@ function AppController() {
 	const [expenses, setExpenses] = useState([]);
 	const [incomes, setIncomes] = useState([]);
 
-	const [incomeForm, setIncomeForm] = useState({
-		amount: "",
-		category: "",
-		source: "",
-		date: new Date().toISOString().slice(0, 10),
-		notes: "",
-		recurring: false,
-		recurrence: "monthly"
-	});
-
 	const [dashboardTotals, setDashboardTotals] = useState({ totalSavings: 0, availableBalance: 0 });
 	const [savingsHistory, setSavingsHistory] = useState([]);
 
@@ -252,10 +242,8 @@ function AppController() {
 		} catch {}
 	}, [perCategoryBudgets, userKey]);
 
-	const [incomeModalOpen, setIncomeModalOpen] = useState(false);
 	const [expenseModalOpen, setExpenseModalOpen] = useState(false);
 	const [editingExpenseId, setEditingExpenseId] = useState(null);
-	const [editingIncomeId, setEditingIncomeId] = useState(null);
 
 	const handleSubmit = async (e) => {
 		e.preventDefault();
@@ -342,72 +330,6 @@ function AppController() {
 		}
 	};
 
-	const handleIncomeSubmit = async (e) => {
-		e.preventDefault();
-		if (editingIncomeId) {
-			try {
-				const t = toast.loading('Updating income...');
-				const updated = await api.put(`/incomes/${editingIncomeId}`, {
-					amount: incomeForm.amount,
-					source: incomeForm.source,
-					date: incomeForm.date,
-					category: incomeForm.category,
-					notes: incomeForm.notes,
-					recurring: !!incomeForm.recurring,
-					recurrence: incomeForm.recurrence || undefined
-				});
-				setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? normalizeIncome({ ...updated, ...incomeForm, payer: incomeForm.source, category: incomeForm.category }) : p)));
-				toast.success('Income updated successfully', { id: t });
-			} catch (e) {
-				toast.error('Failed to update income');
-				console.warn("Update income failed, applying locally", e);
-				setIncomes(prev => prev.map(p => (p.id === editingIncomeId ? { ...p, ...incomeForm, amount: Number(incomeForm.amount) } : p)));
-			} finally {
-				setEditingIncomeId(null);
-				setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
-				setIncomeModalOpen(false);
-			}
-			return;
-		}
-
-		try {
-			const payload = {
-				amount: incomeForm.amount,
-				source: incomeForm.source,
-				date: incomeForm.date,
-				category: incomeForm.category,
-				notes: incomeForm.notes,
-				recurring: !!incomeForm.recurring,
-				recurrence: incomeForm.recurrence || undefined,
-				userId: getCurrentUserId()
-			};
-
-			const t = toast.loading('Adding income...');
-			const newIncome = await api.post("/incomes", payload);
-
-			setIncomes(prev => [normalizeIncome({ ...newIncome, ...payload, payer: payload.source, category: payload.category }), ...prev]);
-			toast.success('Income added successfully', { id: t });
-
-		} catch (e) {
-			console.warn("Create income failed, adding locally", e);
-			const temp = {
-				id: Date.now(),
-				amount: Number(incomeForm.amount),
-				source: incomeForm.source,
-				date: incomeForm.date,
-				category: incomeForm.category,
-				notes: incomeForm.notes,
-				recurring: !!incomeForm.recurring,
-				recurrence: incomeForm.recurrence || undefined,
-				userId: getCurrentUserId()
-			};
-			setIncomes(prev => [temp, ...prev]);
-		} finally {
-			setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
-			setIncomeModalOpen(false);
-		}
-	};
-
 	const createExpenseFromTransactions = async (payload) => {
 		const t = toast.loading('Adding expense...');
 		try {
@@ -480,26 +402,6 @@ function AppController() {
 		setEditingExpenseId(null);
 		setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "", recurring: false, recurrence: "monthly", paymentMethod: "" });
 		setExpenseModalOpen(false);
-	};
-
-	const openEditIncome = (income) => {
-		setIncomeForm({
-			amount: income.amount || "",
-			category: income.category || "",
-			source: income.source || "",
-			date: income.date ? income.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
-			notes: income.notes || "",
-			recurring: !!income.recurring,
-			recurrence: income.recurrence || "monthly"
-		});
-		setEditingIncomeId(income.id);
-		setIncomeModalOpen(true);
-	};
-
-	const cancelIncomeEdit = () => {
-		setEditingIncomeId(null);
-		setIncomeForm({ amount: "", category: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "", recurring: false, recurrence: "monthly" });
-		setIncomeModalOpen(false);
 	};
 
 	const deleteIncome = async (id) => {
@@ -741,22 +643,18 @@ function AppController() {
 
 						<Route path="income" element={<Income
 							incomes={incomes}
-							incomeForm={incomeForm}
-							setIncomeForm={setIncomeForm}
-							handleIncomeSubmit={handleIncomeSubmit}
-							incomeModalOpen={incomeModalOpen}
-							setIncomeModalOpen={setIncomeModalOpen}
 							deleteIncome={deleteIncome}
-							openEditIncome={openEditIncome}
-							editingIncomeId={editingIncomeId}
-							cancelIncomeEdit={cancelIncomeEdit}
+							onCreateExpense={createExpenseFromTransactions}
+							onCreateIncome={createIncomeFromTransactions}
+							onUpdateExpense={updateExpenseFromTransactions}
+							onUpdateIncome={updateIncomeFromTransactions}
 							selectedYear={selectedYear}
 							selectedMonth={selectedMonth}
 							currencySymbol={currencySymbol}
 							formatCurrency={formatCurrency}
 						/>} />
 
-						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} selectedYear={selectedYear} selectedMonth={selectedMonth} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditIncome={openEditIncome} openEditExpense={openEditExpense} onCreateExpense={createExpenseFromTransactions} onCreateIncome={createIncomeFromTransactions} onUpdateExpense={updateExpenseFromTransactions} onUpdateIncome={updateIncomeFromTransactions} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="transactions" element={<Transactions incomes={incomes} expenses={expenses} savingsHistory={savingsHistory} selectedYear={selectedYear} selectedMonth={selectedMonth} deleteIncome={deleteIncome} deleteExpense={deleteExpense} openEditExpense={openEditExpense} onCreateExpense={createExpenseFromTransactions} onCreateIncome={createIncomeFromTransactions} onUpdateExpense={updateExpenseFromTransactions} onUpdateIncome={updateIncomeFromTransactions} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="budget" element={<Budget budgets={perCategoryBudgets} budgetsMeta={budgetsMeta} onBudgetsUpdated={refreshBudgetData} monthlyBudget={monthlyBudgetValue} setMonthlyBudget={setMonthlyBudgetForCurrentMonth} percentBudgetUsed={percentBudgetUsed} budgetRemaining={budgetRemaining} budgetColor={budgetColor} overBudgetCategories={overBudgetCategories} COLORS={COLORS} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 

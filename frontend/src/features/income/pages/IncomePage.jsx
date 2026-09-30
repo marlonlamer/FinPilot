@@ -4,11 +4,25 @@ import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed
 import IncomeHeader from "../components/IncomeHeader";
 import IncomeStats from "../components/IncomeStats";
 import SourceBreakdownList from "../components/SourceBreakdownList";
-import { INCOME_CATEGORIES } from "../../../constants/incomeCategories";
+import AddTransactionModal from "../../transactions/components/AddTransactionModal";
 import "../components/IncomeHeader.css";
 import "../components/IncomeStats.css";
 
-export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, handleIncomeSubmit, incomeModalOpen, setIncomeModalOpen, deleteIncome, openEditIncome, editingIncomeId, cancelIncomeEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function IncomePage({
+  incomes = [],
+  deleteIncome,
+  onCreateExpense,
+  onCreateIncome,
+  onUpdateExpense,
+  onUpdateIncome,
+  selectedYear,
+  selectedMonth,
+  currencySymbol = "₱",
+  formatCurrency
+}) {
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState(null);
+
   const lastMonthTotal = useMemo(() => {
     let prevMonth = selectedMonth - 1;
     let prevYear = selectedYear;
@@ -45,72 +59,50 @@ export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, ha
   const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
   const lastMonthDisplay = formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`;
 
+  const openAddIncome = () => {
+    setEditingTransaction(null);
+    setAddModalOpen(true);
+  };
+
+  const handleEditIncome = (item) => {
+    setEditingTransaction({ ...item, type: "income" });
+    setAddModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setAddModalOpen(false);
+    setEditingTransaction(null);
+  };
+
   return (
     <div className="income-root">
-      <IncomeHeader
-        onAddClick={() => {
-          setIncomeForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
-          setIncomeModalOpen(true);
-        }}
-      />
+      <IncomeHeader onAddClick={openAddIncome} />
 
       <IncomeStats monthlyDisplay={monthlyDisplay} lastMonthDisplay={lastMonthDisplay} />
-
-      {incomeModalOpen && (
-        <div className="modal-overlay" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3 className="modal-title">{editingIncomeId ? "Edit Income" : "Add Income"}</h3>
-              <button className="btn btn-ghost" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>✕</button>
-            </div>
-            <form onSubmit={handleIncomeSubmit} className="form-grid">
-              <label className="form-label">Amount</label>
-              <input className="modern-input" placeholder="Amount" type="number" value={incomeForm.amount} onChange={e => setIncomeForm({ ...incomeForm, amount: e.target.value })} required />
-              <label className="form-label">Source of Income</label>
-              <select className="modern-input" value={incomeForm.category} onChange={e => setIncomeForm({ ...incomeForm, category: e.target.value })}>
-                <option value="">Select Source</option>
-                {INCOME_CATEGORIES.map(category => (
-                  <option key={category.value} value={category.value}>{category.icon} {category.label}</option>
-                ))}
-              </select>
-              <label className="form-label">Description</label>
-              <input className="modern-input" placeholder="Description" value={incomeForm.source} onChange={e => setIncomeForm({ ...incomeForm, source: e.target.value })} required />
-              <label className="form-label">Date</label>
-              <input className="modern-input" type="date" value={incomeForm.date} onChange={e => setIncomeForm({ ...incomeForm, date: e.target.value })} />
-
-              <div className="form-row-inline">
-                <label className="checkbox-label">
-                  <input type="checkbox" checked={!!incomeForm.recurring} onChange={e => setIncomeForm({ ...incomeForm, recurring: e.target.checked })} />
-                  <span>Recurring</span>
-                </label>
-                {incomeForm.recurring && (
-                  <>
-                    <label className="form-label">Recurrence</label>
-                    <select className="modern-input small-select" value={incomeForm.recurrence || "monthly"} onChange={e => setIncomeForm({ ...incomeForm, recurrence: e.target.value })}>
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
-                    </select>
-                  </>
-                )}
-              </div>
-
-              <label className="form-label">Notes(Optional)</label>
-              <input className="modern-input" placeholder="Enter a helpful message" value={incomeForm.notes} onChange={e => setIncomeForm({ ...incomeForm, notes: e.target.value })} />
-              <div className="form-actions">
-                <button type="button" className="btn" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>Cancel</button>
-                <button type="submit" className="btn btn-primary">{editingIncomeId ? "Save Changes" : "Add Income"}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       <SourceBreakdownList bySource={bySource} formatCurrency={formatCurrency} currencySymbol={currencySymbol} />
 
       <h3 className="section-title">All Incomes</h3>
-      <TransactionFeed transactions={incomes.map(i => ({ ...i, type: 'income' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+      <TransactionFeed
+        transactions={incomes.map(i => ({ ...i, type: "income" }))}
+        currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
+        deleteIncome={deleteIncome}
+        openEditIncome={handleEditIncome}
+        onEditTransaction={handleEditIncome}
+      />
+
+      <AddTransactionModal
+        open={addModalOpen}
+        onClose={closeModal}
+        onCreateExpense={onCreateExpense}
+        onCreateIncome={onCreateIncome}
+        onUpdateExpense={onUpdateExpense}
+        onUpdateIncome={onUpdateIncome}
+        editingTransaction={editingTransaction}
+        defaultType="income"
+        currencySymbol={currencySymbol}
+      />
     </div>
   );
 }

@@ -56,6 +56,7 @@ export default function AddTransactionModal({
   onUpdateExpense,
   onUpdateIncome,
   editingTransaction = null,
+  defaultType = "expense",
   currencySymbol = "₱"
 }) {
   const [transactionType, setTransactionType] = useState("expense");
@@ -67,12 +68,12 @@ export default function AddTransactionModal({
 
   useEffect(() => {
     if (open) {
-      const nextType = editingTransaction ? normalizeTransactionType(editingTransaction) : "expense";
+      const nextType = editingTransaction ? normalizeTransactionType(editingTransaction) : defaultType;
       setTransactionType(nextType);
       setValues(toFormValues(editingTransaction, nextType));
       setError("");
     }
-  }, [open, editingTransaction]);
+  }, [open, editingTransaction, defaultType]);
 
   const update = (name, value) => setValues(previous => ({ ...previous, [name]: value }));
 
