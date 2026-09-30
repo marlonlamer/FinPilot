@@ -42,14 +42,8 @@ export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, ha
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [incomes]);
 
-  const recurring = useMemo(() => incomes.filter(i => i.recurring), [incomes]);
-  const nonRecurring = useMemo(() => incomes.filter(i => !i.recurring), [incomes]);
-
   const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
   const lastMonthDisplay = formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`;
-  const recurringTotal = recurring.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
-  const recurringDisplay = formatCurrency ? formatCurrency(recurringTotal) : `${currencySymbol}${recurringTotal.toFixed(2)}`;
-  const recurringCount = recurring.length;
 
   return (
     <div className="income-root">
@@ -60,7 +54,7 @@ export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, ha
         }}
       />
 
-      <IncomeStats monthlyDisplay={monthlyDisplay} lastMonthDisplay={lastMonthDisplay} recurringDisplay={recurringDisplay} recurringCount={recurringCount} />
+      <IncomeStats monthlyDisplay={monthlyDisplay} lastMonthDisplay={lastMonthDisplay} />
 
       {incomeModalOpen && (
         <div className="modal-overlay" onClick={() => (editingIncomeId ? cancelIncomeEdit() : setIncomeModalOpen(false))}>
@@ -113,17 +107,10 @@ export default function IncomePage({ incomes = [], incomeForm, setIncomeForm, ha
         </div>
       )}
 
-      <h3 className="section-title">Recurring Incomes</h3>
-      {recurring.length > 0 ? (
-        <TransactionFeed transactions={recurring.map(i => ({ ...i, type: 'income' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
-      ) : (
-        <div className="no-data">No recurring incomes set.</div>
-      )}
-
       <SourceBreakdownList bySource={bySource} formatCurrency={formatCurrency} currencySymbol={currencySymbol} />
 
       <h3 className="section-title">All Incomes</h3>
-      <TransactionFeed transactions={nonRecurring.map(i => ({ ...i, type: 'income' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+      <TransactionFeed transactions={incomes.map(i => ({ ...i, type: 'income' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
     </div>
   );
 }
