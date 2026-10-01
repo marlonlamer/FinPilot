@@ -423,6 +423,7 @@ export default function Transactions({
         onUpdateExpense={onUpdateExpense}
         onUpdateIncome={onUpdateIncome}
         editingTransaction={editingTransaction}
+        mode="both"
         currencySymbol={currencySymbol}
       />
 

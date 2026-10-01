@@ -57,6 +57,7 @@ export default function AddTransactionModal({
   onUpdateIncome,
   editingTransaction = null,
   defaultType = "expense",
+  mode = "both",
   currencySymbol = "₱"
 }) {
   const [transactionType, setTransactionType] = useState("expense");
@@ -65,15 +66,28 @@ export default function AddTransactionModal({
   const [saving, setSaving] = useState(false);
 
   const isEditing = Boolean(editingTransaction && editingTransaction.id);
+  const restrictedType = mode === "income" || mode === "expense" ? mode : null;
+  const activeTransactionType = restrictedType || transactionType;
+  const headerContent = mode === "income"
+    ? {
+      eyebrow: "Income",
+      title: isEditing ? "Update Income" : "Add Income",
+      description: "Record your income and keep your finances up to date."
+    }
+    : {
+      eyebrow: "Money movement",
+      title: isEditing ? "Update Transaction" : "Add Transaction",
+      description: "Record an expense or income without leaving your overview."
+    };
 
   useEffect(() => {
     if (open) {
-      const nextType = editingTransaction ? normalizeTransactionType(editingTransaction) : defaultType;
+      const nextType = restrictedType || (editingTransaction ? normalizeTransactionType(editingTransaction) : defaultType);
       setTransactionType(nextType);
       setValues(toFormValues(editingTransaction, nextType));
       setError("");
     }
-  }, [open, editingTransaction, defaultType]);
+  }, [open, editingTransaction, defaultType, restrictedType]);
 
   const update = (name, value) => setValues(previous => ({ ...previous, [name]: value }));
 
@@ -112,7 +126,7 @@ export default function AddTransactionModal({
       return;
     }
     if (!values.source.trim()) {
-      setError(transactionType === "expense" ? "Enter a payment source." : "Enter an income source.");
+      setError(activeTransactionType === "expense" ? "Enter a payment source." : "Enter an income source.");
       return;
     }
 
@@ -125,17 +139,17 @@ export default function AddTransactionModal({
       date,
       notes: values.notes.trim(),
       description: values.description.trim(),
-      ...(transactionType === "expense" ? {} : {})
+      ...(activeTransactionType === "expense" ? {} : {})
     };
 
     setSaving(true);
     setError("");
     try {
-      if (isEditing && transactionType === "expense" && typeof onUpdateExpense === "function") {
+      if (isEditing && activeTransactionType === "expense" && typeof onUpdateExpense === "function") {
         await onUpdateExpense(editingTransaction.id, payload);
-      } else if (isEditing && transactionType === "income" && typeof onUpdateIncome === "function") {
+      } else if (isEditing && activeTransactionType === "income" && typeof onUpdateIncome === "function") {
         await onUpdateIncome(editingTransaction.id, payload);
-      } else if (transactionType === "expense") {
+      } else if (activeTransactionType === "expense") {
         await onCreateExpense(payload);
       } else {
         await onCreateIncome(payload);
@@ -148,7 +162,7 @@ export default function AddTransactionModal({
     }
   };
 
-  const isExpense = transactionType === "expense";
+  const isExpense = activeTransactionType === "expense";
   const categoryOptions = isExpense ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
   const categories = values.category && !categoryOptions.some((category) => category.value === values.category)
     ? [{ value: values.category, label: values.category }, ...categoryOptions]
@@ -161,23 +175,23 @@ export default function AddTransactionModal({
       <div className="add-transaction-modal" onMouseDown={event => event.stopPropagation()}>
         <div className="add-transaction-header">
           <div>
-            <p className="add-transaction-eyebrow">Money movement</p>
-            <h2>{isEditing ? "Update Transaction" : "Add Transaction"}</h2>
-            <p>Record an expense or income without leaving your overview.</p>
+            <p className="add-transaction-eyebrow">{headerContent.eyebrow}</p>
+            <h2>{headerContent.title}</h2>
+            <p>{headerContent.description}</p>
           </div>
           <button type="button" className="add-transaction-close" onClick={onClose} aria-label="Close">
             ×
           </button>
         </div>
 
-        <div className="add-transaction-typeSwitch" role="tablist" aria-label="Transaction type">
+        {!restrictedType ? <div className="add-transaction-typeSwitch" role="tablist" aria-label="Transaction type">
           <button type="button" className={isExpense ? "is-active expense" : ""} onClick={() => handleTypeChange("expense")} role="tab" aria-selected={isExpense}>
             ↓ Expense Out
           </button>
           <button type="button" className={!isExpense ? "is-active income" : ""} onClick={() => handleTypeChange("income")} role="tab" aria-selected={!isExpense}>
             ↑ Income In
           </button>
-        </div>
+        </div> : null}
 
         <form onSubmit={handleSubmit} className="add-transaction-form">
           <div className="add-transaction-field add-transaction-field--amount">

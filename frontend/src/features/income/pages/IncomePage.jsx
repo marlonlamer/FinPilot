@@ -101,6 +101,7 @@ export default function IncomePage({
         onUpdateIncome={onUpdateIncome}
         editingTransaction={editingTransaction}
         defaultType="income"
+        mode="income"
         currencySymbol={currencySymbol}
       />
     </div>
