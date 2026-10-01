@@ -150,6 +150,12 @@
   opacity: 0.7;
 }
 
+.transaction-recurring {
+  color: #64748b;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
 .transaction-right {
   font-weight: 800;
   white-space: nowrap;

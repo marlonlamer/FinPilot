@@ -49,6 +49,11 @@ export default function TransactionItem({
   const isIncome = t.includes('income') || (t.includes('deposit') && !t.includes('withdraw')) || (item.savingsId && Number(item.amount) > 0);
   const isExpense = t.includes('expense') || (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0));
   const isSavings = t.includes('savings_') || t.includes('deposit') || t.includes('withdraw');
+  const rawRecurringFrequency = item.recurringFrequency || item.recurrenceFrequency || (typeof item.recurrence === 'string' ? item.recurrence : '');
+  const recurringFrequency = ['daily', 'weekly', 'monthly', 'yearly'].includes(String(rawRecurringFrequency).toLowerCase())
+    ? `${String(rawRecurringFrequency).charAt(0).toUpperCase()}${String(rawRecurringFrequency).slice(1).toLowerCase()}`
+    : '';
+  const isRecurring = !isSavings && (item.isRecurring === true || item.recurring === true || Boolean(recurringFrequency));
 
   const arrow = isIncome ? '↑' : isExpense ? '↓' : '•';
 
@@ -91,6 +96,10 @@ export default function TransactionItem({
             {time ? <>
               <span className="transaction-dot">•</span>
               <span>{time}</span>
+            </> : null}
+            {isRecurring ? <>
+              <span className="transaction-dot">↻</span>
+              <span className="transaction-recurring">{recurringFrequency || 'Recurring'}</span>
             </> : null}
           </div>
 

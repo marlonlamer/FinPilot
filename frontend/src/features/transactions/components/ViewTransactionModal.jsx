@@ -34,6 +34,18 @@ export default function ViewTransactionModal({
     ? transaction.payer || transaction.payerSource || transaction.description || ""
     : transaction.merchant || transaction.merchantRecipient || transaction.recipient || transaction.description || "";
   const notesLabel = transaction.notes || "";
+  const rawRecurringFrequency = transaction.recurringFrequency || transaction.recurrenceFrequency || (typeof transaction.recurrence === "string" ? transaction.recurrence : "");
+  const recurringFrequency = ["daily", "weekly", "monthly", "yearly"].includes(String(rawRecurringFrequency).toLowerCase())
+    ? `${String(rawRecurringFrequency).charAt(0).toUpperCase()}${String(rawRecurringFrequency).slice(1).toLowerCase()}`
+    : "";
+  const isRecurring = !type.includes("savings_") && !type.includes("deposit") && !type.includes("withdraw") && (
+    transaction.isRecurring === true || transaction.recurring === true || Boolean(recurringFrequency)
+  );
+  const recurringEndDate = transaction.recurringEndDate || transaction.recurrenceEndDate || transaction.repeatUntil || "";
+  const recurringEndDateValue = recurringEndDate ? new Date(recurringEndDate) : null;
+  const recurringEndDateLabel = recurringEndDateValue && !Number.isNaN(recurringEndDateValue.getTime())
+    ? recurringEndDateValue.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+    : "";
   const rawTags = transaction.tags || transaction.tag;
   const tags = Array.isArray(rawTags)
     ? rawTags.filter(Boolean)
@@ -94,6 +106,18 @@ export default function ViewTransactionModal({
               <span>{isIncome ? "Destination / Account" : "Payment Source / Account"}</span>
               <strong>{accountLabel}</strong>
             </div>
+            {isRecurring ? (
+              <div className="view-transaction-row">
+                <span>Recurring</span>
+                <strong>{recurringFrequency || "Recurring"}</strong>
+              </div>
+            ) : null}
+            {isRecurring && recurringEndDateLabel ? (
+              <div className="view-transaction-row">
+                <span>Repeat Until</span>
+                <strong>{recurringEndDateLabel}</strong>
+              </div>
+            ) : null}
           </div>
 
           {tags.length > 0 ? (
