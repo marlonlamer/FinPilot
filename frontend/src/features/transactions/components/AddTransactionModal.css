@@ -233,6 +233,45 @@
   gap: 10px;
 }
 
+.add-transaction-recurring {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 11px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.add-transaction-recurringToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #374151;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.add-transaction-recurringToggle input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #2563eb;
+}
+
+.add-transaction-recurringDetails {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.add-transaction-recurringDetails em {
+  color: #6b7280;
+  font-style: normal;
+  font-weight: 500;
+}
+
 .add-transaction-error {
   margin: -3px 0 0;
   color: #b91c1c;
@@ -471,6 +510,10 @@
   .add-transaction-typeSwitch {
     margin-left: 16px;
     margin-right: 16px;
+  }
+
+  .add-transaction-recurringDetails {
+    grid-template-columns: 1fr;
   }
 }
 

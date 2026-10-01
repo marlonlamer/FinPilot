@@ -64,6 +64,9 @@ export default function AddTransactionModal({
   const [values, setValues] = useState(emptyForm);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringFrequency, setRecurringFrequency] = useState("monthly");
+  const [recurringEndDate, setRecurringEndDate] = useState("");
 
   const isEditing = Boolean(editingTransaction && editingTransaction.id);
   const restrictedType = mode === "income" || mode === "expense" ? mode : null;
@@ -86,6 +89,9 @@ export default function AddTransactionModal({
       setTransactionType(nextType);
       setValues(toFormValues(editingTransaction, nextType));
       setError("");
+      setIsRecurring(false);
+      setRecurringFrequency("monthly");
+      setRecurringEndDate("");
     }
   }, [open, editingTransaction, defaultType, restrictedType]);
 
@@ -233,6 +239,38 @@ export default function AddTransactionModal({
             <span>{isExpense ? "Payment Source / Account" : "Destination / Account"}</span>
             <input value={values.source} onChange={event => update("source", event.target.value)} placeholder="Cash, bank, or e-wallet" required />
           </label>
+
+          {!isEditing ? (
+            <div className="add-transaction-recurring">
+              <label className="add-transaction-recurringToggle">
+                <input
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={event => setIsRecurring(event.target.checked)}
+                />
+                <span>Make this a recurring transaction</span>
+              </label>
+
+              {isRecurring ? (
+                <div className="add-transaction-recurringDetails">
+                  <label className="add-transaction-field">
+                    <span>Frequency</span>
+                    <select value={recurringFrequency} onChange={event => setRecurringFrequency(event.target.value)}>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="yearly">Yearly</option>
+                    </select>
+                  </label>
+
+                  <label className="add-transaction-field">
+                    <span>Repeat Until <em>(Optional)</em></span>
+                    <input type="date" value={recurringEndDate} onChange={event => setRecurringEndDate(event.target.value)} />
+                  </label>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="add-transaction-dateRow">
             <label className="add-transaction-field">
