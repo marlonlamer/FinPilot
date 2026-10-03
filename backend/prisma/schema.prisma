@@ -7,26 +7,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Expense {
-  id        Int      @id @default(autoincrement())
-  title     String
-  amount    Float
-  category  String
-  date      DateTime @default(now())
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+model Expense {
+  id                  Int                  @id @default(autoincrement())
+  title               String
+  amount              Float
+  category            String
+  date                DateTime             @default(now())
+  isRecurring         Boolean              @default(false)
+  recurrenceFrequency RecurrenceFrequency?
+  recurrenceEndDate   DateTime?            @db.Date
+
+  userId              Int
+  user                User                 @relation(fields: [userId], references: [id])
 }
 
 model Income {
-  id        Int      @id @default(autoincrement())
-  title     String
-  amount    Float
-  source    String
-  date      DateTime @default(now())
+  id                  Int                  @id @default(autoincrement())
+  title               String
+  amount              Float
+  source              String
+  date                DateTime             @default(now())
+  isRecurring         Boolean              @default(false)
+  recurrenceFrequency RecurrenceFrequency?
+  recurrenceEndDate   DateTime?            @db.Date
 
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  userId              Int
+  user                User                 @relation(fields: [userId], references: [id])
 }
 
 model Savings {

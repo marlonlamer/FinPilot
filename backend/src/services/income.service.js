@@ -19,13 +19,28 @@ const createIncome = async ({
   title,
   amount,
   source,
-  userId
+  userId,
+  date,
+  isRecurring,
+  recurrenceFrequency,
+  recurrenceEndDate
 }) => {
   if (!userId) {
     throw new Error("User ID is required");
   }
 
-  const created = await prisma.income.create({ data: { title, amount: Number(amount), source, userId } });
+  const created = await prisma.income.create({
+    data: {
+      title,
+      amount: Number(amount),
+      source,
+      userId,
+      date: date ? new Date(date) : undefined,
+      isRecurring,
+      recurrenceFrequency,
+      recurrenceEndDate
+    }
+  });
   // Increase user's available balance by income amount
   await prisma.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: Number(amount) } } });
   try { await recalcUserAggregates(userId); } catch (e) {}

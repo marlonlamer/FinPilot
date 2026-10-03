@@ -42,7 +42,12 @@ export default function ViewTransactionModal({
     transaction.isRecurring === true || transaction.recurring === true || Boolean(recurringFrequency)
   );
   const recurringEndDate = transaction.recurringEndDate || transaction.recurrenceEndDate || transaction.repeatUntil || "";
-  const recurringEndDateValue = recurringEndDate ? new Date(recurringEndDate) : null;
+  const recurrenceDateParts = typeof recurringEndDate === "string" && /^\d{4}-\d{2}-\d{2}/.test(recurringEndDate)
+    ? recurringEndDate.slice(0, 10).split("-").map(Number)
+    : null;
+  const recurringEndDateValue = recurrenceDateParts
+    ? new Date(recurrenceDateParts[0], recurrenceDateParts[1] - 1, recurrenceDateParts[2])
+    : null;
   const recurringEndDateLabel = recurringEndDateValue && !Number.isNaN(recurringEndDateValue.getTime())
     ? recurringEndDateValue.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
     : "";

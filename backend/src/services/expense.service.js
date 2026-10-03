@@ -20,10 +20,25 @@ const createExpense = async ({
   title,
   amount,
   category,
-  userId
+  userId,
+  date,
+  isRecurring,
+  recurrenceFrequency,
+  recurrenceEndDate
 }) => {
   return prisma.$transaction(async (tx) => {
-    const created = await tx.expense.create({ data: { title, amount: Number(amount), category, userId } });
+    const created = await tx.expense.create({
+      data: {
+        title,
+        amount: Number(amount),
+        category,
+        userId,
+        date: date ? new Date(date) : undefined,
+        isRecurring,
+        recurrenceFrequency,
+        recurrenceEndDate
+      }
+    });
     // Decrease user's available balance by expense amount
     await tx.user.updateMany({ where: { id: Number(userId) }, data: { availableBalance: { increment: -Number(amount) } } });
     // Optionally update monthlySpent if expense is in current month

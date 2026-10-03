@@ -1,4 +1,5 @@
 const incomeService = require("../services/income.service");
+const { parseRecurrence } = require("../utils/recurrence");
 
 const getIncomes = async (req, res) => {
   try {
@@ -17,11 +18,14 @@ const getIncomes = async (req, res) => {
 
 const createIncome = async (req, res) => {
   // Map frontend fields: frontend may send category/notes/date; use source + amount as required
-  const { amount, source, date, category } = req.body;
+  const { amount, source, date, category, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
 
   if (!amount || !source) {
     return res.status(400).json({ error: "Amount and source are required" });
   }
+
+  const recurrence = parseRecurrence({ isRecurring, recurrenceFrequency, recurrenceEndDate });
+  if (recurrence.error) return res.status(400).json({ error: recurrence.error });
 
   try {
     const income = await incomeService.createIncome({
@@ -29,7 +33,8 @@ const createIncome = async (req, res) => {
       amount: Number(amount),
       source,
       userId: req.userId,
-      date: date || undefined
+      date: date || undefined,
+      ...recurrence.value
     });
 
     res.status(201).json(income);

@@ -1,4 +1,5 @@
 const expenseService = require("../services/expense.service");
+const { parseRecurrence } = require("../utils/recurrence");
 
 
 const getExpenses = async (req, res) => {
@@ -15,11 +16,14 @@ const getExpenses = async (req, res) => {
 
 const createExpense = async (req, res) => {
   // Frontend may send description/source/notes; map description -> title
-  const { description, amount, category, date } = req.body;
+  const { description, amount, category, date, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
 
   if (!amount) {
     return res.status(400).json({ error: "Amount is required" });
   }
+
+  const recurrence = parseRecurrence({ isRecurring, recurrenceFrequency, recurrenceEndDate });
+  if (recurrence.error) return res.status(400).json({ error: recurrence.error });
 
   try {
     const expense = await expenseService.createExpense({
@@ -27,7 +31,8 @@ const createExpense = async (req, res) => {
       amount: Number(amount),
       category: category || "",
       userId: req.userId,
-      date: date || undefined
+      date: date || undefined,
+      ...recurrence.value
     });
     res.status(201).json(expense);
   } catch (error) {

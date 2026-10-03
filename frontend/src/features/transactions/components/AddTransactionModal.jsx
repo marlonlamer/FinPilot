@@ -145,6 +145,11 @@ export default function AddTransactionModal({
       date,
       notes: values.notes.trim(),
       description: values.description.trim(),
+      isRecurring,
+      ...(isRecurring ? {
+        recurrenceFrequency: recurringFrequency,
+        recurrenceEndDate: recurringEndDate || undefined
+      } : {}),
       ...(activeTransactionType === "expense" ? {} : {})
     };
 
