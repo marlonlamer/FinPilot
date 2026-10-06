@@ -101,7 +101,18 @@ const updateExpense = async (id, data, userId) => {
   return prisma.$transaction(async (tx) => {
     const existing = await tx.expense.findUnique({ where: { id: Number(id) } });
     if (!existing || existing.userId !== Number(userId)) throw new Error('Expense not found or not permitted');
-    const result = await tx.expense.updateMany({ where: { id: Number(id), userId }, data: { title: data.title, amount: data.amount != null ? Number(data.amount) : undefined, category: data.category, date: data.date ? new Date(data.date) : undefined } });
+    const result = await tx.expense.updateMany({
+      where: { id: Number(id), userId },
+      data: {
+        title: data.title,
+        amount: data.amount != null ? Number(data.amount) : undefined,
+        category: data.category,
+        date: data.date ? new Date(data.date) : undefined,
+        isRecurring: data.isRecurring !== undefined ? data.isRecurring : undefined,
+        recurrenceFrequency: data.recurrenceFrequency !== undefined ? data.recurrenceFrequency : undefined,
+        recurrenceEndDate: data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : undefined
+      }
+    });
     if (result.count === 0) throw new Error('Expense not found or not permitted');
     const updated = await tx.expense.findUnique({ where: { id: Number(id) } });
     // availableBalance should change by old - new (since expense reduces available)

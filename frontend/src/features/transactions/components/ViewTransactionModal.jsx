@@ -35,8 +35,9 @@ export default function ViewTransactionModal({
     : transaction.merchant || transaction.merchantRecipient || transaction.recipient || transaction.description || "";
   const notesLabel = transaction.notes || "";
   const rawRecurringFrequency = transaction.recurringFrequency || transaction.recurrenceFrequency || (typeof transaction.recurrence === "string" ? transaction.recurrence : "");
-  const recurringFrequency = ["daily", "weekly", "monthly", "yearly"].includes(String(rawRecurringFrequency).toLowerCase())
-    ? `${String(rawRecurringFrequency).charAt(0).toUpperCase()}${String(rawRecurringFrequency).slice(1).toLowerCase()}`
+  const recurringFrequencyLower = String(rawRecurringFrequency).toLowerCase();
+  const recurringFrequency = ["daily", "weekly", "monthly", "yearly"].includes(recurringFrequencyLower)
+    ? `${recurringFrequencyLower.charAt(0).toUpperCase()}${recurringFrequencyLower.slice(1)}`
     : "";
   const isRecurring = !type.includes("savings_") && !type.includes("deposit") && !type.includes("withdraw") && (
     transaction.isRecurring === true || transaction.recurring === true || Boolean(recurringFrequency)

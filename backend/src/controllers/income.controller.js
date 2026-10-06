@@ -55,13 +55,18 @@ const deleteIncome = async (req, res) => {
 };
 
 const updateIncome = async (req, res) => {
-  const { amount, source, date, category } = req.body;
+  const { amount, source, date, category, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
+  
+  const recurrence = parseRecurrence({ isRecurring, recurrenceFrequency, recurrenceEndDate });
+  if (recurrence.error) return res.status(400).json({ error: recurrence.error });
+
   try {
     const updated = await incomeService.updateIncome(req.params.id, {
       title: category || undefined,
       amount,
       source,
-      date
+      date,
+      ...recurrence.value
     }, req.userId);
     res.json(updated);
   } catch (error) {

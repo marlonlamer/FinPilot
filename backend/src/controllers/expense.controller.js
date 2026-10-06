@@ -50,13 +50,18 @@ const deleteExpense = async (req, res) => {
 };
 
 const updateExpense = async (req, res) => {
-  const { description, amount, category, date } = req.body;
+  const { description, amount, category, date, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
+  
+  const recurrence = parseRecurrence({ isRecurring, recurrenceFrequency, recurrenceEndDate });
+  if (recurrence.error) return res.status(400).json({ error: recurrence.error });
+
   try {
     const updated = await expenseService.updateExpense(req.params.id, {
       title: description || undefined,
       amount,
       category,
-      date
+      date,
+      ...recurrence.value
     }, req.userId);
     res.json(updated);
   } catch (error) {

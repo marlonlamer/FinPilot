@@ -50,8 +50,9 @@ export default function TransactionItem({
   const isExpense = t.includes('expense') || (t.includes('withdraw') || (item.savingsId && Number(item.amount) < 0));
   const isSavings = t.includes('savings_') || t.includes('deposit') || t.includes('withdraw');
   const rawRecurringFrequency = item.recurringFrequency || item.recurrenceFrequency || (typeof item.recurrence === 'string' ? item.recurrence : '');
-  const recurringFrequency = ['daily', 'weekly', 'monthly', 'yearly'].includes(String(rawRecurringFrequency).toLowerCase())
-    ? `${String(rawRecurringFrequency).charAt(0).toUpperCase()}${String(rawRecurringFrequency).slice(1).toLowerCase()}`
+  const recurringFrequencyLower = String(rawRecurringFrequency).toLowerCase();
+  const recurringFrequency = ["daily", "weekly", "monthly", "yearly"].includes(recurringFrequencyLower)
+    ? `${recurringFrequencyLower.charAt(0).toUpperCase()}${recurringFrequencyLower.slice(1)}`
     : '';
   const isRecurring = !isSavings && (item.isRecurring === true || item.recurring === true || Boolean(recurringFrequency));
 

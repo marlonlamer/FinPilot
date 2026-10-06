@@ -58,7 +58,18 @@ const deleteIncome = async (id, userId) => {
 const updateIncome = async (id, data, userId) => {
   const existing = await prisma.income.findUnique({ where: { id: Number(id) } });
   if (!existing || existing.userId !== Number(userId)) throw new Error('Income not found or not permitted');
-  const result = await prisma.income.updateMany({ where: { id: Number(id), userId }, data: { title: data.title, amount: data.amount != null ? Number(data.amount) : undefined, source: data.source, date: data.date ? new Date(data.date) : undefined } });
+  const result = await prisma.income.updateMany({
+    where: { id: Number(id), userId },
+    data: {
+      title: data.title,
+      amount: data.amount != null ? Number(data.amount) : undefined,
+      source: data.source,
+      date: data.date ? new Date(data.date) : undefined,
+      isRecurring: data.isRecurring !== undefined ? data.isRecurring : undefined,
+      recurrenceFrequency: data.recurrenceFrequency !== undefined ? data.recurrenceFrequency : undefined,
+      recurrenceEndDate: data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : undefined
+    }
+  });
   if (result.count === 0) throw new Error('Income not found or not permitted');
   const updated = await prisma.income.findUnique({ where: { id: Number(id) } });
   // adjust user's available balance by delta (new - old)
