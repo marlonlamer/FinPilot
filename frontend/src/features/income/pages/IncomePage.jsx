@@ -59,6 +59,48 @@ export default function IncomePage({
   const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
   const lastMonthDisplay = formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`;
 
+  const monthlyIncomeCount = useMemo(() => {
+    return incomes.filter(it => {
+      if (!it.date) return false;
+      const d = new Date(it.date);
+      return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth;
+    }).length;
+  }, [incomes, selectedYear, selectedMonth]);
+
+  const averageIncome = useMemo(() => {
+    return monthlyIncomeCount > 0 ? monthlyTotal / monthlyIncomeCount : 0;
+  }, [monthlyTotal, monthlyIncomeCount]);
+
+  const averageIncomeDisplay = formatCurrency ? formatCurrency(averageIncome) : `${currencySymbol}${averageIncome.toFixed(2)}`;
+
+  const incomeSourcesCount = useMemo(() => {
+    const sources = new Set();
+    incomes.forEach(it => {
+      if (it.source) sources.add(it.source);
+      else if (it.category) sources.add(it.category);
+    });
+    return sources.size;
+  }, [incomes]);
+
+  const monthOverMonthChange = useMemo(() => {
+    // Check if there are any income records for last month
+    let prevMonth = selectedMonth - 1;
+    let prevYear = selectedYear;
+    if (prevMonth < 0) { prevMonth = 11; prevYear = selectedYear - 1; }
+    const lastMonthIncomes = incomes.filter(it => {
+      if (!it.date) return false;
+      const d = new Date(it.date);
+      return d.getFullYear() === prevYear && d.getMonth() === prevMonth;
+    });
+    
+    // Only return null if there are no last month records at all
+    if (lastMonthIncomes.length === 0) return null;
+    
+    // Calculate change even if lastMonthTotal is 0 (edge case of cancelled incomes)
+    const change = ((monthlyTotal - lastMonthTotal) / (lastMonthTotal || 1)) * 100;
+    return change;
+  }, [monthlyTotal, lastMonthTotal, incomes, selectedYear, selectedMonth]);
+
   const openAddIncome = () => {
     setEditingTransaction(null);
     setAddModalOpen(true);
@@ -78,7 +120,12 @@ export default function IncomePage({
     <div className="income-root">
       <IncomeHeader onAddClick={openAddIncome} />
 
-      <IncomeStats monthlyDisplay={monthlyDisplay} lastMonthDisplay={lastMonthDisplay} />
+      <IncomeStats
+        monthlyDisplay={monthlyDisplay}
+        averageIncomeDisplay={averageIncomeDisplay}
+        incomeSourcesCount={incomeSourcesCount}
+        monthOverMonthChange={monthOverMonthChange}
+      />
 
       <SourceBreakdownList bySource={bySource} formatCurrency={formatCurrency} currencySymbol={currencySymbol} />
 
