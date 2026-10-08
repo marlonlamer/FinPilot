@@ -73,15 +73,6 @@ export default function IncomePage({
 
   const averageIncomeDisplay = formatCurrency ? formatCurrency(averageIncome) : `${currencySymbol}${averageIncome.toFixed(2)}`;
 
-  const incomeSourcesCount = useMemo(() => {
-    const sources = new Set();
-    incomes.forEach(it => {
-      if (it.source) sources.add(it.source);
-      else if (it.category) sources.add(it.category);
-    });
-    return sources.size;
-  }, [incomes]);
-
   const monthOverMonthChange = useMemo(() => {
     // Check if there are any income records for last month
     let prevMonth = selectedMonth - 1;
@@ -123,11 +114,8 @@ export default function IncomePage({
       <IncomeStats
         monthlyDisplay={monthlyDisplay}
         averageIncomeDisplay={averageIncomeDisplay}
-        incomeSourcesCount={incomeSourcesCount}
         monthOverMonthChange={monthOverMonthChange}
       />
-
-      <SourceBreakdownList bySource={bySource} formatCurrency={formatCurrency} currencySymbol={currencySymbol} />
 
       <h3 className="section-title">All Incomes</h3>
       <TransactionFeed

@@ -1,11 +1,10 @@
 import React from "react";
-import { TrendingUp, BarChart3, Users } from "lucide-react";
+import { TrendingUp, BarChart3 } from "lucide-react";
 import "./IncomeStats.css";
 
 export default function IncomeStats({
   monthlyDisplay,
   averageIncomeDisplay,
-  incomeSourcesCount,
   monthOverMonthChange
 }) {
   const changePercent = monthOverMonthChange !== null ? Math.abs(monthOverMonthChange).toFixed(1) : null;
@@ -43,16 +42,6 @@ export default function IncomeStats({
         </div>
       </div>
 
-      <div className="income-stat-card income-stat-card--sources">
-        <div className="income-stat-icon" aria-hidden="true">
-          <Users size={16} strokeWidth={2} />
-        </div>
-        <div className="income-stat-content">
-          <div className="income-stat-label">Income Sources</div>
-          <div className="income-stat-value">{incomeSourcesCount}</div>
-          <div className="income-stat-support">active sources</div>
-        </div>
-      </div>
     </div>
   );
 }
