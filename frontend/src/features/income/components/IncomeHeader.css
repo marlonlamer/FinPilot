@@ -16,11 +16,11 @@
 
 .income-header-title {
   margin: 0 0 0.5rem 0;
-  font-size: 1.75rem;
+  font-size: clamp(1.8rem, 2.5vw, 2.4rem);
   font-weight: 700;
   color: #111827;
-  line-height: 1.2;
-  letter-spacing: -0.025em;
+  line-height: 1.15;
+  letter-spacing: -0.04em;
 }
 
 .income-header-description {
@@ -28,7 +28,7 @@
   font-size: 1rem;
   color: #6b7280;
   line-height: 1.5;
-  max-width: 600px;
+  max-width: 660px;
 }
 
 .income-header-button {

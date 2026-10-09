@@ -5,11 +5,9 @@ import "./IncomeStats.css";
 export default function IncomeStats({
   monthlyDisplay,
   averageIncomeDisplay,
-  monthOverMonthChange
+  primaryLabel = "This Month",
+  primarySupportText = "No previous data"
 }) {
-  const changePercent = monthOverMonthChange !== null ? Math.abs(monthOverMonthChange).toFixed(1) : null;
-  const changeDirection = monthOverMonthChange > 0 ? "↑" : monthOverMonthChange < 0 ? "↓" : "";
-
   return (
     <div className="income-stats">
       <div className="income-stat-card income-stat-card--this-month">
@@ -17,17 +15,9 @@ export default function IncomeStats({
           <TrendingUp size={16} strokeWidth={2} />
         </div>
         <div className="income-stat-content">
-          <div className="income-stat-label">This Month</div>
+          <div className="income-stat-label">{primaryLabel}</div>
           <div className="income-stat-value">{monthlyDisplay}</div>
-          <div className="income-stat-support">
-            {monthOverMonthChange !== null ? (
-              <span className={monthOverMonthChange >= 0 ? "income-stat-trend--positive" : "income-stat-trend--negative"}>
-                {changeDirection} {changePercent}% vs last month
-              </span>
-            ) : (
-              "No previous data"
-            )}
-          </div>
+          <div className="income-stat-support">{primarySupportText}</div>
         </div>
       </div>
 
