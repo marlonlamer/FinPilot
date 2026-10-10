@@ -9,16 +9,27 @@
 .income-page-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+  grid-template-areas:
+    "stats sidebar"
+    "transactions sidebar";
   gap: 22px;
   align-items: start;
 }
 
 .income-content {
+  grid-area: transactions;
   min-width: 0;
 }
 
 .income-page-sidebar {
+  grid-area: sidebar;
   min-width: 0;
+}
+
+.income-stats {
+  grid-area: stats;
+  max-width: none;
+  margin-bottom: 0;
 }
 
 .income-filter-card {
@@ -108,6 +119,10 @@
 @media (max-width: 900px) {
   .income-page-layout {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "stats"
+      "sidebar"
+      "transactions";
   }
 }
 

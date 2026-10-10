@@ -137,8 +137,7 @@ function AppController() {
 
 	const fetchIncomes = async () => {
 		try {
-			const monthKey = formatYearMonth(selectedYear, selectedMonth);
-			const data = await api.get("/incomes", { params: { month: monthKey } });
+			const data = await api.get("/incomes");
 			setIncomes(Array.isArray(data) ? data.map(normalizeIncome) : []);
 		} catch (e) {
 			console.warn("Failed to fetch incomes", e);

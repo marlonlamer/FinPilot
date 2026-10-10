@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import "./IncomeModule.css";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import IncomeHeader from "../components/IncomeHeader";
@@ -17,53 +17,79 @@ const timeframeOptions = [
 
 const normalizeValue = (value) => String(value ?? "").trim().toLowerCase();
 
-const getStartOfWeek = (date) => {
-  const value = new Date(date);
-  const day = value.getDay();
-  const diff = value.getDate() - day + (day === 0 ? -6 : 1);
-  value.setDate(diff);
-  value.setHours(0, 0, 0, 0);
-  return value;
+const getLocalDateValue = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getIncomeDate = (item) => {
+  const rawDate = item?.date || item?.createdAt || item?.created_at || item?.timestamp;
+  if (!rawDate) return null;
+
+  if (typeof rawDate === "string") {
+    const dateOnlyMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+    if (dateOnlyMatch) {
+      const [, year, month, day] = dateOnlyMatch;
+      const date = new Date(Number(year), Number(month) - 1, Number(day));
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+  }
+
+  const date = new Date(rawDate);
+  return Number.isNaN(date.getTime()) ? null : date;
 };
 
 const getWeekValue = (date) => {
-  const current = new Date(date);
-  const year = current.getFullYear();
-  const start = new Date(year, 0, 1);
-  const diff = current - start;
-  const oneDay = 1000 * 60 * 60 * 24;
-  const dayOfYear = Math.floor(diff / oneDay) + 1;
-  const week = Math.ceil((dayOfYear + start.getDay() + 1) / 7);
-  return `${year}-W${String(week).padStart(2, "0")}`;
+  const value = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  value.setUTCDate(value.getUTCDate() + 4 - (value.getUTCDay() || 7));
+  const yearStart = new Date(Date.UTC(value.getUTCFullYear(), 0, 1));
+  const week = Math.ceil(((value - yearStart) / 86400000 + 1) / 7);
+  return `${value.getUTCFullYear()}-W${String(week).padStart(2, "0")}`;
 };
 
-const parseWeekValue = (value) => {
-  if (!value) return null;
-  const match = value.match(/^(\d{4})-W(\d{2})$/);
+const getPreviousWeekValue = (weekValue) => {
+  const match = weekValue.match(/^(\d{4})-W(\d{2})$/);
   if (!match) return null;
-  const [, year, weekString] = match;
-  const yearNumber = Number(year);
-  const weekNumber = Number(weekString);
-  const start = new Date(Date.UTC(yearNumber, 0, 4));
-  const day = start.getUTCDay() || 7;
-  start.setUTCDate(start.getUTCDate() + (weekNumber - 1) * 7 + (1 - day));
-  return new Date(start.getTime() + 24 * 60 * 60 * 1000 * 0);
+  const [, year, week] = match;
+  const jan4 = new Date(Date.UTC(Number(year), 0, 4));
+  const monday = new Date(jan4);
+  monday.setUTCDate(jan4.getUTCDate() - ((jan4.getUTCDay() || 7) - 1) + (Number(week) - 1) * 7 - 7);
+  return getWeekValue(new Date(monday.getUTCFullYear(), monday.getUTCMonth(), monday.getUTCDate()));
 };
 
-const getPeriodDisplayLabel = (timeframe) => {
-  if (timeframe === "day") return "This Day";
-  if (timeframe === "week") return "This Week";
-  if (timeframe === "month") return "This Month";
-  if (timeframe === "year") return "This Year";
-  return "All Time";
+const getPreviousMonthValue = (monthValue) => {
+  const match = monthValue.match(/^(\d{4})-(\d{2})$/);
+  if (!match) return null;
+  const [, year, month] = match;
+  const date = new Date(Number(year), Number(month) - 2, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 };
 
-const getComparisonText = (timeframe) => {
-  if (timeframe === "day") return "vs previous day";
-  if (timeframe === "week") return "vs previous week";
-  if (timeframe === "month") return "vs last month";
-  if (timeframe === "year") return "vs previous year";
-  return "Total income";
+const getPeriodDisplayLabel = (timeframe) => ({
+  all: "All Time",
+  day: "This Day",
+  week: "This Week",
+  month: "This Month",
+  year: "This Year"
+}[timeframe] || "All Time");
+
+const getComparisonText = (timeframe) => ({
+  day: "vs previous day",
+  week: "vs previous week",
+  month: "vs previous month",
+  year: "vs previous year"
+}[timeframe] || "Total income");
+
+const getPeriodKey = (date, timeframe) => {
+  if (timeframe === "day") return getLocalDateValue(date);
+  if (timeframe === "week") return getWeekValue(date);
+  if (timeframe === "month") {
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+  }
+  if (timeframe === "year") return String(date.getFullYear());
+  return "all";
 };
 
 export default function IncomePage({
@@ -73,17 +99,18 @@ export default function IncomePage({
   onCreateIncome,
   onUpdateExpense,
   onUpdateIncome,
-  selectedYear,
-  selectedMonth,
   currencySymbol = "₱",
   formatCurrency
 }) {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(getLocalDateValue(new Date()));
   const [selectedWeek, setSelectedWeek] = useState(getWeekValue(new Date()));
-  const [selectedMonthFilter, setSelectedMonthFilter] = useState(new Date().toISOString().slice(0, 7));
+  const [selectedMonthFilter, setSelectedMonthFilter] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
   const [selectedYearFilter, setSelectedYearFilter] = useState(String(new Date().getFullYear()));
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedAccount, setSelectedAccount] = useState("all");
@@ -128,139 +155,94 @@ export default function IncomePage({
     }));
   }, [incomes]);
 
-  const matchesTimeframe = (item) => {
-    if (!item || !item.date) return false;
-    const date = new Date(item.date);
-    if (Number.isNaN(date.getTime())) return false;
+  const years = useMemo(() => {
+    const values = (incomes || [])
+      .map(item => getIncomeDate(item))
+      .filter(Boolean)
+      .map(date => date.getFullYear());
+    values.push(new Date().getFullYear(), Number(selectedYearFilter));
+    return [...new Set(values)].sort((a, b) => b - a);
+  }, [incomes, selectedYearFilter]);
 
+  const matchesTimeframe = useCallback((item) => {
     if (selectedTimeframe === "all") return true;
-    if (selectedTimeframe === "day") {
-      return date.toISOString().slice(0, 10) === selectedDate;
-    }
-    if (selectedTimeframe === "week") {
-      const weekStart = parseWeekValue(selectedWeek);
-      if (!weekStart) return true;
-      const currentWeekStart = getStartOfWeek(date);
-      return currentWeekStart.getTime() === weekStart.getTime();
-    }
-    if (selectedTimeframe === "month") {
-      const monthValue = selectedMonthFilter || new Date().toISOString().slice(0, 7);
-      const [year, month] = monthValue.split("-");
-      return date.getFullYear() === Number(year) && date.getMonth() === Number(month) - 1;
-    }
-    if (selectedTimeframe === "year") {
-      return date.getFullYear() === Number(selectedYearFilter || new Date().getFullYear());
-    }
-    return true;
-  };
+    const date = getIncomeDate(item);
+    if (!date) return false;
+    const period = selectedTimeframe === "day"
+      ? selectedDate
+      : selectedTimeframe === "week"
+        ? selectedWeek
+        : selectedTimeframe === "month"
+          ? selectedMonthFilter
+          : selectedYearFilter;
+    return getPeriodKey(date, selectedTimeframe) === period;
+  }, [selectedTimeframe, selectedDate, selectedWeek, selectedMonthFilter, selectedYearFilter]);
 
-  const matchesCategory = (item) => {
-    if (selectedCategory === "all") return true;
-    const lookedUpValue = normalizeValue(item.category || item.title || item.type || "");
-    return lookedUpValue === selectedCategory;
-  };
-
-  const matchesAccount = (item) => {
-    if (selectedAccount === "all") return true;
-    const accountValue = normalizeValue(item.account || item.destination || item.payer || item.payerSource || item.source || "");
-    return accountValue === selectedAccount;
-  };
-
-  const matchesSource = (item) => {
-    if (selectedSource === "all") return true;
-    const sourceValue = normalizeValue(item.source || item.payer || item.payerSource || "");
-    return sourceValue === selectedSource;
-  };
+  const matchesOtherFilters = useCallback((item) => {
+    const category = normalizeValue(item.category || item.title || item.type || "");
+    const account = normalizeValue(item.account || item.destination || item.payer || item.payerSource || item.source || "");
+    const source = normalizeValue(item.source || item.payer || item.payerSource || "");
+    return (selectedCategory === "all" || category === selectedCategory) &&
+      (selectedAccount === "all" || account === selectedAccount) &&
+      (selectedSource === "all" || source === selectedSource);
+  }, [selectedCategory, selectedAccount, selectedSource]);
 
   const filteredIncomes = useMemo(() => {
-    return (incomes || []).filter(item => matchesTimeframe(item) && matchesCategory(item) && matchesAccount(item) && matchesSource(item));
-  }, [incomes, selectedTimeframe, selectedDate, selectedWeek, selectedMonthFilter, selectedYearFilter, selectedCategory, selectedAccount, selectedSource]);
+    return (incomes || []).filter(item => matchesTimeframe(item) && matchesOtherFilters(item));
+  }, [incomes, matchesTimeframe, matchesOtherFilters]);
 
-  const getPreviousPeriodTotal = (items) => {
-    if (selectedTimeframe === "all") return 0;
-
-    const sumForPeriod = (list, compareFn) => list.reduce((sum, item) => {
-      const itemDate = new Date(item.date);
-      if (!Number.isNaN(itemDate.getTime()) && compareFn(itemDate)) {
-        return sum + (Number(item.amount) || 0);
-      }
-      return sum;
-    }, 0);
-
+  const previousPeriodKey = useMemo(() => {
     if (selectedTimeframe === "day") {
-      const baseDate = new Date(selectedDate);
-      const previousDate = new Date(baseDate);
-      previousDate.setDate(baseDate.getDate() - 1);
-      const iso = previousDate.toISOString().slice(0, 10);
-      return sumForPeriod(items, date => date.toISOString().slice(0, 10) === iso);
+      const date = getIncomeDate({ date: selectedDate });
+      if (!date) return null;
+      date.setDate(date.getDate() - 1);
+      return getLocalDateValue(date);
     }
+    if (selectedTimeframe === "week") return getPreviousWeekValue(selectedWeek);
+    if (selectedTimeframe === "month") return getPreviousMonthValue(selectedMonthFilter);
+    if (selectedTimeframe === "year") return String(Number(selectedYearFilter) - 1);
+    return null;
+  }, [selectedTimeframe, selectedDate, selectedWeek, selectedMonthFilter, selectedYearFilter]);
 
-    if (selectedTimeframe === "week") {
-      const baseDate = parseWeekValue(selectedWeek) || new Date();
-      const previousWeekStart = new Date(baseDate);
-      previousWeekStart.setDate(baseDate.getDate() - 7);
-      const previousWeekEnd = new Date(previousWeekStart);
-      previousWeekEnd.setDate(previousWeekEnd.getDate() + 6);
-      return sumForPeriod(items, date => {
-        const value = new Date(date);
-        return value >= previousWeekStart && value <= previousWeekEnd;
-      });
-    }
-
-    if (selectedTimeframe === "month") {
-      const baseMonth = new Date(`${selectedMonthFilter || new Date().toISOString().slice(0, 7)}-01T00:00:00`);
-      const previousMonth = new Date(baseMonth);
-      previousMonth.setMonth(baseMonth.getMonth() - 1);
-      return sumForPeriod(items, date => {
-        return date.getFullYear() === previousMonth.getFullYear() && date.getMonth() === previousMonth.getMonth();
-      });
-    }
-
-    if (selectedTimeframe === "year") {
-      const baseYear = Number(selectedYearFilter || new Date().getFullYear()) - 1;
-      return sumForPeriod(items, date => date.getFullYear() === baseYear);
-    }
-
-    return 0;
-  };
+  const previousPeriodTotal = useMemo(() => {
+    if (!previousPeriodKey) return 0;
+    return (incomes || []).reduce((sum, item) => {
+      if (!matchesOtherFilters(item)) return sum;
+      const date = getIncomeDate(item);
+      if (!date || getPeriodKey(date, selectedTimeframe) !== previousPeriodKey) return sum;
+      return sum + (Number(item.amount) || 0);
+    }, 0);
+  }, [incomes, selectedTimeframe, previousPeriodKey, matchesOtherFilters]);
 
   const currentPeriodTotal = useMemo(() => {
     return filteredIncomes.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   }, [filteredIncomes]);
-
-  const previousPeriodTotal = useMemo(() => {
-    return getPreviousPeriodTotal(incomes || []);
-  }, [incomes, selectedTimeframe, selectedDate, selectedWeek, selectedMonthFilter, selectedYearFilter]);
 
   const averageIncome = useMemo(() => {
     if (filteredIncomes.length === 0) return 0;
     return currentPeriodTotal / filteredIncomes.length;
   }, [currentPeriodTotal, filteredIncomes]);
 
-  const monthlyDisplay = formatCurrency ? formatCurrency(currentPeriodTotal) : `${currencySymbol}${currentPeriodTotal.toFixed(2)}`;
-  const averageIncomeDisplay = formatCurrency ? formatCurrency(averageIncome) : `${currencySymbol}${averageIncome.toFixed(2)}`;
-
   const comparisonSummary = useMemo(() => {
-    if (selectedTimeframe === "all") {
-      return { text: "Total income", positive: true, value: null };
-    }
-
-    if (previousPeriodTotal === 0) {
-      return { text: "No previous data", positive: true, value: null };
-    }
+    if (selectedTimeframe === "all") return { text: "Total income" };
+    if (previousPeriodTotal === 0) return { text: "No previous data" };
 
     const percentChange = ((currentPeriodTotal - previousPeriodTotal) / previousPeriodTotal) * 100;
     const direction = percentChange >= 0 ? "↑" : "↓";
     const percentage = `${Math.abs(percentChange).toFixed(1)}%`;
-    return { text: `${direction} ${percentage} ${getComparisonText(selectedTimeframe)}`, positive: percentChange >= 0, value: percentChange };
+    return { text: `${direction} ${percentage} ${getComparisonText(selectedTimeframe)}` };
   }, [currentPeriodTotal, previousPeriodTotal, selectedTimeframe]);
 
+  const monthlyDisplay = formatCurrency ? formatCurrency(currentPeriodTotal) : `${currencySymbol}${currentPeriodTotal.toFixed(2)}`;
+  const averageIncomeDisplay = formatCurrency ? formatCurrency(averageIncome) : `${currencySymbol}${averageIncome.toFixed(2)}`;
+
   const resetFilters = () => {
+    const now = new Date();
     setSelectedTimeframe("month");
-    setSelectedDate(new Date().toISOString().slice(0, 10));
-    setSelectedWeek(getWeekValue(new Date()));
-    setSelectedMonthFilter(new Date().toISOString().slice(0, 7));
-    setSelectedYearFilter(String(new Date().getFullYear()));
+    setSelectedDate(getLocalDateValue(now));
+    setSelectedWeek(getWeekValue(now));
+    setSelectedMonthFilter(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`);
+    setSelectedYearFilter(String(now.getFullYear()));
     setSelectedCategory("all");
     setSelectedAccount("all");
     setSelectedSource("all");
@@ -288,24 +270,12 @@ export default function IncomePage({
       <IncomeHeader onAddClick={openAddIncome} />
 
       <div className="income-page-layout">
-        <main className="income-content">
-          <IncomeStats
-            monthlyDisplay={monthlyDisplay}
-            averageIncomeDisplay={averageIncomeDisplay}
-            primaryLabel={primaryLabel}
-            primarySupportText={comparisonSummary.text}
-          />
-
-          <h3 className="section-title">All Incomes</h3>
-          <TransactionFeed
-            transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
-            currencySymbol={currencySymbol}
-            formatCurrency={formatCurrency}
-            deleteIncome={deleteIncome}
-            openEditIncome={handleEditIncome}
-            onEditTransaction={handleEditIncome}
-          />
-        </main>
+        <IncomeStats
+          monthlyDisplay={monthlyDisplay}
+          averageIncomeDisplay={averageIncomeDisplay}
+          primaryLabel={primaryLabel}
+          primarySupportText={comparisonSummary.text}
+        />
 
         <aside className="income-page-sidebar">
           <div className="income-filter-card">
@@ -371,10 +341,7 @@ export default function IncomePage({
                     value={selectedYearFilter}
                     onChange={(event) => setSelectedYearFilter(event.target.value)}
                   >
-                    {Array.from({ length: 10 }, (_, index) => new Date().getFullYear() - index)
-                      .map((year) => (
-                        <option key={year} value={String(year)}>{year}</option>
-                      ))}
+                    {years.map(year => <option key={year} value={String(year)}>{year}</option>)}
                   </select>
                 </label>
               )}
@@ -421,7 +388,7 @@ export default function IncomePage({
                 </select>
               </label>
 
-              {(selectedTimeframe !== "all" || selectedCategory !== "all" || selectedAccount !== "all" || selectedSource !== "all") && (
+              {(selectedTimeframe !== "month" || selectedCategory !== "all" || selectedAccount !== "all" || selectedSource !== "all") && (
                 <button type="button" className="income-filter-reset" onClick={resetFilters}>
                   Clear filters
                 </button>
@@ -429,6 +396,18 @@ export default function IncomePage({
             </div>
           </div>
         </aside>
+
+        <main className="income-content">
+          <h3 className="section-title">All Incomes</h3>
+          <TransactionFeed
+            transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
+            currencySymbol={currencySymbol}
+            formatCurrency={formatCurrency}
+            deleteIncome={deleteIncome}
+            openEditIncome={handleEditIncome}
+            onEditTransaction={handleEditIncome}
+          />
+        </main>
       </div>
 
       <AddTransactionModal
