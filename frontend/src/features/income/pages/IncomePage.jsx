@@ -3,6 +3,7 @@ import "./IncomeModule.css";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import IncomeHeader from "../components/IncomeHeader";
 import IncomeStats from "../components/IncomeStats";
+import IncomeTrend from "../components/IncomeTrend";
 import AddTransactionModal from "../../transactions/components/AddTransactionModal";
 import "../components/IncomeHeader.css";
 import "../components/IncomeStats.css";
@@ -398,6 +399,7 @@ export default function IncomePage({
         </aside>
 
         <main className="income-content">
+          <IncomeTrend incomes={incomes} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
           <h3 className="section-title">All Incomes</h3>
           <TransactionFeed
             transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
