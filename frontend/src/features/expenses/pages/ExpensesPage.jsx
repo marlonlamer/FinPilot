@@ -1,8 +1,6 @@
 import React, { useMemo } from "react";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import "./ExpensesModule.css";
-import { LineChart, Line, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import ExpenseDistribution from "../../../components/ExpenseDistribution/ExpenseDistribution";
 import ExpensesHeader from "../components/ExpensesHeader";
 import ExpenseStats from "../components/ExpenseStats";
 import BudgetAlert from "../components/BudgetAlert";
@@ -10,27 +8,56 @@ import ExpensesAnalytics from "../components/ExpensesAnalytics";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 
 export default function ExpensesPage({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+  const previousPeriod = useMemo(() => {
+    let month = selectedMonth - 1;
+    let year = selectedYear;
+    if (month < 0) {
+      month = 11;
+      year -= 1;
+    }
+    return { month, year };
+  }, [selectedYear, selectedMonth]);
+
   const lastMonthTotal = useMemo(() => {
-    let prevMonth = selectedMonth - 1;
-    let prevYear = selectedYear;
-    if (prevMonth < 0) { prevMonth = 11; prevYear = selectedYear - 1; }
     return expenses.reduce((s, it) => {
       if (!it.date) return s;
       const d = new Date(it.date);
-      if (d.getFullYear() === prevYear && d.getMonth() === prevMonth) return s + (Number(it.amount) || 0);
+      if (Number.isNaN(d.getTime())) return s;
+      if (d.getFullYear() === previousPeriod.year && d.getMonth() === previousPeriod.month) return s + (Number(it.amount) || 0);
       return s;
     }, 0);
-  }, [expenses, selectedYear, selectedMonth]);
+  }, [expenses, previousPeriod]);
 
   const monthlyTotal = useMemo(() => expenses.reduce((s, it) => {
     if (!it.date) return s;
     const d = new Date(it.date);
+    if (Number.isNaN(d.getTime())) return s;
     if (d.getFullYear() === selectedYear && d.getMonth() === selectedMonth) return s + (Number(it.amount) || 0);
     return s;
   }, 0), [expenses, selectedYear, selectedMonth]);
 
+  const monthlyExpenseCount = useMemo(() => expenses.reduce((count, it) => {
+    if (!it.date) return count;
+    const d = new Date(it.date);
+    if (Number.isNaN(d.getTime())) return count;
+    return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth ? count + 1 : count;
+  }, 0), [expenses, selectedYear, selectedMonth]);
+
+  const averageExpense = monthlyExpenseCount > 0 ? monthlyTotal / monthlyExpenseCount : 0;
   const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
-  const lastMonthDisplay = formatCurrency ? formatCurrency(lastMonthTotal) : `${currencySymbol}${lastMonthTotal.toFixed(2)}`;
+  const averageExpenseDisplay = formatCurrency ? formatCurrency(averageExpense) : `${currencySymbol}${averageExpense.toFixed(2)}`;
+  const comparison = useMemo(() => {
+    if (lastMonthTotal <= 0) return { text: "No previous-month data", direction: null };
+    const change = ((monthlyTotal - lastMonthTotal) / lastMonthTotal) * 100;
+    if (!Number.isFinite(change)) return { text: "No previous-month data", direction: null };
+    if (change === 0) return { text: "No change vs previous month", direction: null };
+    const direction = change < 0 ? "down" : "up";
+    const arrow = change < 0 ? "↓" : "↑";
+    return {
+      text: `${arrow} ${Math.abs(change).toFixed(1)}% vs previous month`,
+      direction
+    };
+  }, [monthlyTotal, lastMonthTotal]);
 
   const byCategory = useMemo(() => {
     const map = {};
@@ -75,8 +102,6 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
     return budgetStatus.filter(s => s.budget > 0 && s.spent > s.budget);
   }, [budgetStatus]);
 
-  const recurring = useMemo(() => expenses.filter(e => e.recurring), [expenses]);
-  const nonRecurring = useMemo(() => expenses.filter(e => !e.recurring), [expenses]);
   const handleAddExpense = () => {
     setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
     setExpenseModalOpen(true);
@@ -99,7 +124,9 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
 
       <ExpenseStats
         monthlyDisplay={monthlyDisplay}
-        lastMonthDisplay={lastMonthDisplay}
+        averageExpenseDisplay={averageExpenseDisplay}
+        comparisonText={comparison.text}
+        comparisonDirection={comparison.direction}
       />
 
       {expenseModalOpen && (
@@ -168,15 +195,8 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
         </div>
       )}
 
-      <h3 className="section-title">Recurring Expenses</h3>
-      {recurring.length > 0 ? (
-        <TransactionFeed transactions={recurring.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
-      ) : (
-        <div className="muted">No recurring expenses set.</div>
-      )}
-
       <h3 className="section-title">Recent Expenses</h3>
-      <TransactionFeed transactions={nonRecurring.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+      <TransactionFeed transactions={expenses.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
     </div>
   );
 }
