@@ -31,13 +31,18 @@
 }
 .expenses-header-button { white-space: nowrap; }
 
-.analytics-row {
+.expenses-dashboard-layout {
 	display: grid;
-	grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr);
-	gap: 16px;
-	margin-top: 0;
-	align-items: stretch;
+	grid-template-columns: minmax(0, 1fr) minmax(270px, 320px);
+	grid-template-areas:
+		"trend filters"
+		"transactions category";
+	gap: 22px 16px;
+	align-items: start;
 }
+.expense-trend-area { grid-area: trend; min-width: 0; }
+.expenses-filter-card { grid-area: filters; min-width: 0; }
+.expenses-transactions { grid-area: transactions; min-width: 0; }
 .card {
 	min-width: 0;
 	padding: 18px;
@@ -46,14 +51,64 @@
 	border-radius: 18px;
 	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
 }
-.category-card { display: flex; flex-direction: column; }
+.category-card { grid-area: category; display: flex; flex-direction: column; }
 .category-card-title {
 	margin: 0 0 0.75rem;
 	color: #0f172a;
 	font-size: 1rem;
 	font-weight: 700;
 }
-.expenses-content { min-width: 0; }
+
+.expenses-filter-card {
+	padding: 16px;
+	background: rgba(255, 255, 255, 0.95);
+	border: 1px solid #e2e8f0;
+	border-radius: 20px;
+	box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+}
+.expenses-filter-header h3 {
+	margin: 0 0 16px;
+	color: #0f172a;
+	font-size: 1rem;
+}
+.expenses-filter-stack { display: flex; flex-direction: column; gap: 14px; }
+.expenses-filter-field { display: flex; min-width: 0; flex-direction: column; gap: 6px; }
+.expenses-filter-field > span {
+	color: #475569;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.01em;
+}
+.expenses-filter-select,
+.expenses-filter-input {
+	box-sizing: border-box;
+	width: 100%;
+	min-height: 42px;
+	padding: 0.72rem 0.9rem;
+	border: 1px solid #dfe6ee;
+	border-radius: 10px;
+	background: #f8fafc;
+	color: #0f172a;
+	font-size: 0.95rem;
+}
+.expenses-filter-select:focus,
+.expenses-filter-input:focus {
+	outline: none;
+	border-color: #93c5fd;
+	box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.15);
+}
+.expenses-filter-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.expenses-filter-reset {
+	min-height: 42px;
+	padding: 0.65rem 0.9rem;
+	border: 1px solid #cbd5e1;
+	border-radius: 10px;
+	background: #fff;
+	color: #334155;
+	font-weight: 700;
+	cursor: pointer;
+}
+.expenses-filter-reset:hover { background: #f8fafc; border-color: #94a3b8; }
 
 .expense-stats {
 	display: grid;
@@ -161,7 +216,17 @@
 	.expenses-header-title { font-size: 1.5rem; }
 	.expenses-header-description { font-size: 0.95rem; }
 	.expenses-header-button { width: 100%; }
-	.analytics-row { grid-template-columns: minmax(0, 1fr); }
+	.expenses-dashboard-layout {
+		grid-template-columns: minmax(0, 1fr);
+		grid-template-areas:
+			"filters"
+			"trend"
+			"category"
+			"transactions";
+		gap: 16px;
+	}
+	.expenses-filter-card { padding: 14px; }
+	.expenses-filter-stack { gap: 12px; }
 }
 
 @media (max-width: 480px) {

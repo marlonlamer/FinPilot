@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
 import "./ExpensesModule.css";
 import ExpensesHeader from "../components/ExpensesHeader";
@@ -6,57 +6,110 @@ import ExpenseStats from "../components/ExpenseStats";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 
-export default function ExpensesPage({ expenses = [], expenseHistory, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
-  const previousPeriod = useMemo(() => {
-    let month = selectedMonth - 1;
-    let year = selectedYear;
-    if (month < 0) {
-      month = 11;
-      year -= 1;
+const normalizeFilterValue = (value) => String(value ?? "").trim().toLowerCase();
+
+const getExpenseDate = (expense) => {
+  const rawDate = expense?.date || expense?.createdAt || expense?.created_at || expense?.timestamp;
+  if (!rawDate) return null;
+  if (typeof rawDate === "string") {
+    const match = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
+    if (match) {
+      const [, year, month, day] = match;
+      const date = new Date(Number(year), Number(month) - 1, Number(day));
+      return Number.isNaN(date.getTime()) ? null : date;
     }
-    return { month, year };
-  }, [selectedYear, selectedMonth]);
+  }
+  const date = new Date(rawDate);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
 
-  const lastMonthTotal = useMemo(() => {
-    return expenses.reduce((s, it) => {
-      if (!it.date) return s;
-      const d = new Date(it.date);
-      if (Number.isNaN(d.getTime())) return s;
-      if (d.getFullYear() === previousPeriod.year && d.getMonth() === previousPeriod.month) return s + (Number(it.amount) || 0);
-      return s;
-    }, 0);
-  }, [expenses, previousPeriod]);
+const getLocalMonthValue = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+const getExpenseAmount = (expense) => {
+  const amount = Number(expense?.amount);
+  return Number.isFinite(amount) ? Math.abs(amount) : 0;
+};
 
-  const monthlyTotal = useMemo(() => expenses.reduce((s, it) => {
-    if (!it.date) return s;
-    const d = new Date(it.date);
-    if (Number.isNaN(d.getTime())) return s;
-    if (d.getFullYear() === selectedYear && d.getMonth() === selectedMonth) return s + (Number(it.amount) || 0);
-    return s;
-  }, 0), [expenses, selectedYear, selectedMonth]);
+export default function ExpensesPage({ expenses = [], expenseHistory, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, currencySymbol = "₱", formatCurrency }) {
+  const [now] = useState(() => new Date());
+  const [timeframe, setTimeframe] = useState("month");
+  const [selectedMonthValue, setSelectedMonthValue] = useState(() => getLocalMonthValue(now));
+  const [selectedYearValue, setSelectedYearValue] = useState(() => String(now.getFullYear()));
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedAccount, setSelectedAccount] = useState("all");
+  const [minimumAmount, setMinimumAmount] = useState("");
+  const [maximumAmount, setMaximumAmount] = useState("");
 
-  const monthlyExpenseCount = useMemo(() => expenses.reduce((count, it) => {
-    if (!it.date) return count;
-    const d = new Date(it.date);
-    if (Number.isNaN(d.getTime())) return count;
-    return d.getFullYear() === selectedYear && d.getMonth() === selectedMonth ? count + 1 : count;
-  }, 0), [expenses, selectedYear, selectedMonth]);
+  const sourceExpenses = Array.isArray(expenseHistory) ? expenseHistory : expenses;
+  const categories = useMemo(() => {
+    const values = new Map(EXPENSE_CATEGORIES.map(({ value, label }) => [normalizeFilterValue(value), label]));
+    sourceExpenses.forEach((expense) => {
+      const category = String(expense?.category ?? "").trim();
+      if (category && !values.has(normalizeFilterValue(category))) values.set(normalizeFilterValue(category), category);
+    });
+    return [...values.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [sourceExpenses]);
 
-  const averageExpense = monthlyExpenseCount > 0 ? monthlyTotal / monthlyExpenseCount : 0;
-  const monthlyDisplay = formatCurrency ? formatCurrency(monthlyTotal) : `${currencySymbol}${monthlyTotal.toFixed(2)}`;
+  const accounts = useMemo(() => {
+    const values = sourceExpenses
+      .map(expense => expense.paymentSource || expense.paymentSourceAccount || expense.account || expense.source)
+      .filter(Boolean)
+      .map(value => String(value).trim());
+    return [...new Set(values)].sort((a, b) => a.localeCompare(b));
+  }, [sourceExpenses]);
+
+  const years = useMemo(() => {
+    const values = sourceExpenses
+      .map(getExpenseDate)
+      .filter(Boolean)
+      .map(date => date.getFullYear());
+    values.push(now.getFullYear(), Number(selectedYearValue));
+    return [...new Set(values)].sort((a, b) => b - a);
+  }, [sourceExpenses, selectedYearValue, now]);
+
+  const matchesNonTimeFilters = useCallback((expense) => {
+    if (!Number.isFinite(Number(expense?.amount))) return false;
+    const category = normalizeFilterValue(expense.category || "Uncategorized");
+    const account = normalizeFilterValue(expense.paymentSource || expense.paymentSourceAccount || expense.account || expense.source);
+    const amount = getExpenseAmount(expense);
+    return (selectedCategory === "all" || category === selectedCategory) &&
+      (selectedAccount === "all" || account === selectedAccount) &&
+      (minimumAmount === "" || amount >= Number(minimumAmount)) &&
+      (maximumAmount === "" || amount <= Number(maximumAmount));
+  }, [selectedCategory, selectedAccount, minimumAmount, maximumAmount]);
+
+  const filteredExpenses = useMemo(() => sourceExpenses.filter((expense) => {
+    if (!matchesNonTimeFilters(expense)) return false;
+    if (timeframe === "all") return true;
+    const date = getExpenseDate(expense);
+    if (!date) return false;
+    if (timeframe === "month") return getLocalMonthValue(date) === selectedMonthValue;
+    return date.getFullYear() === Number(selectedYearValue);
+  }), [sourceExpenses, timeframe, selectedMonthValue, selectedYearValue, matchesNonTimeFilters]);
+
+  const filteredTotal = useMemo(() => filteredExpenses.reduce((total, expense) => total + getExpenseAmount(expense), 0), [filteredExpenses]);
+  const averageExpense = filteredExpenses.length > 0 ? filteredTotal / filteredExpenses.length : 0;
+  const monthlyDisplay = formatCurrency ? formatCurrency(filteredTotal) : `${currencySymbol}${filteredTotal.toFixed(2)}`;
   const averageExpenseDisplay = formatCurrency ? formatCurrency(averageExpense) : `${currencySymbol}${averageExpense.toFixed(2)}`;
-  const comparison = useMemo(() => {
-    if (lastMonthTotal <= 0) return { text: "No previous-month data", direction: null };
-    const change = ((monthlyTotal - lastMonthTotal) / lastMonthTotal) * 100;
-    if (!Number.isFinite(change)) return { text: "No previous-month data", direction: null };
-    if (change === 0) return { text: "No change vs previous month", direction: null };
-    const direction = change < 0 ? "down" : "up";
-    const arrow = change < 0 ? "↓" : "↑";
-    return {
-      text: `${arrow} ${Math.abs(change).toFixed(1)}% vs previous month`,
-      direction
-    };
-  }, [monthlyTotal, lastMonthTotal]);
+  const primaryLabel = timeframe === "all"
+    ? "All Time"
+    : timeframe === "year"
+      ? `${selectedYearValue} Total`
+      : new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date(`${selectedMonthValue}-01T00:00:00`));
+  const supportText = timeframe === "month" && filteredExpenses.length > 0
+    ? `${filteredExpenses.length} transaction${filteredExpenses.length === 1 ? "" : "s"}`
+    : timeframe === "all"
+      ? "Across all available records"
+      : "In selected period";
+
+  const resetFilters = () => {
+    setTimeframe("month");
+    setSelectedMonthValue(getLocalMonthValue(now));
+    setSelectedYearValue(String(now.getFullYear()));
+    setSelectedCategory("all");
+    setSelectedAccount("all");
+    setMinimumAmount("");
+    setMaximumAmount("");
+  };
 
   const handleAddExpense = () => {
     setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
@@ -70,22 +123,84 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, setF
       <ExpenseStats
         monthlyDisplay={monthlyDisplay}
         averageExpenseDisplay={averageExpenseDisplay}
-        comparisonText={comparison.text}
-        comparisonDirection={comparison.direction}
+        primaryLabel={primaryLabel}
+        comparisonText={supportText}
       />
 
-      <main className="expenses-content">
+      <div className="expenses-dashboard-layout">
         <ExpensesAnalytics
-          expenses={expenses}
+          expenses={filteredExpenses}
           trendExpenses={expenseHistory}
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
           formatCurrency={formatCurrency}
           currencySymbol={currencySymbol}
         />
-        <h3 className="section-title">Recent Expenses</h3>
-        <TransactionFeed transactions={expenses.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
-      </main>
+
+        <aside className="expenses-filter-card">
+          <div className="expenses-filter-header"><h3>Filters</h3></div>
+          <div className="expenses-filter-stack">
+            <label className="expenses-filter-field">
+              <span>Timeframe</span>
+              <select className="expenses-filter-select" value={timeframe} onChange={(event) => setTimeframe(event.target.value)}>
+                <option value="all">All Time</option>
+                <option value="month">By Month</option>
+                <option value="year">By Year</option>
+              </select>
+            </label>
+
+            {timeframe === "month" && (
+              <label className="expenses-filter-field">
+                <span>Month</span>
+                <input className="expenses-filter-input" type="month" value={selectedMonthValue} onChange={(event) => setSelectedMonthValue(event.target.value)} />
+              </label>
+            )}
+
+            {timeframe === "year" && (
+              <label className="expenses-filter-field">
+                <span>Year</span>
+                <select className="expenses-filter-select" value={selectedYearValue} onChange={(event) => setSelectedYearValue(event.target.value)}>
+                  {years.map(year => <option key={year} value={String(year)}>{year}</option>)}
+                </select>
+              </label>
+            )}
+
+            <label className="expenses-filter-field">
+              <span>Category</span>
+              <select className="expenses-filter-select" value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)}>
+                <option value="all">All Categories</option>
+                {categories.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+              </select>
+            </label>
+
+            <label className="expenses-filter-field">
+              <span>Account / Payment Source</span>
+              <select className="expenses-filter-select" value={selectedAccount} onChange={(event) => setSelectedAccount(event.target.value)}>
+                <option value="all">All Accounts</option>
+                {accounts.map(account => <option key={account} value={normalizeFilterValue(account)}>{account}</option>)}
+              </select>
+            </label>
+
+            <div className="expenses-filter-range">
+              <label className="expenses-filter-field">
+                <span>Minimum Amount</span>
+                <input className="expenses-filter-input" type="number" min="0" value={minimumAmount} onChange={(event) => setMinimumAmount(event.target.value)} placeholder="₱0" />
+              </label>
+              <label className="expenses-filter-field">
+                <span>Maximum Amount</span>
+                <input className="expenses-filter-input" type="number" min="0" value={maximumAmount} onChange={(event) => setMaximumAmount(event.target.value)} placeholder="No limit" />
+              </label>
+            </div>
+
+            {(timeframe !== "month" || selectedMonthValue !== getLocalMonthValue(now) || selectedCategory !== "all" || selectedAccount !== "all" || minimumAmount !== "" || maximumAmount !== "") && (
+              <button type="button" className="expenses-filter-reset" onClick={resetFilters}>Clear filters</button>
+            )}
+          </div>
+        </aside>
+
+        <main className="expenses-transactions">
+          <h3 className="section-title">Expense Transactions</h3>
+          <TransactionFeed transactions={filteredExpenses.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+        </main>
+      </div>
 
       {expenseModalOpen && (
         <div className="modal-overlay" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>

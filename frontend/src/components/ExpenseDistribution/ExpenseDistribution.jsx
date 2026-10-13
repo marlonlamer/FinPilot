@@ -4,14 +4,15 @@ import './ExpenseDistribution.css';
 
 const DEFAULT_COLORS = ['#FF6B6B','#FFA94D','#4CC9F0','#8B5CF6','#22C55E','#F97316','#06B6D4','#F43F5E'];
 
-export default function ExpenseDistribution({ expenses = [], selectedYear, selectedMonth, currencySymbol = '₱', formatCurrency, colors = DEFAULT_COLORS, layout = 'side', percentageDigits = 0 }) {
+export default function ExpenseDistribution({ expenses = [], selectedYear, selectedMonth, currencySymbol = '₱', formatCurrency, colors = DEFAULT_COLORS, layout = 'side', percentageDigits = 0, filterBySelectedMonth = true }) {
   const filtered = useMemo(() => {
+    if (!filterBySelectedMonth) return expenses;
     return (expenses || []).filter(e => {
       const d = e && e.date ? new Date(e.date) : null;
       if (!d || isNaN(d)) return false;
       return d.getFullYear() === Number(selectedYear) && d.getMonth() === Number(selectedMonth);
     });
-  }, [expenses, selectedYear, selectedMonth]);
+  }, [expenses, selectedYear, selectedMonth, filterBySelectedMonth]);
 
   const { data, total } = useMemo(() => {
     const map = {};
@@ -21,7 +22,7 @@ export default function ExpenseDistribution({ expenses = [], selectedYear, selec
       if (!Number.isFinite(amount)) return;
       const key = raw.toLowerCase();
       if (!map[key]) map[key] = { name: raw, value: 0 };
-      map[key].value += amount;
+      map[key].value += Math.abs(amount);
     });
     const arr = Object.values(map).sort((a,b) => b.value - a.value);
     const t = arr.reduce((s,i) => s + i.value, 0);
