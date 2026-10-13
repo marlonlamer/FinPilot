@@ -8,16 +8,16 @@ export default function ExpensesAnalytics({ expenses, trendExpenses, selectedMon
       <ExpenseTrend expenses={trendExpenses} formatCurrency={formatCurrency} currencySymbol={currencySymbol} />
 
       <div className="card category-card">
-        <div className="card-label">Expenses by Category</div>
-        <div className="chart-small center">
-          <ExpenseDistribution
-            expenses={expenses}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
-            currencySymbol={currencySymbol}
-            formatCurrency={formatCurrency}
-          />
-        </div>
+        <h3 className="category-card-title">Expenses by Category</h3>
+        <ExpenseDistribution
+          expenses={expenses}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          currencySymbol={currencySymbol}
+          formatCurrency={formatCurrency}
+          layout="stacked"
+          percentageDigits={2}
+        />
       </div>
     </div>
   );

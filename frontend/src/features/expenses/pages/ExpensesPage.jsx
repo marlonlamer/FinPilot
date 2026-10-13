@@ -3,11 +3,10 @@ import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed
 import "./ExpensesModule.css";
 import ExpensesHeader from "../components/ExpensesHeader";
 import ExpenseStats from "../components/ExpenseStats";
-import BudgetAlert from "../components/BudgetAlert";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 
-export default function ExpensesPage({ expenses = [], expenseHistory, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function ExpensesPage({ expenses = [], expenseHistory, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const previousPeriod = useMemo(() => {
     let month = selectedMonth - 1;
     let year = selectedYear;
@@ -59,31 +58,6 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, setF
     };
   }, [monthlyTotal, lastMonthTotal]);
 
-  const byCategory = useMemo(() => {
-    const map = {};
-    expenses.forEach(it => {
-      const d = it.date ? new Date(it.date) : null;
-      if (!d || d.getFullYear() !== selectedYear || d.getMonth() !== selectedMonth) return;
-      const key = it.category || "Uncategorized";
-      map[key] = (map[key] || 0) + (Number(it.amount) || 0);
-    });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]);
-  }, [expenses, selectedYear, selectedMonth]);
-
-  const budgetStatus = useMemo(() => {
-    if (!budgets) return [];
-    return Object.entries(budgets).map(([cat, b]) => {
-      const spent = byCategory.find(([c]) => c === cat)?.[1] || 0;
-      const pct = b > 0 ? (spent / b) * 100 : null;
-      return { category: cat, budget: b, spent, percent: pct };
-    }).sort((a, b) => (b.percent || 0) - (a.percent || 0));
-  }, [budgets, byCategory]);
-
-  const overBudgetCategories = useMemo(() => {
-    if (!budgetStatus) return [];
-    return budgetStatus.filter(s => s.budget > 0 && s.spent > s.budget);
-  }, [budgetStatus]);
-
   const handleAddExpense = () => {
     setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
     setExpenseModalOpen(true);
@@ -93,23 +67,25 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, setF
     <div className="expenses-root">
       <ExpensesHeader onAddExpense={handleAddExpense} />
 
-      <ExpensesAnalytics
-        expenses={expenses}
-        trendExpenses={expenseHistory}
-        selectedMonth={selectedMonth}
-        selectedYear={selectedYear}
-        formatCurrency={formatCurrency}
-        currencySymbol={currencySymbol}
-      />
-
-      <BudgetAlert overBudgetCategories={overBudgetCategories} />
-
       <ExpenseStats
         monthlyDisplay={monthlyDisplay}
         averageExpenseDisplay={averageExpenseDisplay}
         comparisonText={comparison.text}
         comparisonDirection={comparison.direction}
       />
+
+      <main className="expenses-content">
+        <ExpensesAnalytics
+          expenses={expenses}
+          trendExpenses={expenseHistory}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          formatCurrency={formatCurrency}
+          currencySymbol={currencySymbol}
+        />
+        <h3 className="section-title">Recent Expenses</h3>
+        <TransactionFeed transactions={expenses.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+      </main>
 
       {expenseModalOpen && (
         <div className="modal-overlay" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>
@@ -176,9 +152,6 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, setF
           </div>
         </div>
       )}
-
-      <h3 className="section-title">Recent Expenses</h3>
-      <TransactionFeed transactions={expenses.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
     </div>
   );
 }
