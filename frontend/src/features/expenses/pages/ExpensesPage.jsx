@@ -7,7 +7,7 @@ import BudgetAlert from "../components/BudgetAlert";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 
-export default function ExpensesPage({ expenses = [], form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
+export default function ExpensesPage({ expenses = [], expenseHistory, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, budgets, selectedYear, selectedMonth, currencySymbol = "₱", formatCurrency }) {
   const previousPeriod = useMemo(() => {
     let month = selectedMonth - 1;
     let year = selectedYear;
@@ -70,24 +70,6 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
     return Object.entries(map).sort((a, b) => b[1] - a[1]);
   }, [expenses, selectedYear, selectedMonth]);
 
-  const lastSixMonthsData = useMemo(() => {
-    const now = new Date();
-    const months = [];
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      months.push({ key, date: d, label: new Intl.DateTimeFormat("en", { month: "short" }).format(d), value: 0 });
-    }
-    const map = {};
-    expenses.forEach(exp => {
-      const d = exp.date ? new Date(exp.date) : null;
-      if (!d || isNaN(d)) return;
-      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      map[key] = (map[key] || 0) + Number(exp.amount || 0);
-    });
-    return months.map(m => ({ month: m.label, value: Number(map[m.key] || 0) }));
-  }, [expenses]);
-
   const budgetStatus = useMemo(() => {
     if (!budgets) return [];
     return Object.entries(budgets).map(([cat, b]) => {
@@ -112,8 +94,8 @@ export default function ExpensesPage({ expenses = [], form, setForm, handleSubmi
       <ExpensesHeader onAddExpense={handleAddExpense} />
 
       <ExpensesAnalytics
-        lastSixMonthsData={lastSixMonthsData}
         expenses={expenses}
+        trendExpenses={expenseHistory}
         selectedMonth={selectedMonth}
         selectedYear={selectedYear}
         formatCurrency={formatCurrency}

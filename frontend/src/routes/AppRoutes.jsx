@@ -47,6 +47,7 @@ const normalizeIncome = (income = {}) => ({
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
 	const [expenses, setExpenses] = useState([]);
+	const [expenseHistory, setExpenseHistory] = useState(null);
 	const [incomes, setIncomes] = useState([]);
 
 	const [dashboardTotals, setDashboardTotals] = useState({ totalSavings: 0, availableBalance: 0 });
@@ -135,6 +136,15 @@ function AppController() {
 		}
 	};
 
+	const fetchExpenseHistory = async () => {
+		try {
+			const data = await api.get("/expenses");
+			setExpenseHistory(Array.isArray(data) ? data.map(normalizeExpense) : []);
+		} catch (e) {
+			console.warn("Failed to fetch historical expenses", e);
+		}
+	};
+
 	const fetchIncomes = async () => {
 		try {
 			const data = await api.get("/incomes");
@@ -176,6 +186,10 @@ function AppController() {
 			} catch (e) { console.warn('Failed to fetch dashboard', e); }
 		})();
 	}, [selectedYear, selectedMonth]);
+
+	useEffect(() => {
+		fetchExpenseHistory();
+	}, []);
 
 	const [perCategoryBudgets, setPerCategoryBudgets] = useState(() => {
 		try {
@@ -270,11 +284,14 @@ function AppController() {
 					recurrenceEndDate: form.recurrenceEndDate || undefined
 				});
 				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? normalizeExpense({ ...updated, merchant: form.description, paymentSource: form.source }) : p)));
+				setExpenseHistory(prev => prev?.map(p => (p.id === editingExpenseId ? normalizeExpense({ ...updated, merchant: form.description, paymentSource: form.source }) : p)) ?? prev);
 				toast.success('Expense updated successfully', { id: t });
 			} catch (e) {
 				toast.error('Failed to update expense');
 				console.warn("Update expense failed, applying locally", e);
-				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? { ...p, ...form, amount: Number(form.amount) } : p)));
+				const locallyUpdated = { ...form, amount: Number(form.amount) };
+				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? { ...p, ...locallyUpdated } : p)));
+				setExpenseHistory(prev => prev?.map(p => (p.id === editingExpenseId ? { ...p, ...locallyUpdated } : p)) ?? prev);
 			} finally {
 				setEditingExpenseId(null);
 				setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
@@ -303,7 +320,9 @@ function AppController() {
 			const t = toast.loading('Adding expense...');
 			const newExpense = await api.post("/expenses", payload);
 
-			setExpenses(prev => [normalizeExpense({ ...newExpense, merchant: payload.description, paymentSource: payload.source }), ...prev]);
+			const normalizedExpense = normalizeExpense({ ...newExpense, merchant: payload.description, paymentSource: payload.source });
+			setExpenses(prev => [normalizedExpense, ...prev]);
+			setExpenseHistory(prev => prev ? [normalizedExpense, ...prev.filter(item => item.id !== normalizedExpense.id)] : prev);
 			toast.success('Expense added successfully', { id: t });
 
 		} catch (e) {
@@ -322,6 +341,7 @@ function AppController() {
 				userId: getCurrentUserId()
 			};
 			setExpenses(prev => [temp, ...prev]);
+			setExpenseHistory(prev => prev ? [temp, ...prev.filter(item => item.id !== temp.id)] : prev);
 		} finally {
 			setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
 			setExpenseModalOpen(false);
@@ -330,6 +350,7 @@ function AppController() {
 
 	const deleteExpense = async (id) => {
 		setExpenses(prev => prev.filter(e => e.id !== id));
+		setExpenseHistory(prev => prev?.filter(e => e.id !== id) ?? prev);
 		const t = toast.loading('Deleting expense...');
 		try {
 			await api.delete(`/expenses/${id}`);
@@ -345,7 +366,9 @@ function AppController() {
 		const t = toast.loading('Adding expense...');
 		try {
 			const newExpense = await api.post("/expenses", { ...payload, userId: getCurrentUserId() });
-			setExpenses(prev => [normalizeExpense({ ...newExpense, merchant: payload.description, paymentSource: payload.source }), ...prev]);
+			const normalizedExpense = normalizeExpense({ ...newExpense, merchant: payload.description, paymentSource: payload.source });
+			setExpenses(prev => [normalizedExpense, ...prev]);
+			setExpenseHistory(prev => prev ? [normalizedExpense, ...prev.filter(item => item.id !== normalizedExpense.id)] : prev);
 			toast.success('Expense added successfully', { id: t });
 			return newExpense;
 		} catch (error) {
@@ -358,7 +381,9 @@ function AppController() {
 		const t = toast.loading('Updating expense...');
 		try {
 			const updated = await api.put(`/expenses/${id}`, { ...payload, userId: getCurrentUserId() });
-			setExpenses(prev => prev.map(item => (item.id === id ? normalizeExpense({ ...updated, merchant: payload.description, paymentSource: payload.source }) : item)));
+			const normalizedExpense = normalizeExpense({ ...updated, merchant: payload.description, paymentSource: payload.source });
+			setExpenses(prev => prev.map(item => (item.id === id ? normalizedExpense : item)));
+			setExpenseHistory(prev => prev?.map(item => (item.id === id ? normalizedExpense : item)) ?? prev);
 			toast.success('Expense updated successfully', { id: t });
 			return updated;
 		} catch (error) {
@@ -584,6 +609,7 @@ function AppController() {
 	const onAuthSuccess = (token) => {
 		setAuthToken(token);
 		fetchExpenses();
+		fetchExpenseHistory();
 		fetchIncomes();
 	};
 
@@ -636,6 +662,7 @@ function AppController() {
 
 						<Route path="expenses" element={<Expenses
 							expenses={expenses}
+							expenseHistory={expenseHistory}
 							form={form}
 							setForm={setForm}
 							handleSubmit={handleSubmit}
