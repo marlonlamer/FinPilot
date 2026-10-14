@@ -15,7 +15,8 @@ const emptyForm = {
   date: today(),
   time: new Date().toTimeString().slice(0, 5),
   notes: "",
-  customCategory: ""
+  customCategory: "",
+  paymentMethod: ""
 };
 
 const normalizeTransactionType = (transaction) => {
@@ -44,7 +45,8 @@ const toFormValues = (transaction, fallbackType = "expense") => {
     date: dateString,
     time: timeString,
     notes: transaction?.notes || "",
-    customCategory: isCustomCategory ? actualCategory : ""
+    customCategory: isCustomCategory ? actualCategory : "",
+    paymentMethod: transaction?.paymentMethod || ""
   };
 };
 
@@ -77,11 +79,17 @@ export default function AddTransactionModal({
       title: isEditing ? "Update Income" : "Add Income",
       description: "Record your income and keep your finances up to date."
     }
-    : {
-      eyebrow: "Money movement",
-      title: isEditing ? "Update Transaction" : "Add Transaction",
-      description: "Record an expense or income without leaving your overview."
-    };
+    : mode === "expense"
+      ? {
+        eyebrow: "Expense",
+        title: isEditing ? "Update Expense" : "Add Expense",
+        description: "Record and track where your money goes."
+      }
+      : {
+        eyebrow: "Money movement",
+        title: isEditing ? "Update Transaction" : "Add Transaction",
+        description: "Record an expense or income without leaving your overview."
+      };
 
   useEffect(() => {
     if (open) {
@@ -89,9 +97,13 @@ export default function AddTransactionModal({
       setTransactionType(nextType);
       setValues(toFormValues(editingTransaction, nextType));
       setError("");
-      setIsRecurring(false);
-      setRecurringFrequency("monthly");
-      setRecurringEndDate("");
+      setIsRecurring(restrictedType === "expense" && Boolean(editingTransaction?.isRecurring ?? editingTransaction?.recurring));
+      setRecurringFrequency(
+        restrictedType === "expense"
+          ? editingTransaction?.recurrenceFrequency || editingTransaction?.recurrence || "monthly"
+          : "monthly"
+      );
+      setRecurringEndDate(restrictedType === "expense" ? editingTransaction?.recurrenceEndDate || "" : "");
     }
   }, [open, editingTransaction, defaultType, restrictedType]);
 
@@ -145,7 +157,12 @@ export default function AddTransactionModal({
       date,
       notes: values.notes.trim(),
       description: values.description.trim(),
+      paymentMethod: values.paymentMethod || undefined,
       isRecurring,
+      ...(activeTransactionType === "expense" ? {
+        recurring: isRecurring,
+        recurrence: isRecurring ? recurringFrequency : undefined
+      } : {}),
       ...(isRecurring ? {
         recurrenceFrequency: recurringFrequency,
         recurrenceEndDate: recurringEndDate || undefined
@@ -183,7 +200,7 @@ export default function AddTransactionModal({
 
   return (
     <div className="add-transaction-overlay" onMouseDown={onClose}>
-      <div className="add-transaction-modal" onMouseDown={event => event.stopPropagation()}>
+      <div className={`add-transaction-modal${mode === "expense" ? " add-transaction-modal--expense" : ""}`} onMouseDown={event => event.stopPropagation()}>
         <div className="add-transaction-header">
           <div>
             <p className="add-transaction-eyebrow">{headerContent.eyebrow}</p>
@@ -245,7 +262,7 @@ export default function AddTransactionModal({
             <input value={values.source} onChange={event => update("source", event.target.value)} placeholder="Cash, bank, or e-wallet" required />
           </label>
 
-          {!isEditing ? (
+          {!isEditing || (restrictedType === "expense" && isEditing) ? (
             <div className="add-transaction-recurring">
               <label className="add-transaction-recurringToggle">
                 <input
@@ -253,7 +270,7 @@ export default function AddTransactionModal({
                   checked={isRecurring}
                   onChange={event => setIsRecurring(event.target.checked)}
                 />
-                <span>Make this a recurring transaction</span>
+                <span>{isExpense ? "Make this a recurring expense" : "Make this a recurring transaction"}</span>
               </label>
 
               {isRecurring ? (
@@ -298,7 +315,7 @@ export default function AddTransactionModal({
           <div className="add-transaction-actions">
             <button type="button" className="add-transaction-cancel" onClick={onClose} disabled={saving}>Cancel</button>
             <button type="submit" className={`add-transaction-save ${isExpense ? "expense" : "income"}`} disabled={saving}>
-              {saving ? "Saving..." : isEditing ? "Update Transaction" : "Save Transaction"}
+              {saving ? "Saving..." : mode === "expense" ? (isEditing ? "Update Expense" : "Add Expense") : isEditing ? "Update Transaction" : "Save Transaction"}
             </button>
           </div>
         </form>

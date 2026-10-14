@@ -25,6 +25,26 @@
   box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
 }
 
+.add-transaction-modal--expense {
+  display: flex;
+  flex-direction: column;
+  max-width: 460px;
+  overflow: hidden;
+}
+
+.add-transaction-modal--expense .add-transaction-form {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.add-transaction-modal--expense .add-transaction-actions {
+  position: sticky;
+  bottom: 0;
+  padding: 10px 0 0;
+  background: #fff;
+}
+
 .add-transaction-header {
   display: flex;
   align-items: flex-start;

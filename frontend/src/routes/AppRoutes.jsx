@@ -264,90 +264,6 @@ function AppController() {
 	const [expenseModalOpen, setExpenseModalOpen] = useState(false);
 	const [editingExpenseId, setEditingExpenseId] = useState(null);
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		if (editingExpenseId) {
-			try {
-				const t = toast.loading('Updating expense...');
-				const updated = await api.put(`/expenses/${editingExpenseId}`, {
-					amount: form.amount,
-					category: form.category,
-					description: form.description,
-					source: form.source,
-					date: form.date,
-					notes: form.notes,
-					recurring: !!form.recurring,
-					recurrence: form.recurrence || undefined,
-					paymentMethod: form.paymentMethod || undefined,
-					isRecurring: !!form.recurring,
-					recurrenceFrequency: form.recurrence || undefined,
-					recurrenceEndDate: form.recurrenceEndDate || undefined
-				});
-				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? normalizeExpense({ ...updated, merchant: form.description, paymentSource: form.source }) : p)));
-				setExpenseHistory(prev => prev?.map(p => (p.id === editingExpenseId ? normalizeExpense({ ...updated, merchant: form.description, paymentSource: form.source }) : p)) ?? prev);
-				toast.success('Expense updated successfully', { id: t });
-			} catch (e) {
-				toast.error('Failed to update expense');
-				console.warn("Update expense failed, applying locally", e);
-				const locallyUpdated = { ...form, amount: Number(form.amount) };
-				setExpenses(prev => prev.map(p => (p.id === editingExpenseId ? { ...p, ...locallyUpdated } : p)));
-				setExpenseHistory(prev => prev?.map(p => (p.id === editingExpenseId ? { ...p, ...locallyUpdated } : p)) ?? prev);
-			} finally {
-				setEditingExpenseId(null);
-				setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
-				setExpenseModalOpen(false);
-			}
-			return;
-		}
-
-		try {
-			const payload = {
-				amount: form.amount,
-				category: form.category,
-				description: form.description,
-				source: form.source,
-				date: form.date,
-				notes: form.notes,
-				recurring: !!form.recurring,
-				recurrence: form.recurrence || undefined,
-				paymentMethod: form.paymentMethod || undefined,
-				isRecurring: !!form.recurring,
-				recurrenceFrequency: form.recurrence || undefined,
-				recurrenceEndDate: form.recurrenceEndDate || undefined,
-				userId: getCurrentUserId()
-			};
-
-			const t = toast.loading('Adding expense...');
-			const newExpense = await api.post("/expenses", payload);
-
-			const normalizedExpense = normalizeExpense({ ...newExpense, merchant: payload.description, paymentSource: payload.source });
-			setExpenses(prev => [normalizedExpense, ...prev]);
-			setExpenseHistory(prev => prev ? [normalizedExpense, ...prev.filter(item => item.id !== normalizedExpense.id)] : prev);
-			toast.success('Expense added successfully', { id: t });
-
-		} catch (e) {
-			console.warn("Create expense failed, adding locally", e);
-			const temp = {
-				id: Date.now(),
-				description: form.description,
-				source: form.source,
-				amount: Number(form.amount),
-				category: form.category,
-				date: form.date,
-				notes: form.notes,
-				recurring: !!form.recurring,
-				recurrence: form.recurrence || undefined,
-				paymentMethod: form.paymentMethod || undefined,
-				userId: getCurrentUserId()
-			};
-			setExpenses(prev => [temp, ...prev]);
-			setExpenseHistory(prev => prev ? [temp, ...prev.filter(item => item.id !== temp.id)] : prev);
-		} finally {
-			setForm({ amount: "", category: "", description: "", source: "", date: new Date().toISOString().slice(0, 10), notes: "" });
-			setExpenseModalOpen(false);
-		}
-	};
-
 	const deleteExpense = async (id) => {
 		setExpenses(prev => prev.filter(e => e.id !== id));
 		setExpenseHistory(prev => prev?.filter(e => e.id !== id) ?? prev);
@@ -424,10 +340,10 @@ function AppController() {
 			category: expense.category || "",
 			description: expense.description || "",
 			source: expense.source || "",
-			date: expense.date ? expense.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
+			date: expense.date || new Date().toISOString().slice(0, 10),
 			notes: expense.notes || "",
-			recurring: !!expense.recurring,
-			recurrence: expense.recurrence || "monthly",
+			recurring: Boolean(expense.isRecurring ?? expense.recurring),
+			recurrence: expense.recurrenceFrequency || expense.recurrence || "monthly",
 			paymentMethod: expense.paymentMethod || ""
 		});
 		setEditingExpenseId(expense.id);
@@ -664,12 +580,12 @@ function AppController() {
 							expenses={expenses}
 							expenseHistory={expenseHistory}
 							form={form}
-							setForm={setForm}
-							handleSubmit={handleSubmit}
 							expenseModalOpen={expenseModalOpen}
 							setExpenseModalOpen={setExpenseModalOpen}
 							deleteExpense={deleteExpense}
 							openEditExpense={openEditExpense}
+							onCreateExpense={createExpenseFromTransactions}
+							onUpdateExpense={updateExpenseFromTransactions}
 							editingExpenseId={editingExpenseId}
 							cancelExpenseEdit={cancelExpenseEdit}
 							budgets={perCategoryBudgets}

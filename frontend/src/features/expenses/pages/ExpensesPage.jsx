@@ -5,6 +5,7 @@ import ExpensesHeader from "../components/ExpensesHeader";
 import ExpenseStats from "../components/ExpenseStats";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
+import AddTransactionModal from "../../transactions/components/AddTransactionModal";
 
 const normalizeFilterValue = (value) => String(value ?? "").trim().toLowerCase();
 
@@ -29,7 +30,7 @@ const getExpenseAmount = (expense) => {
   return Number.isFinite(amount) ? Math.abs(amount) : 0;
 };
 
-export default function ExpensesPage({ expenses = [], expenseHistory, form, setForm, handleSubmit, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, currencySymbol = "₱", formatCurrency }) {
+export default function ExpensesPage({ expenses = [], expenseHistory, form, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, openEditExpense, deleteExpense, onCreateExpense, onUpdateExpense, currencySymbol = "₱", formatCurrency }) {
   const [now] = useState(() => new Date());
   const [timeframe, setTimeframe] = useState("month");
   const [selectedMonthValue, setSelectedMonthValue] = useState(() => getLocalMonthValue(now));
@@ -100,6 +101,14 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, setF
     : timeframe === "all"
       ? "Across all available records"
       : "In selected period";
+  const editingTransaction = useMemo(() => editingExpenseId ? ({
+    ...form,
+    id: editingExpenseId,
+    type: "expense",
+    isRecurring: Boolean(form?.recurring),
+    recurrenceFrequency: form?.recurrence || form?.recurrenceFrequency,
+    date: form?.date
+  }) : null, [editingExpenseId, form]);
 
   const resetFilters = () => {
     setTimeframe("month");
@@ -112,8 +121,16 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, setF
   };
 
   const handleAddExpense = () => {
-    setForm(prev => ({ ...prev, date: new Date().toISOString().slice(0, 10) }));
+    if (editingExpenseId) cancelExpenseEdit();
     setExpenseModalOpen(true);
+  };
+
+  const closeExpenseModal = () => {
+    if (editingExpenseId) {
+      cancelExpenseEdit();
+      return;
+    }
+    setExpenseModalOpen(false);
   };
 
   return (
@@ -198,75 +215,27 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, setF
 
         <main className="expenses-transactions">
           <h3 className="section-title">Expense Transactions</h3>
-          <TransactionFeed transactions={filteredExpenses.map(e => ({ ...e, type: 'expense' }))} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
+          <TransactionFeed
+            transactions={filteredExpenses.map(e => ({ ...e, type: 'expense' }))}
+            currencySymbol={currencySymbol}
+            formatCurrency={formatCurrency}
+            deleteExpense={deleteExpense}
+            openEditExpense={openEditExpense}
+          />
         </main>
       </div>
 
-      {expenseModalOpen && (
-        <div className="modal-overlay" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <div className="modal-headers">
-                <div className="modal-title">{editingExpenseId ? "Edit Expense" : "Add Expense"}</div>
-                <div className="modal-sub">Track where your money went</div>
-              </div>
-              <button className="btn btn-ghost" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>✕</button>
-            </div>
-            <form onSubmit={handleSubmit} className="form-grid">
-              <label className="form-label">Amount</label>
-              <div className="input-with-prefix">
-                <div className="currency-prefix">{currencySymbol}</div>
-                <input className="modern-input" placeholder="0.00" type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} />
-              </div>
-              <label className="form-label">Category</label>
-               <select className="modern-input" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} required>
-                <option value="">Select category</option>
-                {EXPENSE_CATEGORIES.map((c) => (
-                  <option key={c.value} value={c.value}>{c.icon} {c.label}</option>
-                ))}
-              </select>
-              <label className="form-label">Description</label>
-               <input className="modern-input form-full" placeholder="Description" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} />
-              <label className="form-label">Source of Fund</label>
-               <input className="modern-input" placeholder="Enter source of fund" value={form.source} onChange={e => setForm({ ...form, source: e.target.value })} />
-              <label className="form-label">Date</label>
-               <input className="modern-input" type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} />
-              <select className="modern-input" value={form.paymentMethod || ""} onChange={e => setForm({ ...form, paymentMethod: e.target.value })}>
-                <option value="">Select payment method</option>
-                <option value="Cash">💵 Cash</option>
-                <option value="Credit Card">💳 Credit Card</option>
-                <option value="Debit Card">🏧 Debit Card</option>
-                <option value="Bank Transfer">🏦 Bank Transfer</option>
-                <option value="Mobile Wallet">📱 Mobile Wallet</option>
-              </select>
-              <label className="form-label">Payment method</label>
-              <div className="recurring-row">
-                <label className="recurring-toggle">
-                  <input type="checkbox" checked={!!form.recurring} onChange={e => setForm({ ...form, recurring: e.target.checked })} />
-                  <span>Recurring</span>
-                </label>
-                {form.recurring && (
-                  <>
-                    <label className="form-label">Recurrence</label>
-                    <select className="modern-input small-select" value={form.recurrence || "monthly"} onChange={e => setForm({ ...form, recurrence: e.target.value })}>
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
-                    </select>
-                  </>
-                )}
-              </div>
-              <label className="form-label">Notes(Optional)</label>
-              <input className="modern-input form-full" placeholder="Enter a helpful message" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
-              <div className="modal-footer form-full">
-                <button type="button" className="btn" onClick={() => (editingExpenseId ? cancelExpenseEdit() : setExpenseModalOpen(false))}>Cancel</button>
-                <button type="submit" className="btn btn-primary">{editingExpenseId ? "Save Changes" : "Add Expense"}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddTransactionModal
+        open={expenseModalOpen}
+        onClose={closeExpenseModal}
+        onCreateExpense={onCreateExpense}
+        onUpdateExpense={onUpdateExpense}
+        editingTransaction={editingTransaction}
+        defaultType="expense"
+        mode="expense"
+        showPaymentMethod
+        currencySymbol={currencySymbol}
+      />
     </div>
   );
 }
