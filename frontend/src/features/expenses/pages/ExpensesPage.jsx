@@ -160,14 +160,14 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
     <div className="expenses-root">
       <ExpensesHeader onAddExpense={handleAddExpense} />
 
-      <ExpenseStats
-        monthlyDisplay={monthlyDisplay}
-        averageExpenseDisplay={averageExpenseDisplay}
-        primaryLabel={primaryLabel}
-        comparisonText={supportText}
-      />
-
       <div className="expenses-dashboard-layout">
+        <ExpenseStats
+          monthlyDisplay={monthlyDisplay}
+          averageExpenseDisplay={averageExpenseDisplay}
+          primaryLabel={primaryLabel}
+          comparisonText={supportText}
+        />
+
         <ExpensesAnalytics
           expenses={filteredExpenses}
           trendExpenses={expenseHistory}
@@ -236,8 +236,11 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
           </div>
         </aside>
 
-        <main className="expenses-transactions">
-          <h3 className="section-title">Expense Transactions</h3>
+        <section className="expenses-transactions">
+          <div className="expenses-transactions-header">
+            <h3>Recent Outflow Transactions</h3>
+            <span>{filteredExpenses.length} {filteredExpenses.length === 1 ? "item" : "items"}</span>
+          </div>
           <TransactionFeed
             transactions={filteredExpenses.map(e => ({ ...e, type: 'expense' }))}
             currencySymbol={currencySymbol}
@@ -246,7 +249,7 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
             onViewTransaction={handleViewExpense}
             onDeleteTransaction={setPendingDelete}
           />
-        </main>
+        </section>
       </div>
 
       <AddTransactionModal
