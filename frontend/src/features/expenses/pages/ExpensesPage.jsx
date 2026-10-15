@@ -6,6 +6,8 @@ import ExpenseStats from "../components/ExpenseStats";
 import ExpensesAnalytics from "../components/ExpensesAnalytics";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 import AddTransactionModal from "../../transactions/components/AddTransactionModal";
+import ViewTransactionModal from "../../transactions/components/ViewTransactionModal";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 
 const normalizeFilterValue = (value) => String(value ?? "").trim().toLowerCase();
 
@@ -39,6 +41,8 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
   const [selectedAccount, setSelectedAccount] = useState("all");
   const [minimumAmount, setMinimumAmount] = useState("");
   const [maximumAmount, setMaximumAmount] = useState("");
+  const [viewedExpense, setViewedExpense] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
 
   const sourceExpenses = Array.isArray(expenseHistory) ? expenseHistory : expenses;
   const categories = useMemo(() => {
@@ -133,6 +137,25 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
     setExpenseModalOpen(false);
   };
 
+  const handleViewExpense = (expense) => {
+    setViewedExpense({
+      ...expense,
+      type: "expense",
+      merchant: expense.merchant || expense.merchantRecipient || expense.recipient || expense.description || "",
+      paymentSource: expense.paymentSource || expense.paymentSourceAccount || expense.account || expense.source || "",
+      isRecurring: expense.isRecurring ?? expense.recurring,
+      recurrenceFrequency: expense.recurrenceFrequency || expense.recurringFrequency || expense.recurrence,
+      recurrenceEndDate: expense.recurrenceEndDate || expense.recurringEndDate
+    });
+  };
+
+  const confirmDeleteExpense = async () => {
+    if (!pendingDelete) return;
+    if (typeof deleteExpense !== "function") throw new Error("Expense deletion is unavailable.");
+    await deleteExpense(pendingDelete.id);
+    setPendingDelete(null);
+  };
+
   return (
     <div className="expenses-root">
       <ExpensesHeader onAddExpense={handleAddExpense} />
@@ -219,8 +242,9 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
             transactions={filteredExpenses.map(e => ({ ...e, type: 'expense' }))}
             currencySymbol={currencySymbol}
             formatCurrency={formatCurrency}
-            deleteExpense={deleteExpense}
             openEditExpense={openEditExpense}
+            onViewTransaction={handleViewExpense}
+            onDeleteTransaction={setPendingDelete}
           />
         </main>
       </div>
@@ -235,6 +259,22 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
         mode="expense"
         showPaymentMethod
         currencySymbol={currencySymbol}
+      />
+
+      <ViewTransactionModal
+        open={Boolean(viewedExpense)}
+        transaction={viewedExpense}
+        onClose={() => setViewedExpense(null)}
+        currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
+      />
+
+      <ConfirmModal
+        open={Boolean(pendingDelete)}
+        message={`Are you sure you want to delete "${pendingDelete?.description || pendingDelete?.merchant || pendingDelete?.category || "this expense"}"? This action cannot be undone.`}
+        onConfirm={confirmDeleteExpense}
+        onCancel={() => setPendingDelete(null)}
+        confirmLabel="Delete"
       />
     </div>
   );

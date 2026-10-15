@@ -265,16 +265,16 @@ function AppController() {
 	const [editingExpenseId, setEditingExpenseId] = useState(null);
 
 	const deleteExpense = async (id) => {
-		setExpenses(prev => prev.filter(e => e.id !== id));
-		setExpenseHistory(prev => prev?.filter(e => e.id !== id) ?? prev);
 		const t = toast.loading('Deleting expense...');
 		try {
 			await api.delete(`/expenses/${id}`);
-			fetchExpenses();
+			setExpenses(prev => prev.filter(e => e.id !== id));
+			setExpenseHistory(prev => prev?.filter(e => e.id !== id) ?? prev);
 			toast.success('Expense deleted successfully', { id: t });
 		} catch (err) {
 			toast.error('Failed to delete expense', { id: t });
 			console.warn('Failed to delete expense', err);
+			throw err;
 		}
 	};
 

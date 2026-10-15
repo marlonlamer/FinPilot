@@ -67,9 +67,13 @@ export default function Transactions({
     const item = pendingDelete;
     const type = String(item.type || "").toLowerCase();
     if (type.includes("income")) {
-      if (typeof deleteIncome === "function") await deleteIncome(item.id);
+      if (typeof deleteIncome !== "function") throw new Error("Income deletion is unavailable.");
+      await deleteIncome(item.id);
     } else if (type.includes("expense")) {
-      if (typeof deleteExpense === "function") await deleteExpense(item.id);
+      if (typeof deleteExpense !== "function") throw new Error("Expense deletion is unavailable.");
+      await deleteExpense(item.id);
+    } else {
+      throw new Error("This transaction type cannot be deleted here.");
     }
     setPendingDelete(null);
   };
