@@ -8,25 +8,14 @@ import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 import AddTransactionModal from "../../transactions/components/AddTransactionModal";
 import ViewTransactionModal from "../../transactions/components/ViewTransactionModal";
 import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
+import {
+  getExpenseDate,
+  getExpenseMonthComparison,
+  getLocalMonthValue
+} from "../utils/expenseMonthComparison";
 
 const normalizeFilterValue = (value) => String(value ?? "").trim().toLowerCase();
 
-const getExpenseDate = (expense) => {
-  const rawDate = expense?.date || expense?.createdAt || expense?.created_at || expense?.timestamp;
-  if (!rawDate) return null;
-  if (typeof rawDate === "string") {
-    const match = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|T)/);
-    if (match) {
-      const [, year, month, day] = match;
-      const date = new Date(Number(year), Number(month) - 1, Number(day));
-      return Number.isNaN(date.getTime()) ? null : date;
-    }
-  }
-  const date = new Date(rawDate);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const getLocalMonthValue = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 const getExpenseAmount = (expense) => {
   const amount = Number(expense?.amount);
   return Number.isFinite(amount) ? Math.abs(amount) : 0;
@@ -95,16 +84,9 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
   const averageExpense = filteredExpenses.length > 0 ? filteredTotal / filteredExpenses.length : 0;
   const monthlyDisplay = formatCurrency ? formatCurrency(filteredTotal) : `${currencySymbol}${filteredTotal.toFixed(2)}`;
   const averageExpenseDisplay = formatCurrency ? formatCurrency(averageExpense) : `${currencySymbol}${averageExpense.toFixed(2)}`;
-  const primaryLabel = timeframe === "all"
-    ? "All Time"
-    : timeframe === "year"
-      ? `${selectedYearValue} Total`
-      : new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(new Date(`${selectedMonthValue}-01T00:00:00`));
-  const supportText = timeframe === "month" && filteredExpenses.length > 0
-    ? `${filteredExpenses.length} transaction${filteredExpenses.length === 1 ? "" : "s"}`
-    : timeframe === "all"
-      ? "Across all available records"
-      : "In selected period";
+  const comparisonSummary = useMemo(() => {
+    return getExpenseMonthComparison(sourceExpenses, selectedMonthValue, matchesNonTimeFilters);
+  }, [sourceExpenses, selectedMonthValue, matchesNonTimeFilters]);
   const editingTransaction = useMemo(() => editingExpenseId ? ({
     ...form,
     id: editingExpenseId,
@@ -164,8 +146,8 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
         <ExpenseStats
           monthlyDisplay={monthlyDisplay}
           averageExpenseDisplay={averageExpenseDisplay}
-          primaryLabel={primaryLabel}
-          comparisonText={supportText}
+          comparisonText={comparisonSummary.text}
+          comparisonDirection={comparisonSummary.direction}
         />
 
         <ExpensesAnalytics
