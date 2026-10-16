@@ -127,7 +127,6 @@
 	border-color: #93c5fd;
 	box-shadow: 0 0 0 4px rgba(147, 197, 253, 0.15);
 }
-.expenses-filter-range { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .expenses-filter-reset {
 	min-height: 42px;
 	padding: 0.65rem 0.9rem;

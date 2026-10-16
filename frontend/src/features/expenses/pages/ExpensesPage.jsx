@@ -13,6 +13,13 @@ import {
   getExpenseMonthComparison,
   getLocalMonthValue
 } from "../utils/expenseMonthComparison";
+import {
+  getExpenseDateRange,
+  getIsoWeekValue,
+  getLocalDateValue,
+  isDateWithinRange
+} from "../utils/expenseDateFilters";
+import { matchesExpenseMerchant } from "../utils/expenseMerchantFilter";
 
 const normalizeFilterValue = (value) => String(value ?? "").trim().toLowerCase();
 
@@ -24,12 +31,13 @@ const getExpenseAmount = (expense) => {
 export default function ExpensesPage({ expenses = [], expenseHistory, form, expenseModalOpen, setExpenseModalOpen, editingExpenseId, cancelExpenseEdit, openEditExpense, deleteExpense, onCreateExpense, onUpdateExpense, currencySymbol = "₱", formatCurrency }) {
   const [now] = useState(() => new Date());
   const [timeframe, setTimeframe] = useState("month");
+  const [selectedDayValue, setSelectedDayValue] = useState(() => getLocalDateValue(now));
+  const [selectedWeekValue, setSelectedWeekValue] = useState(() => getIsoWeekValue(now));
   const [selectedMonthValue, setSelectedMonthValue] = useState(() => getLocalMonthValue(now));
   const [selectedYearValue, setSelectedYearValue] = useState(() => String(now.getFullYear()));
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedAccount, setSelectedAccount] = useState("all");
-  const [minimumAmount, setMinimumAmount] = useState("");
-  const [maximumAmount, setMaximumAmount] = useState("");
+  const [merchantSearch, setMerchantSearch] = useState("");
   const [viewedExpense, setViewedExpense] = useState(null);
   const [pendingDelete, setPendingDelete] = useState(null);
 
@@ -60,25 +68,29 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
     return [...new Set(values)].sort((a, b) => b - a);
   }, [sourceExpenses, selectedYearValue, now]);
 
+  const selectedDateRange = useMemo(() => getExpenseDateRange({
+    timeframe,
+    dayValue: selectedDayValue,
+    weekValue: selectedWeekValue,
+    monthValue: selectedMonthValue,
+    yearValue: selectedYearValue
+  }), [timeframe, selectedDayValue, selectedWeekValue, selectedMonthValue, selectedYearValue]);
+
   const matchesNonTimeFilters = useCallback((expense) => {
     if (!Number.isFinite(Number(expense?.amount))) return false;
     const category = normalizeFilterValue(expense.category || "Uncategorized");
     const account = normalizeFilterValue(expense.paymentSource || expense.paymentSourceAccount || expense.account || expense.source);
-    const amount = getExpenseAmount(expense);
     return (selectedCategory === "all" || category === selectedCategory) &&
       (selectedAccount === "all" || account === selectedAccount) &&
-      (minimumAmount === "" || amount >= Number(minimumAmount)) &&
-      (maximumAmount === "" || amount <= Number(maximumAmount));
-  }, [selectedCategory, selectedAccount, minimumAmount, maximumAmount]);
+      matchesExpenseMerchant(expense, merchantSearch);
+  }, [selectedCategory, selectedAccount, merchantSearch]);
 
   const filteredExpenses = useMemo(() => sourceExpenses.filter((expense) => {
     if (!matchesNonTimeFilters(expense)) return false;
     if (timeframe === "all") return true;
     const date = getExpenseDate(expense);
-    if (!date) return false;
-    if (timeframe === "month") return getLocalMonthValue(date) === selectedMonthValue;
-    return date.getFullYear() === Number(selectedYearValue);
-  }), [sourceExpenses, timeframe, selectedMonthValue, selectedYearValue, matchesNonTimeFilters]);
+    return isDateWithinRange(date, selectedDateRange);
+  }), [sourceExpenses, timeframe, selectedDateRange, matchesNonTimeFilters]);
 
   const filteredTotal = useMemo(() => filteredExpenses.reduce((total, expense) => total + getExpenseAmount(expense), 0), [filteredExpenses]);
   const averageExpense = filteredExpenses.length > 0 ? filteredTotal / filteredExpenses.length : 0;
@@ -98,12 +110,13 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
 
   const resetFilters = () => {
     setTimeframe("month");
+    setSelectedDayValue(getLocalDateValue(now));
+    setSelectedWeekValue(getIsoWeekValue(now));
     setSelectedMonthValue(getLocalMonthValue(now));
     setSelectedYearValue(String(now.getFullYear()));
     setSelectedCategory("all");
     setSelectedAccount("all");
-    setMinimumAmount("");
-    setMaximumAmount("");
+    setMerchantSearch("");
   };
 
   const handleAddExpense = () => {
@@ -164,10 +177,36 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
               <span>Timeframe</span>
               <select className="expenses-filter-select" value={timeframe} onChange={(event) => setTimeframe(event.target.value)}>
                 <option value="all">All Time</option>
+                <option value="day">By Day</option>
+                <option value="week">By Week</option>
                 <option value="month">By Month</option>
                 <option value="year">By Year</option>
               </select>
             </label>
+
+            {timeframe === "day" && (
+              <label className="expenses-filter-field">
+                <span>Date</span>
+                <input
+                  className="expenses-filter-input"
+                  type="date"
+                  value={selectedDayValue}
+                  onChange={(event) => setSelectedDayValue(event.target.value)}
+                />
+              </label>
+            )}
+
+            {timeframe === "week" && (
+              <label className="expenses-filter-field">
+                <span>Week</span>
+                <input
+                  className="expenses-filter-input"
+                  type="week"
+                  value={selectedWeekValue}
+                  onChange={(event) => setSelectedWeekValue(event.target.value)}
+                />
+              </label>
+            )}
 
             {timeframe === "month" && (
               <label className="expenses-filter-field">
@@ -201,18 +240,18 @@ export default function ExpensesPage({ expenses = [], expenseHistory, form, expe
               </select>
             </label>
 
-            <div className="expenses-filter-range">
-              <label className="expenses-filter-field">
-                <span>Minimum Amount</span>
-                <input className="expenses-filter-input" type="number" min="0" value={minimumAmount} onChange={(event) => setMinimumAmount(event.target.value)} placeholder="₱0" />
-              </label>
-              <label className="expenses-filter-field">
-                <span>Maximum Amount</span>
-                <input className="expenses-filter-input" type="number" min="0" value={maximumAmount} onChange={(event) => setMaximumAmount(event.target.value)} placeholder="No limit" />
-              </label>
-            </div>
+            <label className="expenses-filter-field">
+              <span>Merchant / Recipient</span>
+              <input
+                className="expenses-filter-input"
+                type="search"
+                value={merchantSearch}
+                onChange={(event) => setMerchantSearch(event.target.value)}
+                placeholder="Search merchant or recipient"
+              />
+            </label>
 
-            {(timeframe !== "month" || selectedMonthValue !== getLocalMonthValue(now) || selectedCategory !== "all" || selectedAccount !== "all" || minimumAmount !== "" || maximumAmount !== "") && (
+            {(timeframe !== "month" || selectedMonthValue !== getLocalMonthValue(now) || selectedYearValue !== String(now.getFullYear()) || selectedCategory !== "all" || selectedAccount !== "all" || merchantSearch.trim() !== "") && (
               <button type="button" className="expenses-filter-reset" onClick={resetFilters}>Clear filters</button>
             )}
           </div>
