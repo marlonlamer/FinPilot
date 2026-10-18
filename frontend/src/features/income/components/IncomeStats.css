@@ -3,10 +3,10 @@
 .income-stats {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: 1rem;
   width: 100%;
-  max-width: 760px;
-  margin: 0 0 1.5rem;
+  max-width: none;
+  margin: 0;
 }
 
 .income-stat-card {
@@ -121,10 +121,6 @@
 }
 
 @media (min-width: 1024px) {
-  .income-stats {
-    gap: 1.25rem;
-  }
-
   .income-stat-card {
     padding: 1.125rem;
   }

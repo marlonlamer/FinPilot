@@ -387,28 +387,26 @@ export default function IncomePage({
               )}
             </div>
           </div>
+          <IncomeByCategory
+            incomes={filteredIncomes}
+            currencySymbol={currencySymbol}
+            formatCurrency={formatCurrency}
+          />
         </aside>
 
         <main className="income-content">
           <IncomeTrend incomes={incomes} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
-          <div className="income-transactions-layout">
-            <section className="income-transaction-list">
-              <h3 className="section-title">All Incomes</h3>
-              <TransactionFeed
-                transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
-                currencySymbol={currencySymbol}
-                formatCurrency={formatCurrency}
-                deleteIncome={deleteIncome}
-                openEditIncome={handleEditIncome}
-                onEditTransaction={handleEditIncome}
-              />
-            </section>
-            <IncomeByCategory
-              incomes={filteredIncomes}
+          <section className="income-transaction-list">
+            <h3 className="section-title">All Incomes</h3>
+            <TransactionFeed
+              transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
               currencySymbol={currencySymbol}
               formatCurrency={formatCurrency}
+              deleteIncome={deleteIncome}
+              openEditIncome={handleEditIncome}
+              onEditTransaction={handleEditIncome}
             />
-          </div>
+          </section>
         </main>
       </div>
 

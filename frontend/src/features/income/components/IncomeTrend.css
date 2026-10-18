@@ -4,7 +4,7 @@
   border-radius: 18px;
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
   padding: 18px 18px 14px;
-  margin: 1.5rem 0 0;
+  margin: 0;
 }
 
 .income-trend-header {
@@ -68,7 +68,6 @@
 @media (max-width: 768px) {
   .income-trend-card {
     padding: 14px 14px 10px;
-    margin-top: 1rem;
   }
 
   .income-trend-header {

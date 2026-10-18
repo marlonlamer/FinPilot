@@ -12,7 +12,7 @@
   grid-template-areas:
     "stats sidebar"
     "transactions sidebar";
-  gap: 22px;
+  gap: 16px 22px;
   align-items: start;
 }
 
@@ -21,16 +21,9 @@
   min-width: 0;
 }
 
-.income-transactions-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, 290px);
-  align-items: start;
-  gap: 16px;
-  margin-top: 18px;
-}
-
 .income-transaction-list {
   min-width: 0;
+  margin-top: 16px;
 }
 
 .income-transaction-list .section-title {
@@ -39,11 +32,18 @@
 
 .income-page-sidebar {
   grid-area: sidebar;
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .income-stats {
   grid-area: stats;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  width: 100%;
   max-width: none;
   margin-bottom: 0;
 }
@@ -137,14 +137,32 @@
     grid-template-columns: 1fr;
     grid-template-areas:
       "stats"
-      "sidebar"
-      "transactions";
+      "filter"
+      "trend"
+      "income-list"
+      "category";
   }
-}
 
-@media (max-width: 760px) {
-  .income-transactions-layout {
-    grid-template-columns: minmax(0, 1fr);
+  .income-page-sidebar,
+  .income-content {
+    display: contents;
+  }
+
+  .income-filter-card {
+    grid-area: filter;
+  }
+
+  .income-trend-card {
+    grid-area: trend;
+  }
+
+  .income-transaction-list {
+    grid-area: income-list;
+    margin-top: 0;
+  }
+
+  .income-category-card {
+    grid-area: category;
   }
 }
 
@@ -161,8 +179,7 @@
     gap: 12px;
   }
 
-  .income-transactions-layout {
-    gap: 14px;
-    margin-top: 14px;
+  .income-page-layout {
+    row-gap: 14px;
   }
 }
