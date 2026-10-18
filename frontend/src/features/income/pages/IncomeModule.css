@@ -21,6 +21,22 @@
   min-width: 0;
 }
 
+.income-transactions-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 290px);
+  align-items: start;
+  gap: 16px;
+  margin-top: 18px;
+}
+
+.income-transaction-list {
+  min-width: 0;
+}
+
+.income-transaction-list .section-title {
+  margin: 0 0 12px;
+}
+
 .income-page-sidebar {
   grid-area: sidebar;
   min-width: 0;
@@ -126,6 +142,12 @@
   }
 }
 
+@media (max-width: 760px) {
+  .income-transactions-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 700px) {
   .income-root {
     padding: 18px 12px 28px;
@@ -137,5 +159,10 @@
 
   .income-filter-stack {
     gap: 12px;
+  }
+
+  .income-transactions-layout {
+    gap: 14px;
+    margin-top: 14px;
   }
 }

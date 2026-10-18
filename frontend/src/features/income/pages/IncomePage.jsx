@@ -4,6 +4,7 @@ import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed
 import IncomeHeader from "../components/IncomeHeader";
 import IncomeStats from "../components/IncomeStats";
 import IncomeTrend from "../components/IncomeTrend";
+import IncomeByCategory from "../components/IncomeByCategory";
 import AddTransactionModal from "../../transactions/components/AddTransactionModal";
 import "../components/IncomeHeader.css";
 import "../components/IncomeStats.css";
@@ -400,15 +401,24 @@ export default function IncomePage({
 
         <main className="income-content">
           <IncomeTrend incomes={incomes} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
-          <h3 className="section-title">All Incomes</h3>
-          <TransactionFeed
-            transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
-            currencySymbol={currencySymbol}
-            formatCurrency={formatCurrency}
-            deleteIncome={deleteIncome}
-            openEditIncome={handleEditIncome}
-            onEditTransaction={handleEditIncome}
-          />
+          <div className="income-transactions-layout">
+            <section className="income-transaction-list">
+              <h3 className="section-title">All Incomes</h3>
+              <TransactionFeed
+                transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
+                currencySymbol={currencySymbol}
+                formatCurrency={formatCurrency}
+                deleteIncome={deleteIncome}
+                openEditIncome={handleEditIncome}
+                onEditTransaction={handleEditIncome}
+              />
+            </section>
+            <IncomeByCategory
+              incomes={filteredIncomes}
+              currencySymbol={currencySymbol}
+              formatCurrency={formatCurrency}
+            />
+          </div>
         </main>
       </div>
 
