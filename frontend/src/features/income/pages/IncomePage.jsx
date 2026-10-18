@@ -397,7 +397,10 @@ export default function IncomePage({
         <main className="income-content">
           <IncomeTrend incomes={incomes} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />
           <section className="income-transaction-list">
-            <h3 className="section-title">All Incomes</h3>
+            <div className="income-transaction-list__header">
+              <h2>Recent Inflow Transactions</h2>
+              <span>{filteredIncomes.length} {filteredIncomes.length === 1 ? "item" : "items"}</span>
+            </div>
             <TransactionFeed
               transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
               currencySymbol={currencySymbol}

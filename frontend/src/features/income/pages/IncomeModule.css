@@ -24,10 +24,38 @@
 .income-transaction-list {
   min-width: 0;
   margin-top: 16px;
+  padding: 18px 18px 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e2e8f0;
+  border-radius: 22px;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.04);
 }
 
-.income-transaction-list .section-title {
-  margin: 0 0 12px;
+.income-transaction-list__header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.income-transaction-list__header h2 {
+  min-width: 0;
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.income-transaction-list__header span {
+  flex: 0 0 auto;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .income-page-sidebar {
@@ -173,6 +201,10 @@
 
   .income-filter-card {
     padding: 14px;
+  }
+
+  .income-transaction-list {
+    padding: 14px 12px 8px;
   }
 
   .income-filter-stack {
