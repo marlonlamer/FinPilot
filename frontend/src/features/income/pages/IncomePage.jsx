@@ -6,6 +6,7 @@ import IncomeStats from "../components/IncomeStats";
 import IncomeTrend from "../components/IncomeTrend";
 import IncomeByCategory from "../components/IncomeByCategory";
 import AddTransactionModal from "../../transactions/components/AddTransactionModal";
+import { getIncomeComparisonSummary } from "../utils/incomeComparison";
 import "../components/IncomeHeader.css";
 import "../components/IncomeStats.css";
 
@@ -76,13 +77,6 @@ const getPeriodDisplayLabel = (timeframe) => ({
   month: "This Month",
   year: "This Year"
 }[timeframe] || "All Time");
-
-const getComparisonText = (timeframe) => ({
-  day: "vs previous day",
-  week: "vs previous week",
-  month: "vs previous month",
-  year: "vs previous year"
-}[timeframe] || "Total income");
 
 const getPeriodKey = (date, timeframe) => {
   if (timeframe === "day") return getLocalDateValue(date);
@@ -225,15 +219,10 @@ export default function IncomePage({
     return currentPeriodTotal / filteredIncomes.length;
   }, [currentPeriodTotal, filteredIncomes]);
 
-  const comparisonSummary = useMemo(() => {
-    if (selectedTimeframe === "all") return { text: "Total income" };
-    if (previousPeriodTotal === 0) return { text: "No previous data" };
-
-    const percentChange = ((currentPeriodTotal - previousPeriodTotal) / previousPeriodTotal) * 100;
-    const direction = percentChange >= 0 ? "↑" : "↓";
-    const percentage = `${Math.abs(percentChange).toFixed(1)}%`;
-    return { text: `${direction} ${percentage} ${getComparisonText(selectedTimeframe)}` };
-  }, [currentPeriodTotal, previousPeriodTotal, selectedTimeframe]);
+  const comparisonSummary = useMemo(
+    () => getIncomeComparisonSummary(currentPeriodTotal, previousPeriodTotal, selectedTimeframe),
+    [currentPeriodTotal, previousPeriodTotal, selectedTimeframe]
+  );
 
   const monthlyDisplay = formatCurrency ? formatCurrency(currentPeriodTotal) : `${currencySymbol}${currentPeriodTotal.toFixed(2)}`;
   const averageIncomeDisplay = formatCurrency ? formatCurrency(averageIncome) : `${currencySymbol}${averageIncome.toFixed(2)}`;
@@ -277,6 +266,7 @@ export default function IncomePage({
           averageIncomeDisplay={averageIncomeDisplay}
           primaryLabel={primaryLabel}
           primarySupportText={comparisonSummary.text}
+          comparisonDirection={comparisonSummary.direction}
         />
 
         <aside className="income-page-sidebar">

@@ -6,7 +6,8 @@ export default function IncomeStats({
   monthlyDisplay,
   averageIncomeDisplay,
   primaryLabel = "This Month",
-  primarySupportText = "No previous data"
+  primarySupportText = "No previous data",
+  comparisonDirection
 }) {
   return (
     <div className="income-stats">
@@ -16,8 +17,13 @@ export default function IncomeStats({
         </div>
         <div className="income-stat-content">
           <div className="income-stat-label">{primaryLabel}</div>
-          <div className="income-stat-value">{monthlyDisplay}</div>
-          <div className="income-stat-support">{primarySupportText}</div>
+          <div className="income-stat-value income-stat-value--income">{monthlyDisplay}</div>
+          <div
+            className={`income-stat-support${comparisonDirection ? ` income-stat-support--${comparisonDirection}` : ""}`}
+            aria-live="polite"
+          >
+            {primarySupportText}
+          </div>
         </div>
       </div>
 
@@ -27,7 +33,7 @@ export default function IncomeStats({
         </div>
         <div className="income-stat-content">
           <div className="income-stat-label">Average Income</div>
-          <div className="income-stat-value">{averageIncomeDisplay}</div>
+          <div className="income-stat-value income-stat-value--income">{averageIncomeDisplay}</div>
           <div className="income-stat-support">per transaction</div>
         </div>
       </div>
