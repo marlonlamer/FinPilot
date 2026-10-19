@@ -5,9 +5,19 @@ import {
   getIncomeEditFormFields,
   getIncomeRequestFields
 } from "../../income/utils/incomeTransactionMapping";
+import {
+  getIncomeDateTimeInputValues,
+  getRecurrenceFormValues,
+  serializeIncomeDateTime
+} from "../../income/utils/incomeDateTime";
 import "./AddTransactionModal.css";
 
 const today = () => new Date().toISOString().slice(0, 10);
+const localToday = () => {
+  const date = new Date();
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
 
 const defaultCategory = (isExpense) => (isExpense ? EXPENSE_CATEGORIES[0]?.value : INCOME_CATEGORIES[0]?.value) || "";
 
@@ -37,8 +47,22 @@ const toFormValues = (transaction, fallbackType = "expense") => {
   const actualCategory = transaction?.category || defaultCategory(isExpenseType);
   const isCustomCategory = actualCategory && !categoryOptions.some((category) => category.value === actualCategory) && actualCategory !== "Other";
   const dateValue = transaction?.date ? new Date(transaction.date) : null;
-  const dateString = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toISOString().slice(0, 10) : today();
-  const timeString = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toTimeString().slice(0, 5) : new Date().toTimeString().slice(0, 5);
+  const validDateValue = dateValue && !Number.isNaN(dateValue.getTime());
+  const incomeDateTime = !isExpenseType && validDateValue ? getIncomeDateTimeInputValues(dateValue) : null;
+  const dateString = incomeDateTime
+    ? incomeDateTime.date
+    : validDateValue
+      ? dateValue.toISOString().slice(0, 10)
+      : transaction?.date
+        ? ""
+        : !isExpenseType
+          ? localToday()
+          : today();
+  const timeString = incomeDateTime
+    ? incomeDateTime.time
+    : validDateValue
+      ? dateValue.toTimeString().slice(0, 5)
+      : new Date().toTimeString().slice(0, 5);
   const incomeFields = !isExpenseType && transaction ? getIncomeEditFormFields(transaction) : null;
 
   return {
@@ -98,9 +122,12 @@ export default function AddTransactionModal({
       setTransactionType(nextType);
       setValues(toFormValues(editingTransaction, nextType));
       setError("");
-      setIsRecurring(false);
-      setRecurringFrequency("monthly");
-      setRecurringEndDate("");
+      const recurrence = nextType === "income"
+        ? getRecurrenceFormValues(editingTransaction)
+        : { isRecurring: false, recurringFrequency: "monthly", recurringEndDate: "" };
+      setIsRecurring(recurrence.isRecurring);
+      setRecurringFrequency(recurrence.recurringFrequency);
+      setRecurringEndDate(recurrence.recurringEndDate);
     }
   }, [open, editingTransaction, defaultType, restrictedType]);
 
@@ -145,7 +172,13 @@ export default function AddTransactionModal({
       return;
     }
 
-    const date = values.time ? `${values.date}T${values.time}:00` : values.date;
+    const date = activeTransactionType === "income"
+      ? serializeIncomeDateTime(values.date, values.time)
+      : values.time ? `${values.date}T${values.time}:00` : values.date;
+    if (!date) {
+      setError("Enter a valid date and time.");
+      return;
+    }
     const payload = {
       amount,
       category: selectedCategory,
@@ -157,10 +190,17 @@ export default function AddTransactionModal({
       notes: values.notes.trim(),
       ...(activeTransactionType === "expense" ? { description: values.description.trim() } : {}),
       isRecurring,
-      ...(isRecurring ? {
-        recurrenceFrequency: recurringFrequency,
-        recurrenceEndDate: recurringEndDate || undefined
-      } : {}),
+      ...(activeTransactionType === "income"
+        ? {
+          recurrenceFrequency: isRecurring ? recurringFrequency : null,
+          recurrenceEndDate: isRecurring ? recurringEndDate || null : null
+        }
+        : isRecurring
+          ? {
+            recurrenceFrequency: recurringFrequency,
+            recurrenceEndDate: recurringEndDate || undefined
+          }
+          : {}),
       ...(activeTransactionType === "expense" ? {} : {})
     };
 
@@ -256,7 +296,7 @@ export default function AddTransactionModal({
             <input value={values.source} onChange={event => update("source", event.target.value)} placeholder="Cash, bank, or e-wallet" required />
           </label>
 
-          {!isEditing ? (
+          {!isEditing || activeTransactionType === "income" ? (
             <div className="add-transaction-recurring">
               <label className="add-transaction-recurringToggle">
                 <input

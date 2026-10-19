@@ -70,7 +70,9 @@ const updateIncome = async (id, data, userId) => {
       date: data.date ? new Date(data.date) : undefined,
       isRecurring: data.isRecurring !== undefined ? data.isRecurring : undefined,
       recurrenceFrequency: data.recurrenceFrequency !== undefined ? data.recurrenceFrequency : undefined,
-      recurrenceEndDate: data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : undefined
+      recurrenceEndDate: data.recurrenceEndDate !== undefined
+        ? data.recurrenceEndDate ? new Date(data.recurrenceEndDate) : null
+        : undefined
     }
   });
   if (result.count === 0) throw new Error('Income not found or not permitted');

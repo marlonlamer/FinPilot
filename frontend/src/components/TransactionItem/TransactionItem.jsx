@@ -1,6 +1,7 @@
 import React from 'react';
 import '../TransactionFeed/TransactionFeed.css';
 import { getIncomeTransactionDisplayFields } from '../../features/income/utils/incomeTransactionMapping';
+import { formatIncomeTime } from '../../features/income/utils/incomeDateTime';
 
 export default function TransactionItem({
   item,
@@ -14,11 +15,13 @@ export default function TransactionItem({
   openEditExpense,
   openEditIncome
 }) {
+  const t = String((item.type || '')).toLowerCase();
   const date = item.date ? new Date(item.date) : null;
-  const time = date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+  const time = t.includes('income')
+    ? formatIncomeTime(item.date)
+    : date ? date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
 
   let typeLabel = 'Transaction';
-  const t = String((item.type || '')).toLowerCase();
   if (t.includes('income')) typeLabel = 'Income';
   else if (t.includes('expense')) typeLabel = 'Expense';
   else if (t.includes('deposit') || t.includes('withdraw') || item.savingsId) typeLabel = 'Savings';

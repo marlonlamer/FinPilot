@@ -24,16 +24,28 @@ export default function TransactionFeed({
     const map = {};
     const now = new Date();
     const yesterday = new Date(); yesterday.setDate(now.getDate() - 1);
-    const labelFor = (d) => {
-      if (!d) return 'Unknown';
-      const dateLabel = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-      if (d.toDateString() === now.toDateString()) return `Today • ${dateLabel}`;
-      if (d.toDateString() === yesterday.toDateString()) return `Yesterday • ${dateLabel}`;
-      return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    const dateKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const labelFor = (d, isIncome) => {
+      if (!d || Number.isNaN(d.getTime())) return 'Unknown';
+      const incomeDateKey = isIncome ? d.toISOString().slice(0, 10) : null;
+      const todayKey = isIncome ? dateKey(now) : now.toDateString();
+      const yesterdayKey = isIncome ? dateKey(yesterday) : yesterday.toDateString();
+      const itemKey = isIncome ? incomeDateKey : d.toDateString();
+      const dateLabelOptions = { month: 'short', day: 'numeric', year: 'numeric' };
+      const fullDateLabelOptions = { year: 'numeric', month: 'long', day: 'numeric' };
+      if (isIncome) {
+        dateLabelOptions.timeZone = 'UTC';
+        fullDateLabelOptions.timeZone = 'UTC';
+      }
+      const dateLabel = d.toLocaleDateString(undefined, dateLabelOptions);
+      if (itemKey === todayKey) return `Today • ${dateLabel}`;
+      if (itemKey === yesterdayKey) return `Yesterday • ${dateLabel}`;
+      return d.toLocaleDateString(undefined, fullDateLabelOptions);
     };
     sorted.forEach(item => {
       const d = item.date ? new Date(item.date) : null;
-      const label = labelFor(d);
+      const isIncome = String(item.type || '').toLowerCase().includes('income');
+      const label = labelFor(d, isIncome);
       if (!map[label]) map[label] = [];
       map[label].push(item);
     });
