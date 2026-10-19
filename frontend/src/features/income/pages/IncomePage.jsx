@@ -127,7 +127,7 @@ export default function IncomePage({
 
   const accountOptions = useMemo(() => {
     const values = incomes
-      .map(item => item.account || item.destination || item.payer || item.payerSource || item.source)
+      .map(item => item.destination || item.destinationAccount || item.account)
       .filter(Boolean)
       .map(value => String(value).trim())
       .filter(Boolean);
@@ -140,7 +140,7 @@ export default function IncomePage({
 
   const sourceOptions = useMemo(() => {
     const values = incomes
-      .map(item => item.source || item.payer || item.payerSource)
+      .map(item => item.payer || item.payerSource || item.source)
       .filter(Boolean)
       .map(value => String(value).trim())
       .filter(Boolean);
@@ -176,8 +176,8 @@ export default function IncomePage({
 
   const matchesOtherFilters = useCallback((item) => {
     const category = normalizeValue(item.category || item.title || item.type || "");
-    const account = normalizeValue(item.account || item.destination || item.payer || item.payerSource || item.source || "");
-    const source = normalizeValue(item.source || item.payer || item.payerSource || "");
+    const account = normalizeValue(item.destination || item.destinationAccount || item.account || "");
+    const source = normalizeValue(item.payer || item.payerSource || item.source || "");
     return (selectedCategory === "all" || category === selectedCategory) &&
       (selectedAccount === "all" || account === selectedAccount) &&
       (selectedSource === "all" || source === selectedSource);

@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { EXPENSE_CATEGORIES } from "../../../constants/expenseCategories";
 import { INCOME_CATEGORIES } from "../../../constants/incomeCategories";
+import {
+  getIncomeEditFormFields,
+  getIncomeRequestFields
+} from "../../income/utils/incomeTransactionMapping";
 import "./AddTransactionModal.css";
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -35,12 +39,17 @@ const toFormValues = (transaction, fallbackType = "expense") => {
   const dateValue = transaction?.date ? new Date(transaction.date) : null;
   const dateString = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toISOString().slice(0, 10) : today();
   const timeString = dateValue && !Number.isNaN(dateValue.getTime()) ? dateValue.toTimeString().slice(0, 5) : new Date().toTimeString().slice(0, 5);
+  const incomeFields = !isExpenseType && transaction ? getIncomeEditFormFields(transaction) : null;
 
   return {
     amount: transaction?.amount != null ? String(transaction.amount) : "",
     category: isCustomCategory ? "Other" : actualCategory || defaultCategory(isExpenseType),
-    description: transaction?.description || transaction?.merchant || transaction?.payer || transaction?.source || "",
-    source: transaction?.destination || transaction?.account || transaction?.paymentSource || transaction?.source || "",
+    description: isExpenseType
+      ? transaction?.description || transaction?.merchant || transaction?.source || ""
+      : incomeFields?.description || "",
+    source: isExpenseType
+      ? transaction?.paymentSource || transaction?.paymentSourceAccount || transaction?.account || transaction?.source || ""
+      : incomeFields?.source || "",
     date: dateString,
     time: timeString,
     notes: transaction?.notes || "",
@@ -131,8 +140,8 @@ export default function AddTransactionModal({
       setError(values.category === "Other" ? "Enter a custom category." : "Select a category.");
       return;
     }
-    if (!values.source.trim()) {
-      setError(activeTransactionType === "expense" ? "Enter a payment source." : "Enter an income source.");
+    if (activeTransactionType === "expense" && !values.source.trim()) {
+      setError("Enter a payment source.");
       return;
     }
 
@@ -141,10 +150,12 @@ export default function AddTransactionModal({
       amount,
       category: selectedCategory,
       customCategory: values.category === "Other" ? selectedCategory : undefined,
-      source: values.source.trim(),
+      ...(activeTransactionType === "income"
+        ? getIncomeRequestFields({ payer: values.description, destination: values.source })
+        : { source: values.source.trim() }),
       date,
       notes: values.notes.trim(),
-      description: values.description.trim(),
+      ...(activeTransactionType === "expense" ? { description: values.description.trim() } : {}),
       isRecurring,
       ...(isRecurring ? {
         recurrenceFrequency: recurringFrequency,

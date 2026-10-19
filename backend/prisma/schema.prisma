@@ -33,6 +33,7 @@ model Income {
   title               String
   amount              Float
   source              String
+  destination         String?
   date                DateTime             @default(now())
   isRecurring         Boolean              @default(false)
   recurrenceFrequency RecurrenceFrequency?
@@ -107,6 +108,5 @@ model Budget {
   @@index([userId])
   @@unique([userId, category, month])
 }
-
 
 

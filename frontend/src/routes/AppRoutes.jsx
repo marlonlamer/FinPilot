@@ -23,6 +23,7 @@ import { api, getCurrentUserId, clearCurrentUser } from "../services/api";
 import { formatCurrency as formatCurrencyValue, getCurrencySymbol } from "../utils/formatCurrency";
 import { formatYearMonth } from "../utils/dateUtils";
 import { budgetService } from "../features/budgets/services/budgetServices";
+import { normalizeIncomeRecord } from "../features/income/utils/incomeTransactionMapping";
 
 const normalizeExpense = (expense = {}) => ({
 	...expense,
@@ -32,16 +33,6 @@ const normalizeExpense = (expense = {}) => ({
 	isRecurring: expense.isRecurring ?? expense.recurring ?? false,
 	recurrenceFrequency: expense.recurrenceFrequency ?? expense.recurrence ?? undefined,
 	recurrenceEndDate: expense.recurrenceEndDate ?? undefined,
-});
-
-const normalizeIncome = (income = {}) => ({
-	...income,
-	category: income.category ?? income.title ?? "",
-	payer: income.payer ?? income.payerSource ?? "",
-	destination: income.destination ?? income.destinationAccount ?? income.account ?? "",
-	isRecurring: income.isRecurring ?? income.recurring ?? false,
-	recurrenceFrequency: income.recurrenceFrequency ?? income.recurrence ?? undefined,
-	recurrenceEndDate: income.recurrenceEndDate ?? undefined,
 });
 
 function AppController() {
@@ -138,7 +129,7 @@ function AppController() {
 	const fetchIncomes = async () => {
 		try {
 			const data = await api.get("/incomes");
-			setIncomes(Array.isArray(data) ? data.map(normalizeIncome) : []);
+			setIncomes(Array.isArray(data) ? data.map(normalizeIncomeRecord) : []);
 		} catch (e) {
 			console.warn("Failed to fetch incomes", e);
 		}
@@ -371,7 +362,7 @@ function AppController() {
 		const t = toast.loading('Adding income...');
 		try {
 			const newIncome = await api.post("/incomes", { ...payload, userId: getCurrentUserId() });
-			setIncomes(prev => [normalizeIncome({ ...newIncome, payer: payload.description, destination: payload.source }), ...prev]);
+			setIncomes(prev => [normalizeIncomeRecord(newIncome), ...prev]);
 			toast.success('Income added successfully', { id: t });
 			return newIncome;
 		} catch (error) {
@@ -384,7 +375,7 @@ function AppController() {
 		const t = toast.loading('Updating income...');
 		try {
 			const updated = await api.put(`/incomes/${id}`, { ...payload, userId: getCurrentUserId() });
-			setIncomes(prev => prev.map(item => (item.id === id ? normalizeIncome({ ...updated, payer: payload.description, destination: payload.source }) : item)));
+			setIncomes(prev => prev.map(item => (item.id === id ? normalizeIncomeRecord(updated) : item)));
 			toast.success('Income updated successfully', { id: t });
 			return updated;
 		} catch (error) {

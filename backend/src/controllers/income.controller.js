@@ -17,11 +17,10 @@ const getIncomes = async (req, res) => {
 };
 
 const createIncome = async (req, res) => {
-  // Map frontend fields: frontend may send category/notes/date; use source + amount as required
-  const { amount, source, date, category, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
+  const { amount, source, destination, date, category, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
 
-  if (!amount || !source) {
-    return res.status(400).json({ error: "Amount and source are required" });
+  if (!amount || typeof source !== "string") {
+    return res.status(400).json({ error: "Amount and payer/source are required" });
   }
 
   const recurrence = parseRecurrence({ isRecurring, recurrenceFrequency, recurrenceEndDate });
@@ -32,6 +31,7 @@ const createIncome = async (req, res) => {
       title: category || "",
       amount: Number(amount),
       source,
+      destination: destination || null,
       userId: req.userId,
       date: date || undefined,
       ...recurrence.value
@@ -55,7 +55,7 @@ const deleteIncome = async (req, res) => {
 };
 
 const updateIncome = async (req, res) => {
-  const { amount, source, date, category, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
+  const { amount, source, destination, date, category, isRecurring, recurrenceFrequency, recurrenceEndDate } = req.body;
   
   const recurrence = parseRecurrence({ isRecurring, recurrenceFrequency, recurrenceEndDate });
   if (recurrence.error) return res.status(400).json({ error: recurrence.error });
@@ -65,6 +65,7 @@ const updateIncome = async (req, res) => {
       title: category || undefined,
       amount,
       source,
+      destination,
       date,
       ...recurrence.value
     }, req.userId);

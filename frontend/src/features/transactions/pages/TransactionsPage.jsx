@@ -85,7 +85,7 @@ export default function Transactions({
 
   const accountOptions = useMemo(() => {
     const values = [
-      ...(incomes || []).map(item => item.account || item.destination || item.destinationAccount || item.payerSource || item.source),
+      ...(incomes || []).map(item => item.destination || item.destinationAccount || item.account),
       ...(expenses || []).map(item => item.account || item.paymentSource || item.paymentSourceAccount || item.source || item.merchant),
       ...(savingsHistory || []).map(item => item.account || item.source || item.destination || item.paymentSource)
     ].filter(value => value && String(value).trim());
@@ -96,18 +96,11 @@ export default function Transactions({
 
   const matchesAccount = useCallback((item) => {
     if (selectedAccount === "all") return true;
-    const itemValue = String(
-      item.account ||
-      item.destination ||
-      item.destinationAccount ||
-      item.paymentSource ||
-      item.paymentSourceAccount ||
-      item.source ||
-      item.payerSource ||
-      item.merchant ||
-      item.recipient ||
-      ""
-    ).trim().toLowerCase();
+    const type = String(item.type || "").toLowerCase();
+    const accountValue = type.includes("income")
+      ? item.destination || item.destinationAccount || item.account
+      : item.account || item.paymentSource || item.paymentSourceAccount || item.source || item.merchant || item.recipient;
+    const itemValue = String(accountValue || "").trim().toLowerCase();
     return itemValue === selectedAccount;
   }, [selectedAccount]);
 
@@ -139,6 +132,10 @@ export default function Transactions({
     const q = searchQuery.trim().toLowerCase();
     const checks = [
       item.category,
+      item.payer,
+      item.payerSource,
+      item.destination,
+      item.destinationAccount,
       item.source,
       item.account,
       item.paymentSource,

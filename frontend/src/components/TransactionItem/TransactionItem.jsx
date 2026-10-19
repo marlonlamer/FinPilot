@@ -1,5 +1,6 @@
 import React from 'react';
 import '../TransactionFeed/TransactionFeed.css';
+import { getIncomeTransactionDisplayFields } from '../../features/income/utils/incomeTransactionMapping';
 
 export default function TransactionItem({
   item,
@@ -22,9 +23,10 @@ export default function TransactionItem({
   else if (t.includes('expense')) typeLabel = 'Expense';
   else if (t.includes('deposit') || t.includes('withdraw') || item.savingsId) typeLabel = 'Savings';
 
-  const categoryText = item.category || item.source || item.goalName || 'General';
-  const titleText = item.description || item.notes || item.category || item.source || item.goalName || 'Transaction';
-  const accountText = item.source || item.account || item.paymentSource || item.method || 'Cash';
+  const incomeFields = t.includes('income') ? getIncomeTransactionDisplayFields(item) : null;
+  const categoryText = incomeFields?.category || item.category || item.source || item.goalName || 'General';
+  const titleText = incomeFields?.title || item.description || item.notes || item.category || item.source || item.goalName || 'Transaction';
+  const accountText = incomeFields?.account || item.source || item.account || item.paymentSource || item.method || 'Cash';
 
   const amountVal = Number(item.amount || 0);
   const isPositiveByType = (() => {
