@@ -1,11 +1,13 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import "./IncomeModule.css";
 import TransactionFeed from "../../../components/TransactionFeed/TransactionFeed";
+import ConfirmModal from "../../../components/ConfirmModal/ConfirmModal";
 import IncomeHeader from "../components/IncomeHeader";
 import IncomeStats from "../components/IncomeStats";
 import IncomeTrend from "../components/IncomeTrend";
 import IncomeByCategory from "../components/IncomeByCategory";
 import AddTransactionModal from "../../transactions/components/AddTransactionModal";
+import ViewTransactionModal from "../../transactions/components/ViewTransactionModal";
 import { getIncomeComparisonSummary } from "../utils/incomeComparison";
 import "../components/IncomeHeader.css";
 import "../components/IncomeStats.css";
@@ -100,6 +102,11 @@ export default function IncomePage({
 }) {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState(null);
+  const [viewedTransaction, setViewedTransaction] = useState(null);
+  const [pendingDelete, setPendingDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const deletingRef = useRef(false);
   const [selectedTimeframe, setSelectedTimeframe] = useState("month");
   const [selectedDate, setSelectedDate] = useState(getLocalDateValue(new Date()));
   const [selectedWeek, setSelectedWeek] = useState(getWeekValue(new Date()));
@@ -249,6 +256,35 @@ export default function IncomePage({
   const handleEditIncome = (item) => {
     setEditingTransaction({ ...item, type: "income" });
     setAddModalOpen(true);
+  };
+
+  const handleViewIncome = (item) => {
+    setViewedTransaction({ ...item, type: "income" });
+  };
+
+  const handleDeleteRequest = (item) => {
+    setDeleteError("");
+    setPendingDelete(item);
+  };
+
+  const confirmDeleteIncome = async () => {
+    if (!pendingDelete || deletingRef.current || typeof deleteIncome !== "function") return;
+    deletingRef.current = true;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const result = await deleteIncome(pendingDelete.id);
+      if (result === false) {
+        setDeleteError("Unable to delete this income transaction. Please try again.");
+        return;
+      }
+      setPendingDelete(null);
+    } catch (error) {
+      setDeleteError(error?.message || "Unable to delete this income transaction. Please try again.");
+    } finally {
+      deletingRef.current = false;
+      setDeleting(false);
+    }
   };
 
   const closeModal = () => {
@@ -405,9 +441,10 @@ export default function IncomePage({
               transactions={filteredIncomes.map(i => ({ ...i, type: "income" }))}
               currencySymbol={currencySymbol}
               formatCurrency={formatCurrency}
-              deleteIncome={deleteIncome}
               openEditIncome={handleEditIncome}
               onEditTransaction={handleEditIncome}
+              onViewTransaction={handleViewIncome}
+              onDeleteTransaction={handleDeleteRequest}
             />
           </section>
         </main>
@@ -424,6 +461,24 @@ export default function IncomePage({
         defaultType="income"
         mode="income"
         currencySymbol={currencySymbol}
+      />
+      <ViewTransactionModal
+        open={Boolean(viewedTransaction)}
+        transaction={viewedTransaction}
+        onClose={() => setViewedTransaction(null)}
+        currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
+        incomeDateTimeMode
+      />
+      <ConfirmModal
+        open={Boolean(pendingDelete)}
+        message={deleteError || "Delete this income transaction? This action cannot be undone."}
+        onConfirm={confirmDeleteIncome}
+        onCancel={() => {
+          if (!deleting) setPendingDelete(null);
+        }}
+        confirmLabel={deleting ? "Deleting..." : "Delete"}
+        cancelLabel="Cancel"
       />
     </div>
   );

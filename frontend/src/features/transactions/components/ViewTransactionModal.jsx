@@ -6,7 +6,8 @@ export default function ViewTransactionModal({
   transaction,
   onClose,
   currencySymbol = "₱",
-  formatCurrency
+  formatCurrency,
+  incomeDateTimeMode = false
 }) {
   if (!open || !transaction) return null;
 
@@ -20,18 +21,24 @@ export default function ViewTransactionModal({
 
   const date = transaction.date ? new Date(transaction.date) : null;
   const validDate = date && !Number.isNaN(date.getTime());
+  const dateOptions = { month: "long", day: "numeric", year: "numeric" };
+  const timeOptions = { hour: "numeric", minute: "2-digit" };
+  if (incomeDateTimeMode && isIncome) {
+    dateOptions.timeZone = "UTC";
+    timeOptions.timeZone = "UTC";
+  }
   const dateLabel = validDate
-    ? date.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })
+    ? date.toLocaleDateString(undefined, dateOptions)
     : "Not provided";
   const timeLabel = validDate
-    ? date.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    ? date.toLocaleTimeString([], timeOptions)
     : "Not provided";
   const accountLabel = isIncome
     ? transaction.destination || transaction.destinationAccount || transaction.account || "Not provided"
     : transaction.paymentSource || transaction.paymentSourceAccount || transaction.account || transaction.source || transaction.method || "Not provided";
   const categoryLabel = transaction.category || transaction.customCategory || transaction.title || "";
   const counterpartyLabel = isIncome
-    ? transaction.payer || transaction.payerSource || transaction.description || ""
+    ? transaction.payer || transaction.payerSource || transaction.source || transaction.description || ""
     : transaction.merchant || transaction.merchantRecipient || transaction.recipient || transaction.description || "";
   const notesLabel = transaction.notes || "";
   const rawRecurringFrequency = transaction.recurringFrequency || transaction.recurrenceFrequency || (typeof transaction.recurrence === "string" ? transaction.recurrence : "");

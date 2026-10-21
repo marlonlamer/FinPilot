@@ -407,15 +407,17 @@ function AppController() {
 	};
 
 	const deleteIncome = async (id) => {
-		setIncomes(prev => prev.filter(i => i.id !== id));
 		const t = toast.loading('Deleting income...');
 		try {
 			await api.delete(`/incomes/${id}`);
-			fetchIncomes();
+			setIncomes(prev => prev.filter(i => i.id !== id));
+			void fetchIncomes();
 			toast.success('Income deleted successfully', { id: t });
+			return true;
 		} catch (err) {
 			toast.error('Failed to delete income', { id: t });
 			console.warn('Failed to delete income', err);
+			return false;
 		}
 	};
 
