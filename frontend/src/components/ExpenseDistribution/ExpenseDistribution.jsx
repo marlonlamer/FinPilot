@@ -4,22 +4,25 @@ import './ExpenseDistribution.css';
 
 const DEFAULT_COLORS = ['#FF6B6B','#FFA94D','#4CC9F0','#8B5CF6','#22C55E','#F97316','#06B6D4','#F43F5E'];
 
-export default function ExpenseDistribution({ expenses = [], selectedYear, selectedMonth, currencySymbol = '₱', formatCurrency, colors = DEFAULT_COLORS }) {
+export default function ExpenseDistribution({ expenses = [], selectedYear, selectedMonth, currencySymbol = '₱', formatCurrency, colors = DEFAULT_COLORS, layout = 'side', percentageDigits = 0, filterBySelectedMonth = true }) {
   const filtered = useMemo(() => {
+    if (!filterBySelectedMonth) return expenses;
     return (expenses || []).filter(e => {
       const d = e && e.date ? new Date(e.date) : null;
       if (!d || isNaN(d)) return false;
       return d.getFullYear() === Number(selectedYear) && d.getMonth() === Number(selectedMonth);
     });
-  }, [expenses, selectedYear, selectedMonth]);
+  }, [expenses, selectedYear, selectedMonth, filterBySelectedMonth]);
 
   const { data, total } = useMemo(() => {
     const map = {};
     (filtered || []).forEach(it => {
-      const raw = (it.category || 'Uncategorized').trim();
+      const raw = String(it.category || 'Uncategorized').trim() || 'Uncategorized';
+      const amount = Number(it.amount);
+      if (!Number.isFinite(amount)) return;
       const key = raw.toLowerCase();
       if (!map[key]) map[key] = { name: raw, value: 0 };
-      map[key].value += Number(it.amount || 0);
+      map[key].value += Math.abs(amount);
     });
     const arr = Object.values(map).sort((a,b) => b.value - a.value);
     const t = arr.reduce((s,i) => s + i.value, 0);
@@ -34,7 +37,7 @@ export default function ExpenseDistribution({ expenses = [], selectedYear, selec
   };
 
   return (
-    <div className="expense-dist-root">
+    <div className={`expense-dist-root${layout === 'stacked' ? ' expense-dist-root--stacked' : ''}`}>
       <div className="expense-dist-chart">
         <ResponsiveContainer width="100%" height={220}>
           <PieChart>
@@ -63,7 +66,7 @@ export default function ExpenseDistribution({ expenses = [], selectedYear, selec
               </div>
               <div className="cat-right">
                 <div className="cat-amount">{fmt(c.value)}</div>
-                <div className="cat-pct">({Math.round(c.percent)}%)</div>
+                <div className="cat-pct">{c.percent.toFixed(percentageDigits)}%</div>
               </div>
             </div>
           ))
