@@ -35,17 +35,29 @@ const normalizeExpense = (expense = {}) => ({
 	recurrenceEndDate: expense.recurrenceEndDate ?? undefined,
 });
 
+const hasStoredAuthToken = () => {
+	try {
+		return Boolean(localStorage.getItem("token"));
+	} catch {
+		return false;
+	}
+};
+
 function AppController() {
 	// Most of the application state and handlers were copied from App.jsx
 	const [expenses, setExpenses] = useState([]);
 	const [expenseHistory, setExpenseHistory] = useState(null);
 	const [incomes, setIncomes] = useState([]);
+	const [analyticsDataStatus, setAnalyticsDataStatus] = useState(() => hasStoredAuthToken()
+		? { incomes: "loading", expenses: "loading" }
+		: { incomes: "unavailable", expenses: "unavailable" });
 
 	const [dashboardTotals, setDashboardTotals] = useState({ totalSavings: 0, availableBalance: 0 });
 	const [savingsHistory, setSavingsHistory] = useState([]);
 
 	const fetchSavingsHistory = async () => {
 		try {
+			if (!hasStoredAuthToken()) return setSavingsHistory([]);
 			const uid = getCurrentUserId();
 			if (!uid) return setSavingsHistory([]);
 			const pad = (n) => String(n + 1).padStart(2, "0");
@@ -119,6 +131,7 @@ function AppController() {
 
 	const fetchExpenses = async () => {
 		try {
+			if (!hasStoredAuthToken()) return;
 			const monthKey = formatYearMonth(selectedYear, selectedMonth);
 			const data = await api.get("/expenses", { params: { month: monthKey } });
 			setExpenses(Array.isArray(data) ? data.map(normalizeExpense) : []);
@@ -129,19 +142,25 @@ function AppController() {
 
 	const fetchExpenseHistory = async () => {
 		try {
+			if (!hasStoredAuthToken()) return;
 			const data = await api.get("/expenses");
 			setExpenseHistory(Array.isArray(data) ? data.map(normalizeExpense) : []);
+			setAnalyticsDataStatus(prev => ({ ...prev, expenses: "loaded" }));
 		} catch (e) {
 			console.warn("Failed to fetch historical expenses", e);
+			setAnalyticsDataStatus(prev => ({ ...prev, expenses: "unavailable" }));
 		}
 	};
 
 	const fetchIncomes = async () => {
 		try {
+			if (!hasStoredAuthToken()) return;
 			const data = await api.get("/incomes");
 			setIncomes(Array.isArray(data) ? data.map(normalizeIncomeRecord) : []);
+			setAnalyticsDataStatus(prev => ({ ...prev, incomes: "loaded" }));
 		} catch (e) {
 			console.warn("Failed to fetch incomes", e);
+			setAnalyticsDataStatus(prev => ({ ...prev, incomes: "unavailable" }));
 		}
 	};
 
@@ -165,10 +184,10 @@ function AppController() {
 	};
 
 	useEffect(() => {
+		if (!hasStoredAuthToken()) return;
 		fetchExpenses();
 		fetchIncomes();
 		fetchSavingsHistory();
-		if (localStorage.getItem('token')) fetchBudgets();
 		// fetch dashboard totals (savings, available balance)
 		(async () => {
 			try {
@@ -179,6 +198,7 @@ function AppController() {
 	}, [selectedYear, selectedMonth]);
 
 	useEffect(() => {
+		if (!hasStoredAuthToken()) return;
 		fetchExpenseHistory();
 	}, []);
 
@@ -196,6 +216,7 @@ function AppController() {
 
 	const fetchBudgetSummary = async () => {
 		try {
+			if (!hasStoredAuthToken()) return;
 			const uid = getCurrentUserId();
 			if (!uid) return;
 			const monthKey = `${selectedYear}-${String((selectedMonth || 0) + 1).padStart(2, '0')}`;
@@ -211,6 +232,7 @@ function AppController() {
 
 	const fetchBudgets = async () => {
 		try {
+			if (!hasStoredAuthToken()) return;
 			const uid = getCurrentUserId();
 			if (!uid) return;
 
@@ -517,9 +539,21 @@ function AppController() {
 
 	const onAuthSuccess = (token) => {
 		setAuthToken(token);
+		setAnalyticsDataStatus({ incomes: "loading", expenses: "loading" });
 		fetchExpenses();
 		fetchExpenseHistory();
 		fetchIncomes();
+		fetchSavingsHistory();
+		fetchBudgets();
+		fetchBudgetSummary();
+		(async () => {
+			try {
+				const data = await api.get("/dashboard");
+				setDashboardTotals(data.totals || {});
+			} catch (error) {
+				console.warn("Failed to fetch dashboard", error);
+			}
+		})();
 	};
 
 	const logout = () => {
@@ -607,7 +641,7 @@ function AppController() {
 
 						<Route path="debt-bills" element={<DebtBills selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
-						<Route path="analytics" element={<Analytics combinedLineData={combinedLineData} pieData={pieData} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="analytics" element={<Analytics incomes={analyticsDataStatus.incomes === "loaded" ? incomes : undefined} expenses={analyticsDataStatus.expenses === "loaded" ? expenseHistory : undefined} dataLoading={analyticsDataStatus.incomes === "loading" || analyticsDataStatus.expenses === "loading"} dataUnavailable={analyticsDataStatus.incomes === "unavailable" || analyticsDataStatus.expenses === "unavailable"} budgets={perCategoryBudgets} budgetSummary={budgetSummary} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="profile" element={<Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
