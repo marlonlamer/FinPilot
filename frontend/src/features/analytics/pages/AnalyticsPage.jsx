@@ -4,18 +4,23 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  ComposedChart,
   Line,
+  LineChart,
   Pie,
   PieChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis
 } from "recharts";
+import {
+  buildCashFlowData,
+  getCashFlowAvailability,
+  getCashFlowRecordDate
+} from "../utils/cashFlowData";
 import "./AnalyticsModule.css";
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const CATEGORY_COLORS = ["#0ea5a4", "#2563eb", "#8b5cf6", "#f59e0b", "#ec4899", "#64748b", "#14b8a6"];
 const EMPTY_RECORDS = [];
 const TIMEFRAMES = [
@@ -23,23 +28,6 @@ const TIMEFRAMES = [
   { value: "yearly", label: "Yearly" },
   { value: "all", label: "All time" }
 ];
-
-const getRecordDate = (record) => {
-  const value = record?.date || record?.createdAt || record?.created_at || record?.timestamp;
-  if (!value) return null;
-
-  if (typeof value === "string") {
-    const dateOnly = /^(\d{4})-(\d{2})-(\d{2})(?:$|T)/.exec(value);
-    if (dateOnly) {
-      const [, year, month, day] = dateOnly;
-      const parsed = new Date(Number(year), Number(month) - 1, Number(day));
-      return Number.isNaN(parsed.getTime()) ? null : parsed;
-    }
-  }
-
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-};
 
 const getAmount = (record) => {
   const amount = Number(record?.amount);
@@ -75,8 +63,8 @@ export default function AnalyticsPage({
   budgetSummary,
   currencySymbol = "₱",
   formatCurrency,
-  dataLoading = false,
-  dataUnavailable = false,
+  incomeStatus = "unavailable",
+  expenseStatus = "unavailable",
   selectedYear = new Date().getFullYear(),
   selectedMonth = new Date().getMonth()
 }) {
@@ -84,13 +72,19 @@ export default function AnalyticsPage({
   const currentYear = Number(selectedYear);
   const currentMonthKey = `${currentYear}-${String(Number(selectedMonth) + 1).padStart(2, "0")}`;
   const currentMonthDate = new Date(currentYear, Number(selectedMonth), 1);
-  const hasTransactionData = Array.isArray(incomes) && Array.isArray(expenses);
+  const {
+    incomeAvailable,
+    expenseAvailable,
+    isLoading,
+    showInitialLoading,
+    bothUnavailable
+  } = getCashFlowAvailability(incomes, expenses, incomeStatus, expenseStatus);
   const incomeRecords = Array.isArray(incomes) ? incomes : EMPTY_RECORDS;
   const expenseRecords = Array.isArray(expenses) ? expenses : EMPTY_RECORDS;
 
   const scopedData = useMemo(() => {
     const matchesPeriod = (record) => {
-      const date = getRecordDate(record);
+      const date = getCashFlowRecordDate(record);
       if (!date) return false;
       if (timeframe === "monthly") return getMonthKey(date) === currentMonthKey;
       if (timeframe === "yearly") return date.getFullYear() === currentYear;
@@ -113,38 +107,13 @@ export default function AnalyticsPage({
     };
   }, [scopedData]);
 
-  const trendData = useMemo(() => {
-    const totalsByKey = new Map();
-    const addRecords = (records, keyName) => {
-      records.forEach((record) => {
-        const date = getRecordDate(record);
-        if (!date) return;
-
-        let key;
-        let label;
-        if (timeframe === "monthly") {
-          if (getMonthKey(date) !== currentMonthKey) return;
-          key = `${getMonthKey(date)}-${String(date.getDate()).padStart(2, "0")}`;
-          label = String(date.getDate());
-        } else if (timeframe === "yearly") {
-          if (date.getFullYear() !== currentYear) return;
-          key = `${currentYear}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-          label = MONTHS[date.getMonth()];
-        } else {
-          key = getMonthKey(date);
-          label = date.toLocaleDateString(undefined, { month: "short", year: "2-digit" });
-        }
-
-        const current = totalsByKey.get(key) || { key, label, income: 0, expense: 0 };
-        current[keyName] += getAmount(record);
-        totalsByKey.set(key, current);
-      });
-    };
-
-    addRecords(incomeRecords, "income");
-    addRecords(expenseRecords, "expense");
-    return [...totalsByKey.values()].sort((a, b) => a.key.localeCompare(b.key));
-  }, [incomeRecords, expenseRecords, timeframe, currentMonthKey, currentYear]);
+  const trendData = useMemo(() => buildCashFlowData({
+    incomes: incomeRecords,
+    expenses: expenseRecords,
+    timeframe,
+    selectedYear: currentYear,
+    selectedMonth: Number(selectedMonth)
+  }), [incomeRecords, expenseRecords, timeframe, currentYear, selectedMonth]);
 
   const categoryData = useMemo(() => {
     const byCategory = new Map();
@@ -159,38 +128,41 @@ export default function AnalyticsPage({
 
   const monthlyBudget = Number(budgetSummary?.totalMonthlyBudget || 0);
   const monthlyActual = expenseRecords.reduce((sum, expense) => {
-    const date = getRecordDate(expense);
+    const date = getCashFlowRecordDate(expense);
     return date && getMonthKey(date) === currentMonthKey ? sum + getAmount(expense) : sum;
   }, 0);
   const hasCategoryBudgets = Object.values(budgets || {}).some((amount) => Number(amount) > 0);
   const hasMonthlyBudget = Number.isFinite(monthlyBudget) && monthlyBudget > 0;
   const money = (value) => formatMoney(value, currencySymbol, formatCurrency);
   const periodLabel = getPeriodLabel(timeframe, timeframe === "monthly" ? currentMonthDate : new Date(currentYear, 0, 1));
-  const noPeriodTransactions = scopedData.incomes.length === 0 && scopedData.expenses.length === 0;
+  const noPeriodTransactions = incomeAvailable && expenseAvailable &&
+    scopedData.incomes.length === 0 && scopedData.expenses.length === 0;
 
   const kpis = [
     {
       label: "Total inflow",
-      value: totals.inflow,
-      detail: periodLabel,
+      value: incomeAvailable ? totals.inflow : null,
+      detail: incomeAvailable ? periodLabel : incomeStatus === "loading" ? "Loading Income data" : "Income data unavailable",
       tone: "inflow"
     },
     {
       label: "Total outflow",
-      value: totals.outflow,
-      detail: periodLabel,
+      value: expenseAvailable ? totals.outflow : null,
+      detail: expenseAvailable ? periodLabel : expenseStatus === "loading" ? "Loading Expense data" : "Expense data unavailable",
       tone: "outflow"
     },
     {
       label: "Net cash flow",
-      value: totals.net,
-      detail: periodLabel,
-      tone: totals.net >= 0 ? "positive" : "negative"
+      value: incomeAvailable && expenseAvailable ? totals.net : null,
+      detail: incomeAvailable && expenseAvailable ? periodLabel : "Requires Income and Expense data",
+      tone: incomeAvailable && expenseAvailable ? totals.net >= 0 ? "positive" : "negative" : "accent"
     },
     {
       label: "Savings rate",
-      value: totals.savingsRate,
-      detail: totals.savingsRate == null ? "Not enough inflow data" : periodLabel,
+      value: incomeAvailable && expenseAvailable ? totals.savingsRate : null,
+      detail: incomeAvailable && expenseAvailable
+        ? totals.savingsRate == null ? "Not enough inflow data" : periodLabel
+        : "Requires Income and Expense data",
       tone: "accent",
       percentage: true
     }
@@ -219,14 +191,21 @@ export default function AnalyticsPage({
         </div>
       </header>
 
-      {dataLoading ? (
+      {showInitialLoading ? (
         <div className="analytics-loading" role="status">Loading your financial data…</div>
-      ) : dataUnavailable || !hasTransactionData ? (
+      ) : bothUnavailable ? (
         <div className="analytics-unavailable" role="status">
           Transaction data is currently unavailable. Please try again later.
         </div>
       ) : (
         <>
+          {!incomeAvailable || !expenseAvailable ? (
+            <div className="analytics-source-notice" role="status">
+              {!incomeAvailable
+                ? `Income data ${incomeStatus === "loading" ? "is still loading" : "is unavailable"}. Income totals and net cash flow are not shown.`
+                : `Expense data ${expenseStatus === "loading" ? "is still loading" : "is unavailable"}. Expense totals and net cash flow are not shown.`}
+            </div>
+          ) : null}
           <section className="analytics-kpis" aria-label={`${periodLabel} financial summary`}>
             {kpis.map((kpi) => {
               const hasValue = kpi.value != null && !noPeriodTransactions;
@@ -254,27 +233,66 @@ export default function AnalyticsPage({
                   <h2>Inflow vs Outflow Trend</h2>
                   <p>{timeframe === "monthly" ? periodLabel : timeframe === "yearly" ? `By month · ${currentYear}` : "By month · all available history"}</p>
                 </div>
-                <div className="analytics-legend">
-                  <span><i className="analytics-legend-dot analytics-legend-dot--inflow" />Inflow</span>
-                  <span><i className="analytics-legend-dot analytics-legend-dot--outflow" />Outflow</span>
+                <div className="analytics-legend" aria-label="Cash flow chart legend">
+                  {incomeAvailable ? <span><i className="analytics-legend-dot analytics-legend-dot--inflow" />Income</span> : null}
+                  {expenseAvailable ? <span><i className="analytics-legend-dot analytics-legend-dot--outflow" />Expenses</span> : null}
                 </div>
               </div>
-              {dataLoading ? (
-                <ChartEmptyState>Loading trend data…</ChartEmptyState>
-              ) : trendData.length ? (
+              {trendData.length ? (
                 <div className="analytics-chart analytics-chart--trend">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={trendData} margin={{ top: 8, right: 10, left: 0, bottom: 0 }}>
+                    <BarChart data={trendData} margin={{ top: 8, right: 10, left: 0, bottom: 0 }} barGap={5}>
                       <CartesianGrid stroke="#e8edf3" strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} minTickGap={18} />
                       <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={(value) => `${currencySymbol}${Number(value).toLocaleString()}`} width={72} />
                       <Tooltip
-                        formatter={(value, name) => [money(value), name === "income" ? "Inflow" : "Outflow"]}
+                        formatter={(value, name) => [money(value), name]}
+                        labelFormatter={(label, payload) => payload?.[0]?.payload?.key || label}
                         contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", boxShadow: "0 8px 24px rgba(15, 23, 42, .08)" }}
                       />
-                      <Bar dataKey="income" name="Inflow" fill="#16a36a" radius={[4, 4, 0, 0]} maxBarSize={24} />
-                      <Line dataKey="expense" name="Outflow" stroke="#e35d6a" strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                    </ComposedChart>
+                      {incomeAvailable ? <Bar dataKey="income" name="Income" fill="#16a36a" radius={[4, 4, 0, 0]} maxBarSize={26} /> : null}
+                      {expenseAvailable ? <Bar dataKey="expense" name="Expenses" fill="#e35d6a" radius={[4, 4, 0, 0]} maxBarSize={26} /> : null}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : isLoading ? (
+                <ChartEmptyState>Waiting for available transaction history…</ChartEmptyState>
+              ) : (
+                <ChartEmptyState>No dated transactions are available for this trend.</ChartEmptyState>
+              )}
+            </article>
+
+            <article className="analytics-panel analytics-panel--net">
+              <div className="analytics-panel-header">
+                <div>
+                  <h2>Net Cash Flow Trend</h2>
+                  <p>Income minus expenses · {timeframe === "monthly" ? periodLabel : timeframe === "yearly" ? currentYear : "all available history"}</p>
+                </div>
+                <div className="analytics-legend" aria-label="Net cash flow chart legend">
+                  <span><i className="analytics-legend-dot analytics-legend-dot--net" />Net cash flow</span>
+                </div>
+              </div>
+              {!incomeAvailable || !expenseAvailable ? (
+                <ChartEmptyState>
+                  Net cash flow requires both data sources. {!incomeAvailable
+                    ? `Income data ${incomeStatus === "loading" ? "is still loading." : "is unavailable."}`
+                    : `Expense data ${expenseStatus === "loading" ? "is still loading." : "is unavailable."}`}
+                </ChartEmptyState>
+              ) : trendData.length ? (
+                <div className="analytics-chart analytics-chart--net" role="img" aria-label="Net cash flow trend">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={trendData} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+                      <CartesianGrid stroke="#e8edf3" strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} minTickGap={18} />
+                      <YAxis tickLine={false} axisLine={false} tick={{ fill: "#64748b", fontSize: 11 }} tickFormatter={(value) => `${currencySymbol}${Number(value).toLocaleString()}`} width={72} />
+                      <ReferenceLine y={0} stroke="#94a3b8" strokeDasharray="4 4" />
+                      <Tooltip
+                        formatter={(value) => [money(value), "Net cash flow"]}
+                        labelFormatter={(label, payload) => payload?.[0]?.payload?.key || label}
+                        contentStyle={{ borderRadius: 10, border: "1px solid #e2e8f0", boxShadow: "0 8px 24px rgba(15, 23, 42, .08)" }}
+                      />
+                      <Line dataKey="net" name="Net cash flow" stroke="#0e8f8e" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: "#0e8f8e" }} />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
@@ -289,7 +307,11 @@ export default function AnalyticsPage({
                   <p>{periodLabel}</p>
                 </div>
               </div>
-              {categoryData.length ? (
+              {!expenseAvailable ? (
+                <ChartEmptyState>
+                  {expenseStatus === "loading" ? "Loading Expense data…" : "Expense data is unavailable."}
+                </ChartEmptyState>
+              ) : categoryData.length ? (
                 <div className="analytics-category-content">
                   <div className="analytics-chart analytics-chart--donut">
                     <ResponsiveContainer width="100%" height="100%">
@@ -322,7 +344,11 @@ export default function AnalyticsPage({
                   <p>Current month · based on your saved budget</p>
                 </div>
               </div>
-              {timeframe !== "monthly" ? (
+              {!expenseAvailable ? (
+                <ChartEmptyState>
+                  {expenseStatus === "loading" ? "Loading Expense data…" : "Expense data is unavailable."}
+                </ChartEmptyState>
+              ) : timeframe !== "monthly" ? (
                 <ChartEmptyState>Budget comparisons are shown in the Monthly view.</ChartEmptyState>
               ) : hasMonthlyBudget ? (
                 <>

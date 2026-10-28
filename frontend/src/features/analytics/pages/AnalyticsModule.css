@@ -166,8 +166,7 @@
 }
 
 .analytics-panel--trend {
-  grid-column: 1 / -1;
-  min-height: 350px;
+  min-height: 300px;
 }
 
 .analytics-panel--health {
@@ -230,13 +229,21 @@
   background: #e35d6a;
 }
 
+.analytics-legend-dot--net {
+  background: #0e8f8e;
+}
+
 .analytics-chart {
   width: 100%;
   min-width: 0;
 }
 
 .analytics-chart--trend {
-  height: 270px;
+  height: 250px;
+}
+
+.analytics-chart--net {
+  height: 250px;
 }
 
 .analytics-category-content {
@@ -346,6 +353,17 @@
   color: #b45309;
 }
 
+.analytics-source-notice {
+  margin-bottom: 12px;
+  padding: 10px 13px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  background: #fffaf3;
+  color: #9a5b16;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 @media (max-width: 900px) {
   .analytics-page {
     padding: 20px;
@@ -412,10 +430,11 @@
   }
 
   .analytics-panel--trend {
-    min-height: 310px;
+    min-height: 0;
   }
 
-  .analytics-chart--trend {
+  .analytics-chart--trend,
+  .analytics-chart--net {
     height: 230px;
   }
 

@@ -641,7 +641,7 @@ function AppController() {
 
 						<Route path="debt-bills" element={<DebtBills selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
-						<Route path="analytics" element={<Analytics incomes={analyticsDataStatus.incomes === "loaded" ? incomes : undefined} expenses={analyticsDataStatus.expenses === "loaded" ? expenseHistory : undefined} dataLoading={analyticsDataStatus.incomes === "loading" || analyticsDataStatus.expenses === "loading"} dataUnavailable={analyticsDataStatus.incomes === "unavailable" || analyticsDataStatus.expenses === "unavailable"} budgets={perCategoryBudgets} budgetSummary={budgetSummary} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="analytics" element={<Analytics incomes={analyticsDataStatus.incomes === "loaded" ? incomes : undefined} expenses={analyticsDataStatus.expenses === "loaded" ? expenseHistory : undefined} incomeStatus={analyticsDataStatus.incomes} expenseStatus={analyticsDataStatus.expenses} budgets={perCategoryBudgets} budgetSummary={budgetSummary} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
 						<Route path="profile" element={<Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
