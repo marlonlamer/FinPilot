@@ -19,6 +19,11 @@ import {
   getCashFlowAvailability,
   getCashFlowRecordDate
 } from "../utils/cashFlowData";
+import {
+  getAdjacentMonth,
+  getAdjacentYear,
+  isValidAnalyticsYear
+} from "../utils/analyticsPeriod";
 import "./AnalyticsModule.css";
 
 const CATEGORY_COLORS = ["#0ea5a4", "#2563eb", "#8b5cf6", "#f59e0b", "#ec4899", "#64748b", "#14b8a6"];
@@ -69,9 +74,16 @@ export default function AnalyticsPage({
   selectedMonth = new Date().getMonth()
 }) {
   const [timeframe, setTimeframe] = useState("monthly");
-  const currentYear = Number(selectedYear);
-  const currentMonthKey = `${currentYear}-${String(Number(selectedMonth) + 1).padStart(2, "0")}`;
-  const currentMonthDate = new Date(currentYear, Number(selectedMonth), 1);
+  const [selectedPeriod, setSelectedPeriod] = useState(() => ({
+    year: Number(selectedYear),
+    month: Number(selectedMonth)
+  }));
+  const currentYear = selectedPeriod.year;
+  const currentMonth = selectedPeriod.month;
+  const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
+  const currentMonthDate = new Date(currentYear, currentMonth, 1);
+  const budgetPeriodKey = `${Number(selectedYear)}-${String(Number(selectedMonth) + 1).padStart(2, "0")}`;
+  const analyticsPeriodMatchesBudget = currentMonthKey === budgetPeriodKey;
   const {
     incomeAvailable,
     expenseAvailable,
@@ -81,6 +93,15 @@ export default function AnalyticsPage({
   } = getCashFlowAvailability(incomes, expenses, incomeStatus, expenseStatus);
   const incomeRecords = Array.isArray(incomes) ? incomes : EMPTY_RECORDS;
   const expenseRecords = Array.isArray(expenses) ? expenses : EMPTY_RECORDS;
+
+  const availableYears = useMemo(() => {
+    const years = new Set([currentYear, Number(selectedYear)]);
+    [...incomeRecords, ...expenseRecords].forEach((record) => {
+      const date = getCashFlowRecordDate(record);
+      if (date) years.add(date.getFullYear());
+    });
+    return [...years].filter(isValidAnalyticsYear).sort((a, b) => b - a);
+  }, [incomeRecords, expenseRecords, currentYear, selectedYear]);
 
   const scopedData = useMemo(() => {
     const matchesPeriod = (record) => {
@@ -112,8 +133,8 @@ export default function AnalyticsPage({
     expenses: expenseRecords,
     timeframe,
     selectedYear: currentYear,
-    selectedMonth: Number(selectedMonth)
-  }), [incomeRecords, expenseRecords, timeframe, currentYear, selectedMonth]);
+    selectedMonth: currentMonth
+  }), [incomeRecords, expenseRecords, timeframe, currentYear, currentMonth]);
 
   const categoryData = useMemo(() => {
     const byCategory = new Map();
@@ -176,18 +197,88 @@ export default function AnalyticsPage({
           <h1>Financial Insights</h1>
           <p className="analytics-subtitle">A clear view of your cash flow and spending patterns.</p>
         </div>
-        <div className="analytics-timeframe" aria-label="Analytics timeframe">
-          {TIMEFRAMES.map((option) => (
-            <button
-              type="button"
-              key={option.value}
-              className={timeframe === option.value ? "is-active" : ""}
-              onClick={() => setTimeframe(option.value)}
-              aria-pressed={timeframe === option.value}
-            >
-              {option.label}
-            </button>
-          ))}
+        <div className="analytics-header-controls">
+          {timeframe === "monthly" ? (
+            <div className="analytics-period-selector analytics-period-selector--month">
+              <button
+                type="button"
+                className="analytics-period-nav"
+                aria-label="Previous month"
+                onClick={() => setSelectedPeriod((period) => getAdjacentMonth(period, -1))}
+              >
+                ‹
+              </button>
+              <label className="analytics-period-input">
+                <span className="analytics-visually-hidden">Select month and year</span>
+                <input
+                  type="month"
+                  aria-label="Select month and year"
+                  value={`${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`}
+                  onChange={(event) => {
+                    const match = /^(\d{4})-(\d{2})$/.exec(event.target.value);
+                    if (!match) return;
+                    setSelectedPeriod({ year: Number(match[1]), month: Number(match[2]) - 1 });
+                  }}
+                />
+              </label>
+              <button
+                type="button"
+                className="analytics-period-nav"
+                aria-label="Next month"
+                onClick={() => setSelectedPeriod((period) => getAdjacentMonth(period, 1))}
+              >
+                ›
+              </button>
+            </div>
+          ) : null}
+          {timeframe === "yearly" ? (
+            <div className="analytics-period-selector analytics-period-selector--year">
+              <button
+                type="button"
+                className="analytics-period-nav"
+                aria-label="Previous year"
+                onClick={() => setSelectedPeriod((period) => ({ ...period, year: getAdjacentYear(period.year, -1) }))}
+              >
+                ‹
+              </button>
+              <label className="analytics-period-input">
+                <span className="analytics-visually-hidden">Select year</span>
+                <select
+                  aria-label="Select year"
+                  value={currentYear}
+                  onChange={(event) => {
+                    const year = Number(event.target.value);
+                    if (isValidAnalyticsYear(year)) {
+                      setSelectedPeriod((period) => ({ ...period, year }));
+                    }
+                  }}
+                >
+                  {availableYears.map((year) => <option value={year} key={year}>{year}</option>)}
+                </select>
+              </label>
+              <button
+                type="button"
+                className="analytics-period-nav"
+                aria-label="Next year"
+                onClick={() => setSelectedPeriod((period) => ({ ...period, year: getAdjacentYear(period.year, 1) }))}
+              >
+                ›
+              </button>
+            </div>
+          ) : null}
+          <div className="analytics-timeframe" role="group" aria-label="Analytics timeframe">
+            {TIMEFRAMES.map((option) => (
+              <button
+                type="button"
+                key={option.value}
+                className={timeframe === option.value ? "is-active" : ""}
+                onClick={() => setTimeframe(option.value)}
+                aria-pressed={timeframe === option.value}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
@@ -341,7 +432,7 @@ export default function AnalyticsPage({
               <div className="analytics-panel-header">
                 <div>
                   <h2>Budget vs Actual Spending</h2>
-                  <p>Current month · based on your saved budget</p>
+                  <p>{currentMonthDate.toLocaleDateString(undefined, { month: "long", year: "numeric" })} · based on your saved budget</p>
                 </div>
               </div>
               {!expenseAvailable ? (
@@ -350,6 +441,8 @@ export default function AnalyticsPage({
                 </ChartEmptyState>
               ) : timeframe !== "monthly" ? (
                 <ChartEmptyState>Budget comparisons are shown in the Monthly view.</ChartEmptyState>
+              ) : !analyticsPeriodMatchesBudget ? (
+                <ChartEmptyState>Budget details are only loaded for the app’s currently selected month.</ChartEmptyState>
               ) : hasMonthlyBudget ? (
                 <>
                   <div className="analytics-budget-summary">

@@ -13,6 +13,106 @@
   margin-bottom: 20px;
 }
 
+.analytics-header-controls {
+  display: flex;
+  flex: 0 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.analytics-period-selector {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+  background: #fff;
+}
+
+.analytics-period-selector--month {
+  min-width: 204px;
+}
+
+.analytics-period-selector--year {
+  min-width: 132px;
+}
+
+.analytics-period-nav {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: #475569;
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.analytics-period-nav:hover {
+  border-color: transparent;
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.analytics-period-nav:focus-visible {
+  outline: 2px solid #0ea5a4;
+  outline-offset: 1px;
+}
+
+.analytics-period-input {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.analytics-period-input input,
+.analytics-period-input select {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 6px;
+  outline: none;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+  font-size: 0.79rem;
+  font-weight: 650;
+  text-align: center;
+}
+
+.analytics-period-input input:focus-visible,
+.analytics-period-input select:focus-visible {
+  outline: 2px solid #0ea5a4;
+  outline-offset: 1px;
+}
+
+.analytics-period-selector--year .analytics-period-input select {
+  text-align-last: center;
+}
+
+.analytics-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .analytics-eyebrow {
   margin: 0 0 5px;
   color: #0e8f8e;
@@ -376,6 +476,10 @@
   .analytics-chart-grid {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
+
+  .analytics-header {
+    align-items: flex-start;
+  }
 }
 
 @media (max-width: 640px) {
@@ -388,6 +492,23 @@
     align-items: stretch;
     gap: 14px;
     margin-bottom: 15px;
+  }
+
+  .analytics-header-controls {
+    justify-content: flex-start;
+    gap: 7px;
+  }
+
+  .analytics-period-selector--month {
+    min-width: 190px;
+  }
+
+  .analytics-period-selector--year {
+    min-width: 120px;
+  }
+
+  .analytics-timeframe {
+    max-width: 100%;
   }
 
   .analytics-subtitle {

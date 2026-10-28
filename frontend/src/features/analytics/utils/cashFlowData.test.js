@@ -53,6 +53,40 @@ test("yearly data aggregates full selected-year history by month", () => {
   assert.equal(result[11].net, -150);
 });
 
+test("monthly and yearly selections filter every total to the selected period", () => {
+  const incomes = [
+    { amount: 40, date: "2026-10-02T00:00:00.000Z" },
+    { amount: 60, date: "2026-11-02T00:00:00.000Z" },
+    { amount: 80, date: "2025-11-02T00:00:00.000Z" }
+  ];
+  const expenses = [
+    { amount: 10, date: "2026-10-02T00:00:00.000Z" },
+    { amount: 20, date: "2026-11-02T00:00:00.000Z" }
+  ];
+
+  const november = buildCashFlowData({
+    selectedYear: 2026,
+    selectedMonth: 10,
+    timeframe: "monthly",
+    incomes,
+    expenses
+  });
+  assert.equal(november[1].income, 60);
+  assert.equal(november[1].expense, 20);
+  assert.equal(november[1].net, 40);
+
+  const year2025 = buildCashFlowData({
+    selectedYear: 2025,
+    selectedMonth: 10,
+    timeframe: "yearly",
+    incomes,
+    expenses
+  });
+  assert.equal(year2025[10].income, 80);
+  assert.equal(year2025[10].expense, 0);
+  assert.equal(year2025[10].net, 80);
+});
+
 test("all-time data spans the full available transaction history", () => {
   const result = buildCashFlowData({
     ...options,
