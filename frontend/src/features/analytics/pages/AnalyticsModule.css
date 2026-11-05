@@ -464,6 +464,248 @@
   line-height: 1.45;
 }
 
+.analytics-statement-trigger {
+  min-height: 42px;
+  padding: 0 14px;
+  border: 1px solid #0e8f8e;
+  border-radius: 11px;
+  background: #0e8f8e;
+  color: #fff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.analytics-statement-trigger:hover {
+  border-color: #0b7776;
+  background: #0b7776;
+}
+
+.analytics-statement-trigger:focus-visible,
+.analytics-statement-close:focus-visible,
+.analytics-statement-toolbar select:focus-visible {
+  outline: 2px solid #0ea5a4;
+  outline-offset: 2px;
+}
+
+.analytics-statement-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.56);
+}
+
+.analytics-statement-modal {
+  width: min(100%, 980px);
+  max-height: min(900px, calc(100vh - 48px));
+  padding: 22px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+}
+
+.analytics-statement-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.analytics-statement-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.analytics-statement-header p:last-child {
+  margin: 6px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.analytics-statement-close {
+  display: inline-flex;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.analytics-statement-close:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.analytics-statement-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.analytics-statement-toolbar select {
+  min-width: 100px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid #dbe3ec;
+  border-radius: 8px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+}
+
+.analytics-statement-notice {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid #fed7aa;
+  border-radius: 9px;
+  background: #fffaf3;
+  color: #9a5b16;
+  font-size: 0.77rem;
+  line-height: 1.45;
+}
+
+.analytics-statement-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.analytics-statement-summary-card {
+  display: flex;
+  min-width: 0;
+  min-height: 91px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.analytics-statement-summary-card > span {
+  color: #64748b;
+  font-size: 0.71rem;
+  font-weight: 650;
+}
+
+.analytics-statement-summary-card strong {
+  overflow: hidden;
+  color: #0f172a;
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-statement-summary-card small {
+  color: #94a3b8;
+  font-size: 0.66rem;
+}
+
+.analytics-statement-summary-card--inflow strong {
+  color: #13804f;
+}
+
+.analytics-statement-summary-card--outflow strong {
+  color: #ce4c5b;
+}
+
+.analytics-statement-table-scroll {
+  max-height: min(430px, 48vh);
+  overflow: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 11px;
+}
+
+.analytics-statement-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: #334155;
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.analytics-statement-table th,
+.analytics-statement-table td {
+  padding: 9px 12px;
+  border-bottom: 1px solid #edf1f5;
+  white-space: nowrap;
+}
+
+.analytics-statement-table thead th {
+  position: sticky;
+  z-index: 1;
+  top: 0;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.analytics-statement-table th:first-child,
+.analytics-statement-table tbody th,
+.analytics-statement-table tfoot th {
+  text-align: left;
+}
+
+.analytics-statement-table tbody th {
+  color: #334155;
+  font-weight: 600;
+}
+
+.analytics-statement-table tbody tr:last-child th,
+.analytics-statement-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.analytics-statement-table tfoot th,
+.analytics-statement-table tfoot td {
+  position: sticky;
+  bottom: 0;
+  border-top: 1px solid #dbe3ec;
+  border-bottom: 0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 750;
+}
+
+.analytics-statement-income {
+  color: #13804f;
+}
+
+.analytics-statement-expense {
+  color: #ce4c5b;
+}
+
 @media (max-width: 900px) {
   .analytics-page {
     padding: 20px;
@@ -518,6 +760,11 @@
 
   .analytics-timeframe {
     align-self: flex-start;
+  }
+
+  .analytics-statement-trigger {
+    min-height: 40px;
+    padding: 0 11px;
   }
 
   .analytics-timeframe button {
@@ -589,5 +836,54 @@
 
   .analytics-chart--donut {
     height: 175px;
+  }
+}
+
+@media (max-width: 640px) {
+  .analytics-statement-backdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .analytics-statement-modal {
+    width: 100%;
+    max-height: 94vh;
+    padding: 18px 14px calc(14px + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    border-radius: 18px 18px 0 0;
+  }
+
+  .analytics-statement-header h2 {
+    font-size: 1.18rem;
+  }
+
+  .analytics-statement-header p:last-child {
+    max-width: 34ch;
+    font-size: 0.73rem;
+  }
+
+  .analytics-statement-summary {
+    gap: 7px;
+  }
+
+  .analytics-statement-summary-card {
+    min-height: 82px;
+    padding: 9px 8px;
+  }
+
+  .analytics-statement-summary-card > span {
+    font-size: 0.64rem;
+  }
+
+  .analytics-statement-summary-card strong {
+    font-size: clamp(0.82rem, 3.5vw, 1.05rem);
+  }
+
+  .analytics-statement-summary-card small {
+    font-size: 0.6rem;
+  }
+
+  .analytics-statement-table-scroll {
+    max-height: 45vh;
   }
 }

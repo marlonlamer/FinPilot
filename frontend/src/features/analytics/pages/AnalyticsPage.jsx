@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -24,6 +24,7 @@ import {
   getAdjacentYear,
   isValidAnalyticsYear
 } from "../utils/analyticsPeriod";
+import MonthlyStatementModal from "../components/MonthlyStatementModal";
 import "./AnalyticsModule.css";
 
 const CATEGORY_COLORS = ["#0ea5a4", "#2563eb", "#8b5cf6", "#f59e0b", "#ec4899", "#64748b", "#14b8a6"];
@@ -74,12 +75,14 @@ export default function AnalyticsPage({
   selectedMonth = new Date().getMonth()
 }) {
   const [timeframe, setTimeframe] = useState("monthly");
+  const [statementOpen, setStatementOpen] = useState(false);
   const [selectedPeriod, setSelectedPeriod] = useState(() => ({
     year: Number(selectedYear),
     month: Number(selectedMonth)
   }));
   const currentYear = selectedPeriod.year;
   const currentMonth = selectedPeriod.month;
+  const [statementYear, setStatementYear] = useState(currentYear);
   const currentMonthKey = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}`;
   const currentMonthDate = new Date(currentYear, currentMonth, 1);
   const budgetPeriodKey = `${Number(selectedYear)}-${String(Number(selectedMonth) + 1).padStart(2, "0")}`;
@@ -102,6 +105,14 @@ export default function AnalyticsPage({
     });
     return [...years].filter(isValidAnalyticsYear).sort((a, b) => b - a);
   }, [incomeRecords, expenseRecords, currentYear, selectedYear]);
+  const statementYears = useMemo(() => (
+    [...new Set([...availableYears, new Date().getFullYear()])].sort((a, b) => b - a)
+  ), [availableYears]);
+  const closeStatement = useCallback(() => setStatementOpen(false), []);
+  const openStatement = useCallback(() => {
+    setStatementYear(currentYear);
+    setStatementOpen(true);
+  }, [currentYear]);
 
   const scopedData = useMemo(() => {
     const matchesPeriod = (record) => {
@@ -279,6 +290,13 @@ export default function AnalyticsPage({
               </button>
             ))}
           </div>
+          <button
+            type="button"
+            className="analytics-statement-trigger"
+            onClick={openStatement}
+          >
+            Interactive Statement
+          </button>
         </div>
       </header>
 
@@ -482,6 +500,21 @@ export default function AnalyticsPage({
           </section>
         </>
       )}
+      <MonthlyStatementModal
+        open={statementOpen}
+        onClose={closeStatement}
+        year={statementYear}
+        onYearChange={setStatementYear}
+        availableYears={statementYears}
+        incomes={incomeRecords}
+        expenses={expenseRecords}
+        incomeAvailable={incomeAvailable}
+        expenseAvailable={expenseAvailable}
+        incomeStatus={incomeStatus}
+        expenseStatus={expenseStatus}
+        currencySymbol={currencySymbol}
+        formatCurrency={formatCurrency}
+      />
     </main>
   );
 }
