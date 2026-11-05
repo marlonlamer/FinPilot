@@ -96,8 +96,7 @@ export default function MonthlyStatementModal({
       >
         <header className="analytics-statement-header">
           <div>
-            <p className="analytics-eyebrow">FinPilot / Reports</p>
-            <h2 id="analytics-statement-title">Interactive Statement</h2>
+            <h2 id="analytics-statement-title">Interactive Financial Statement</h2>
             <p id="analytics-statement-description">
               Monthly income, expenditure, and net totals for the selected year.
             </p>

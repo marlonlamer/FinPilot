@@ -14,6 +14,7 @@ import {
   XAxis,
   YAxis
 } from "recharts";
+import { FileText } from "lucide-react";
 import {
   buildCashFlowData,
   getCashFlowAvailability,
@@ -32,7 +33,7 @@ const EMPTY_RECORDS = [];
 const TIMEFRAMES = [
   { value: "monthly", label: "Monthly" },
   { value: "yearly", label: "Yearly" },
-  { value: "all", label: "All time" }
+  { value: "all", label: "All Time" }
 ];
 
 const getAmount = (record) => {
@@ -204,8 +205,7 @@ export default function AnalyticsPage({
     <main className="analytics-page">
       <header className="analytics-header">
         <div>
-          <p className="analytics-eyebrow">FinPilot / Reports</p>
-          <h1>Financial Insights</h1>
+          <h1>Analytics</h1>
           <p className="analytics-subtitle">A clear view of your cash flow and spending patterns.</p>
         </div>
         <div className="analytics-header-controls">
@@ -295,6 +295,7 @@ export default function AnalyticsPage({
             className="analytics-statement-trigger"
             onClick={openStatement}
           >
+            <FileText size={17} strokeWidth={1.9} aria-hidden="true" />
             Interactive Statement
           </button>
         </div>
