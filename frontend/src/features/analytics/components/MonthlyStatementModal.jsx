@@ -179,7 +179,7 @@ export default function MonthlyStatementModal({
                 <tbody>
                   {statement.rows.map((row) => (
                     <tr key={row.monthIndex}>
-                      <th scope="row">{row.month}</th>
+                      <th scope="row">{row.month.slice(0, 3)}</th>
                       <td className="analytics-statement-income">{money(row.income)}</td>
                       <td className="analytics-statement-expense">{money(row.expenditure)}</td>
                       <td>{money(row.net)}</td>
