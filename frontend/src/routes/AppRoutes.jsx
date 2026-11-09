@@ -577,6 +577,10 @@ function AppController() {
 				<Route element={<ProtectedRoute />}>
 					<Route element={<AppLayout {...layoutProps} />}>
 												<Route index element={<Dashboard
+							incomes={incomes}
+							expenses={expenses}
+							onCreateExpense={createExpenseFromTransactions}
+							onCreateIncome={createIncomeFromTransactions}
 							availableBalance={dashboardTotals.availableBalance != null ? dashboardTotals.availableBalance : (availableBalance + (savingsBalanceAdjustment || 0))}
 							totalSavings={totalSavings}
 							computedTotalSavings={dashboardTotals.totalSavings != null ? dashboardTotals.totalSavings : computedTotalSavingsFromGoals}
@@ -595,7 +599,6 @@ function AppController() {
 							COLORS={COLORS}
 							currencySymbol={currencySymbol}
 							formatCurrency={formatCurrency}
-							  expenses={expenses}
 							totalMonthlyBudget={budgetSummary.totalMonthlyBudget}
 							totalBudgetSpent={budgetSummary.totalBudgetSpent}
 							totalBudgetRemaining={budgetSummary.totalBudgetRemaining}
