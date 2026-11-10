@@ -130,6 +130,7 @@ export default function Dashboard(props) {
         monthlyIncomeDisplay={monthlyIncomeDisplay}
         monthlyExpensesDisplay={monthlyExpensesDisplay}
         totalNetWorthDisplay={totalNetWorthDisplay}
+        selectedPeriodLabel={selectedPeriodLabel}
       />
 
       <section className="dashboard-content-grid" aria-label="Financial activity and insights">

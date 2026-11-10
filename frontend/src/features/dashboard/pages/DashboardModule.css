@@ -100,11 +100,10 @@
 .stat-card {
   position: relative;
   display: flex;
-  min-height: 118px;
+  min-height: 136px;
   flex-direction: column;
-  justify-content: center;
-  gap: 9px;
-  padding: 16px 15px 15px 18px;
+  justify-content: flex-start;
+  padding: 14px 15px 13px 18px;
   overflow: hidden;
 }
 
@@ -124,21 +123,79 @@
   background: #e35d6a;
 }
 
+.stat-heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .stat-label {
+  min-width: 0;
   color: #64748b;
   font-size: 0.74rem;
   font-weight: 650;
+  line-height: 1.35;
+}
+
+.stat-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dbeafe;
+  border-radius: 9px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.stat-icon--savings {
+  border-color: #d1fae5;
+  background: #ecfdf5;
+  color: #13804f;
+}
+
+.stat-icon--income {
+  border-color: #d1fae5;
+  background: #ecfdf5;
+  color: #13804f;
+}
+
+.stat-icon--expenses {
+  border-color: #ffe4e6;
+  background: #fff1f2;
+  color: #ce4c5b;
+}
+
+.stat-icon--net-worth {
+  border-color: #e0e7ff;
+  background: #eef2ff;
+  color: #4f46e5;
 }
 
 .stat-value {
+  display: block;
+  min-width: 0;
+  margin-top: 9px;
   overflow: hidden;
   color: #0f172a;
-  font-size: clamp(1.1rem, 1.65vw, 1.45rem);
+  font-size: clamp(1.2rem, 1.75vw, 1.55rem);
   font-weight: 750;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.035em;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.stat-subtitle {
+  display: block;
+  margin-top: 5px;
+  color: #94a3b8;
+  font-size: 0.68rem;
+  line-height: 1.4;
 }
 
 .stat-card--income .stat-value {
@@ -396,27 +453,29 @@
   }
 
   .dashboard-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: minmax(0, 1fr);
     gap: 9px;
     margin-bottom: 12px;
   }
 
   .stat-card {
-    min-height: 98px;
-    padding: 13px 10px 12px 14px;
-    gap: 7px;
+    width: 100%;
+    min-height: 0;
+    padding: 13px 12px 12px 15px;
   }
 
   .stat-label {
-    font-size: 0.68rem;
+    font-size: 0.74rem;
   }
 
   .stat-value {
-    font-size: clamp(0.9rem, 4vw, 1.12rem);
+    margin-top: 7px;
+    font-size: clamp(1.6rem, 5vw, 1.4rem);
   }
 
-  .stat-card--net-worth {
-    grid-column: 1 / -1;
+  .stat-subtitle {
+    margin-top: 4px;
+    font-size: 0.68rem;
   }
 
   .dashboard-content-grid {

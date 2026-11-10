@@ -1,31 +1,54 @@
+import { Landmark, PiggyBank, TrendingDown, TrendingUp, Wallet } from "lucide-react";
+
 export default function DashboardSummaryCards({
   availableBalanceDisplay,
   totalSavingsDisplay,
   monthlyIncomeDisplay,
   monthlyExpensesDisplay,
   totalNetWorthDisplay,
+  selectedPeriodLabel,
 }) {
   return (
     <section className="dashboard-stats" aria-label="Financial overview">
       <article className="stat-card stat-card--balance">
-        <span className="stat-label">Available Balance</span>
+        <div className="stat-heading">
+          <span className="stat-label">Available Balance</span>
+          <span className="stat-icon stat-icon--balance" aria-hidden="true"><Wallet size={17} strokeWidth={1.9} /></span>
+        </div>
         <strong className="stat-value">{availableBalanceDisplay}</strong>
+        <span className="stat-subtitle">Your current available funds</span>
       </article>
       <article className="stat-card stat-card--savings">
-        <span className="stat-label">Total Savings</span>
+        <div className="stat-heading">
+          <span className="stat-label">Total Savings</span>
+          <span className="stat-icon stat-icon--savings" aria-hidden="true"><PiggyBank size={17} strokeWidth={1.9} /></span>
+        </div>
         <strong className="stat-value">{totalSavingsDisplay}</strong>
+        <span className="stat-subtitle">Money set aside for your goals</span>
       </article>
       <article className="stat-card stat-card--income">
-        <span className="stat-label">Monthly Income</span>
+        <div className="stat-heading">
+          <span className="stat-label">Income · {selectedPeriodLabel}</span>
+          <span className="stat-icon stat-icon--income" aria-hidden="true"><TrendingUp size={17} strokeWidth={1.9} /></span>
+        </div>
         <strong className="stat-value">{monthlyIncomeDisplay}</strong>
+        <span className="stat-subtitle">Total money received in this period</span>
       </article>
       <article className="stat-card stat-card--expenses">
-        <span className="stat-label">Monthly Expenses</span>
+        <div className="stat-heading">
+          <span className="stat-label">Expenses · {selectedPeriodLabel}</span>
+          <span className="stat-icon stat-icon--expenses" aria-hidden="true"><TrendingDown size={17} strokeWidth={1.9} /></span>
+        </div>
         <strong className="stat-value">{monthlyExpensesDisplay}</strong>
+        <span className="stat-subtitle">Total money spent in this period</span>
       </article>
       <article className="stat-card stat-card--net-worth">
-        <span className="stat-label">Total Net Worth</span>
+        <div className="stat-heading">
+          <span className="stat-label">Net Worth</span>
+          <span className="stat-icon stat-icon--net-worth" aria-hidden="true"><Landmark size={17} strokeWidth={1.9} /></span>
+        </div>
         <strong className="stat-value">{totalNetWorthDisplay}</strong>
+        <span className="stat-subtitle">Savings and available balance</span>
       </article>
     </section>
   );
