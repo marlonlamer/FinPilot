@@ -10,9 +10,13 @@ export default function DashboardHeader({
   return (
     <header className="dashboard-header">
       <div className="dashboard-header-copy">
-        <div className="dashboard-greeting">
-          <h1>{greeting}, {displayName} <span className="wave" aria-hidden="true">👋</span></h1>
-          <div className="dashboard-date">{formattedDate}</div>
+        <h1 className="dashboard-title">Dashboard</h1>
+        <div className="dashboard-meta-row">
+          <p className="dashboard-greeting">
+            {greeting}, {displayName} <span className="wave" aria-hidden="true">👋</span>
+          </p>
+          <span className="dashboard-meta-separator" aria-hidden="true">·</span>
+          <time className="dashboard-date">{formattedDate}</time>
         </div>
         <p className="dashboard-subtext">
           Your financial overview for <strong>{selectedPeriodLabel}</strong>.
