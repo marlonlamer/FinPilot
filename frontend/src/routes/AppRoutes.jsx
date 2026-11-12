@@ -54,19 +54,29 @@ function AppController() {
 
 	const [dashboardTotals, setDashboardTotals] = useState({ totalSavings: 0, availableBalance: 0 });
 	const [savingsHistory, setSavingsHistory] = useState([]);
+	const [savingsHistoryStatus, setSavingsHistoryStatus] = useState(() => hasStoredAuthToken() ? "loading" : "unavailable");
 
 	const fetchSavingsHistory = async () => {
+		if (!hasStoredAuthToken()) {
+			setSavingsHistory([]);
+			setSavingsHistoryStatus("unavailable");
+			return;
+		}
+		const uid = getCurrentUserId();
+		if (!uid) {
+			setSavingsHistory([]);
+			setSavingsHistoryStatus("unavailable");
+			return;
+		}
+		setSavingsHistoryStatus("loading");
 		try {
-			if (!hasStoredAuthToken()) return setSavingsHistory([]);
-			const uid = getCurrentUserId();
-			if (!uid) return setSavingsHistory([]);
-			const pad = (n) => String(n + 1).padStart(2, "0");
-			const monthKey = `${selectedYear}-${pad(selectedMonth)}`;
+			const monthKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
 			const list = await api.get(`/savings/history/${uid}`, { params: { month: monthKey } });
 			setSavingsHistory(Array.isArray(list) ? list : []);
+			setSavingsHistoryStatus("loaded");
 		} catch (e) {
 			console.warn('Failed to fetch savings history', e);
-			setSavingsHistory([]);
+			setSavingsHistoryStatus("unavailable");
 		}
 	};
 
@@ -579,6 +589,8 @@ function AppController() {
 												<Route index element={<Dashboard
 							incomes={incomes}
 							expenses={expenses}
+							savingsHistory={savingsHistory}
+							savingsHistoryStatus={savingsHistoryStatus}
 							onCreateExpense={createExpenseFromTransactions}
 							onCreateIncome={createIncomeFromTransactions}
 							availableBalance={dashboardTotals.availableBalance != null ? dashboardTotals.availableBalance : (availableBalance + (savingsBalanceAdjustment || 0))}

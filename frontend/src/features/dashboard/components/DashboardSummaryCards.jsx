@@ -6,7 +6,7 @@ export default function DashboardSummaryCards({
   monthlyIncomeDisplay,
   monthlyExpensesDisplay,
   totalNetWorthDisplay,
-  selectedPeriodLabel,
+  savingsHistoryStatus,
 }) {
   return (
     <section className="dashboard-stats" aria-label="Financial overview">
@@ -20,35 +20,41 @@ export default function DashboardSummaryCards({
       </article>
       <article className="stat-card stat-card--savings">
         <div className="stat-heading">
-          <span className="stat-label">Total Savings</span>
+          <span className="stat-label">Savings This Month</span>
           <span className="stat-icon stat-icon--savings" aria-hidden="true"><PiggyBank size={17} strokeWidth={1.9} /></span>
         </div>
         <strong className="stat-value">{totalSavingsDisplay}</strong>
-        <span className="stat-subtitle">Money set aside for your goals</span>
+        <span className="stat-subtitle">
+          {savingsHistoryStatus === "loading"
+            ? "Loading savings activity"
+            : savingsHistoryStatus === "loaded"
+              ? "Net savings contributions this month"
+              : "Savings activity unavailable"}
+        </span>
       </article>
       <article className="stat-card stat-card--income">
         <div className="stat-heading">
-          <span className="stat-label">Income · {selectedPeriodLabel}</span>
+          <span className="stat-label">Income This Month</span>
           <span className="stat-icon stat-icon--income" aria-hidden="true"><TrendingUp size={17} strokeWidth={1.9} /></span>
         </div>
         <strong className="stat-value">{monthlyIncomeDisplay}</strong>
-        <span className="stat-subtitle">Total money received in this period</span>
+        <span className="stat-subtitle">Total money received this month</span>
       </article>
       <article className="stat-card stat-card--expenses">
         <div className="stat-heading">
-          <span className="stat-label">Expenses · {selectedPeriodLabel}</span>
+          <span className="stat-label">Expenses This Month</span>
           <span className="stat-icon stat-icon--expenses" aria-hidden="true"><TrendingDown size={17} strokeWidth={1.9} /></span>
         </div>
         <strong className="stat-value">{monthlyExpensesDisplay}</strong>
-        <span className="stat-subtitle">Total money spent in this period</span>
+        <span className="stat-subtitle">Total money spent this month</span>
       </article>
       <article className="stat-card stat-card--net-worth">
         <div className="stat-heading">
-          <span className="stat-label">Net Worth</span>
+          <span className="stat-label">Net Worth This Month</span>
           <span className="stat-icon stat-icon--net-worth" aria-hidden="true"><Landmark size={17} strokeWidth={1.9} /></span>
         </div>
         <strong className="stat-value">{totalNetWorthDisplay}</strong>
-        <span className="stat-subtitle">Savings and available balance</span>
+        <span className="stat-subtitle">Income less expenses; savings transfers excluded</span>
       </article>
     </section>
   );

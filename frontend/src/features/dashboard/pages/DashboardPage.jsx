@@ -13,12 +13,17 @@ import ExpenseDistribution from "../../../components/ExpenseDistribution/Expense
 import AddTransactionModal from "../../transactions/components/AddTransactionModal";
 import DashboardHeader from "../components/DashboardHeader";
 import DashboardSummaryCards from "../components/DashboardSummaryCards";
+import { getMonthlySavingsNet } from "../utils/monthlySavings";
 import { getCurrentUser } from "../../../services/api";
 import "./DashboardModule.css";
 
+const toNumber = (value) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : 0;
+};
+
 export default function Dashboard(props) {
   const {
-    computedTotalSavings, 
     monthlyIncomeTotal,
     monthlyExpenseTotal,
     combinedLineData,
@@ -31,6 +36,8 @@ export default function Dashboard(props) {
     totalBudgetRemaining = 0,
     incomes = [],
     expenses = [],
+    savingsHistory = [],
+    savingsHistoryStatus = "unavailable",
     onCreateExpense,
     onCreateIncome
   } = props;
@@ -64,23 +71,18 @@ export default function Dashboard(props) {
     }
   }, [now]);
 
-  const toNumber = (v) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? n : 0;
-  };
-
   const fmt = (v, digits = 2) => {
     const n = toNumber(v);
     return formatCurrency ? formatCurrency(n) : `${currencySymbol}${n.toFixed(digits)}`;
   };
 
   const availableBalanceDisplay = fmt(availableBalance, 2);
-  const totalSavingsDisplay = fmt(computedTotalSavings, 2);
+  const monthlySavingsTotal = getMonthlySavingsNet(savingsHistory, selectedYear, selectedMonth);
+  const monthlyNetWorthChange = toNumber(monthlyIncomeTotal) - toNumber(monthlyExpenseTotal);
+  const totalSavingsDisplay = savingsHistoryStatus === "loaded" ? fmt(monthlySavingsTotal, 2) : "—";
   const monthlyIncomeDisplay = fmt(monthlyIncomeTotal, 2);
   const monthlyExpensesDisplay = fmt(monthlyExpenseTotal, 2);
-  const totalNetWorthDisplay = formatCurrency
-    ? formatCurrency(Number(computedTotalSavings || 0) + Number(availableBalance || 0))
-    : `${currencySymbol}${(Number(computedTotalSavings || 0) + Number(availableBalance || 0)).toFixed(2)}`;
+  const monthlyNetWorthChangeDisplay = fmt(monthlyNetWorthChange, 2);
 
   const cld = Array.isArray(combinedLineData) ? combinedLineData : [];
   const obc = Array.isArray(overBudgetCategories) ? overBudgetCategories : [];
@@ -129,8 +131,8 @@ export default function Dashboard(props) {
         totalSavingsDisplay={totalSavingsDisplay}
         monthlyIncomeDisplay={monthlyIncomeDisplay}
         monthlyExpensesDisplay={monthlyExpensesDisplay}
-        totalNetWorthDisplay={totalNetWorthDisplay}
-        selectedPeriodLabel={selectedPeriodLabel}
+        totalNetWorthDisplay={monthlyNetWorthChangeDisplay}
+        savingsHistoryStatus={savingsHistoryStatus}
       />
 
       <section className="dashboard-content-grid" aria-label="Financial activity and insights">
