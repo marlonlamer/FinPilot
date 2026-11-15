@@ -658,7 +658,7 @@ function AppController() {
 
 						<Route path="analytics" element={<Analytics incomes={analyticsDataStatus.incomes === "loaded" ? incomes : undefined} expenses={analyticsDataStatus.expenses === "loaded" ? expenseHistory : undefined} incomeStatus={analyticsDataStatus.incomes} expenseStatus={analyticsDataStatus.expenses} budgets={perCategoryBudgets} budgetSummary={budgetSummary} selectedYear={selectedYear} selectedMonth={selectedMonth} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 
-						<Route path="profile" element={<Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
+						<Route path="profile" element={<Profile totalDeposits={totalIncomes} totalWithdrawals={totalExpenses} totalSavings={totalSavings} savingsRate={savingsRate} savingsRateColor={savingsRateColor} currencySymbol={currencySymbol} formatCurrency={formatCurrency} logout={logout} />} />
 
 						<Route path="settings" element={<Settings currencyCode={currencyCode} setCurrencyCode={setCurrencyCode} currencySymbol={currencySymbol} formatCurrency={formatCurrency} />} />
 

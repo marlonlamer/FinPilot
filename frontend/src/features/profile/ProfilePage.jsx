@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Check, Mail, Pencil, UserRound, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Check, LogOut, Mail, Pencil, Trash2, UserRound, X } from "lucide-react";
 import { api, getCurrentUser, setCurrentUser } from "../../services/api";
 import "../../pages/Profile/ProfileModule.css";
 
@@ -12,11 +13,13 @@ const getInitials = (user) => {
   return emailName ? emailName.slice(0, 2).toUpperCase() : "?";
 };
 
-export default function ProfilePage() {
+export default function ProfilePage({ logout }) {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState(() => getCurrentUser() || {});
   const [name, setName] = useState(profile.name || "");
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -61,6 +64,13 @@ export default function ProfilePage() {
 
   const displayName = profile.name || "Name not provided";
   const email = profile.email || "Email unavailable";
+
+  const handleLogout = () => {
+    if (loggingOut || typeof logout !== "function") return;
+    setLoggingOut(true);
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <main className="profile-page">
@@ -163,6 +173,56 @@ export default function ProfilePage() {
           </p>
         </aside>
       </div>
+
+      <section className="profile-card profile-actions-card" aria-labelledby="profile-actions-title">
+        <div className="profile-card-header">
+          <div>
+            <h2 id="profile-actions-title">Account Actions</h2>
+            <p>Manage your current session and account.</p>
+          </div>
+        </div>
+        <div className="profile-actions-list">
+          <div className="profile-action-row">
+            <span className="profile-action-icon profile-action-icon--neutral" aria-hidden="true">
+              <LogOut size={18} />
+            </span>
+            <span className="profile-action-copy">
+              <strong>Log Out</strong>
+              <small>End your current session on this device.</small>
+            </span>
+            <button
+              type="button"
+              className="profile-button profile-button--secondary"
+              onClick={handleLogout}
+              disabled={loggingOut || typeof logout !== "function"}
+            >
+              <LogOut size={15} aria-hidden="true" />
+              {loggingOut ? "Logging out..." : "Log Out"}
+            </button>
+          </div>
+          <div className="profile-action-row profile-action-row--danger">
+            <span className="profile-action-icon profile-action-icon--danger" aria-hidden="true">
+              <Trash2 size={18} />
+            </span>
+            <span className="profile-action-copy">
+              <strong>Delete Account</strong>
+              <small>Permanent account deletion is not currently supported.</small>
+            </span>
+            <button
+              type="button"
+              className="profile-button profile-button--danger"
+              disabled
+              aria-describedby="profile-delete-unavailable"
+            >
+              <Trash2 size={15} aria-hidden="true" />
+              Delete Account
+            </button>
+          </div>
+          <p className="profile-action-unavailable" id="profile-delete-unavailable" role="note">
+            Contact support for account deletion. No account data will be removed here.
+          </p>
+        </div>
+      </section>
     </main>
   );
 }
