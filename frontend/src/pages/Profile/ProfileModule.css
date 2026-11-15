@@ -1,2 +1,371 @@
 
-(The file intentionally left blank)
+.profile-page {
+  box-sizing: border-box;
+  width: min(100%, 1200px);
+  margin: 0 auto;
+  padding: 28px 24px 36px;
+  color: #0f172a;
+}
+
+.profile-page-header {
+  margin-bottom: 20px;
+}
+
+.profile-page-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+.profile-page-header p {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.profile-overview,
+.profile-card {
+  min-width: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.035);
+}
+
+.profile-overview {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 21px 22px;
+  margin-bottom: 14px;
+}
+
+.profile-avatar {
+  display: flex;
+  width: 68px;
+  height: 68px;
+  flex: 0 0 68px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #bfdbfe;
+  border-radius: 20px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 1.3rem;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+
+.profile-overview-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.profile-section-eyebrow {
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.profile-overview-copy h2 {
+  overflow: hidden;
+  margin: 4px 0 5px;
+  color: #0f172a;
+  font-size: 1.25rem;
+  font-weight: 730;
+  letter-spacing: -0.025em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-overview-copy p {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #64748b;
+  font-size: 0.82rem;
+}
+
+.profile-overview-copy p svg {
+  flex: 0 0 auto;
+  color: #94a3b8;
+}
+
+.profile-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(270px, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.profile-card {
+  padding: 19px 20px;
+}
+
+.profile-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.profile-card-header h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 0.98rem;
+  font-weight: 720;
+}
+
+.profile-card-header p {
+  margin: 5px 0 0;
+  color: #94a3b8;
+  font-size: 0.75rem;
+}
+
+.profile-card-icon {
+  display: inline-flex;
+  width: 35px;
+  height: 35px;
+  flex: 0 0 35px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.profile-overview-action {
+  flex: 0 0 auto;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-field {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  color: #334155;
+  font-size: 0.77rem;
+  font-weight: 650;
+}
+
+.profile-field input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid #dbe3ec;
+  border-radius: 9px;
+  background: #fff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.profile-field input:read-only {
+  background: #f8fafc;
+  color: #475569;
+}
+
+.profile-field input:focus-visible {
+  border-color: #2563eb;
+  outline: 2px solid rgba(37, 99, 235, 0.18);
+  outline-offset: 1px;
+}
+
+.profile-field input[aria-invalid="true"] {
+  border-color: #dc2626;
+}
+
+.profile-field small {
+  color: #94a3b8;
+  font-size: 0.69rem;
+  font-weight: 400;
+}
+
+.profile-button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 13px;
+  border: 1px solid #dbe3ec;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.77rem;
+  font-weight: 680;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.profile-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.profile-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.profile-button--secondary {
+  background: #fff;
+  color: #475569;
+}
+
+.profile-button--secondary:hover:not(:disabled) {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.profile-button--primary {
+  border-color: #2563eb;
+  background: #2563eb;
+  color: #fff;
+}
+
+.profile-button--primary:hover:not(:disabled) {
+  border-color: #1d4ed8;
+  background: #1d4ed8;
+}
+
+.profile-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.profile-feedback {
+  margin: -4px 0 0;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.profile-feedback--error {
+  color: #b91c1c;
+}
+
+.profile-feedback--success {
+  color: #047857;
+}
+
+.profile-account-list {
+  margin: 0;
+}
+
+.profile-account-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #edf1f5;
+}
+
+.profile-account-list > div:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.profile-account-list dt {
+  color: #64748b;
+  font-size: 0.76rem;
+}
+
+.profile-account-list dd {
+  max-width: 60%;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 650;
+  text-align: right;
+}
+
+.profile-account-note {
+  margin: 12px 0 0;
+  padding: 10px 11px;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.71rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  .profile-page {
+    padding: 22px 18px 30px;
+  }
+
+  .profile-content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    padding: 18px 14px 26px;
+  }
+
+  .profile-page-header {
+    margin-bottom: 16px;
+  }
+
+  .profile-overview {
+    flex-wrap: wrap;
+    gap: 13px;
+    padding: 16px;
+  }
+
+  .profile-avatar {
+    width: 56px;
+    height: 56px;
+    flex-basis: 56px;
+    border-radius: 16px;
+    font-size: 1.1rem;
+  }
+
+  .profile-overview-copy h2 {
+    font-size: 1.05rem;
+  }
+
+  .profile-overview-copy p {
+    font-size: 0.74rem;
+  }
+
+  .profile-overview-action {
+    width: 100%;
+  }
+
+  .profile-card {
+    padding: 16px 14px;
+  }
+
+  .profile-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .profile-form-actions .profile-button {
+    width: 100%;
+    min-height: 44px;
+  }
+}
