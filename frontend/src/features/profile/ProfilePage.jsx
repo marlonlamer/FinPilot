@@ -20,6 +20,10 @@ export default function ProfilePage({ logout }) {
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -70,6 +74,45 @@ export default function ProfilePage({ logout }) {
     setLoggingOut(true);
     logout();
     navigate("/login", { replace: true });
+  };
+
+  const openDeleteModal = () => {
+    setDeletePassword("");
+    setDeleteError("");
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    if (deletingAccount) return;
+    setDeleteModalOpen(false);
+    setDeletePassword("");
+    setDeleteError("");
+  };
+
+  const handleDeleteAccount = async (event) => {
+    event.preventDefault();
+    if (deletingAccount || !deletePassword || typeof logout !== "function") return;
+
+    setDeletingAccount(true);
+    setDeleteError("");
+    try {
+      await api.delete("/user/account", { data: { password: deletePassword } });
+      logout();
+      navigate("/login", { replace: true });
+    } catch (deleteAccountError) {
+      setDeleteError(
+        deleteAccountError?.response?.data?.error ||
+        deleteAccountError?.message ||
+        "Unable to delete your account. Please try again."
+      );
+    } finally {
+      setDeletePassword("");
+      setDeletingAccount(false);
+    }
+  };
+
+  const handleDeleteBackdropMouseDown = (event) => {
+    if (event.target === event.currentTarget) closeDeleteModal();
   };
 
   return (
@@ -206,23 +249,84 @@ export default function ProfilePage({ logout }) {
             </span>
             <span className="profile-action-copy">
               <strong>Delete Account</strong>
-              <small>Permanent account deletion is not currently supported.</small>
+              <small>Permanently delete your account and associated financial records.</small>
             </span>
             <button
               type="button"
               className="profile-button profile-button--danger"
-              disabled
-              aria-describedby="profile-delete-unavailable"
+              onClick={openDeleteModal}
+              disabled={deletingAccount || typeof logout !== "function"}
             >
               <Trash2 size={15} aria-hidden="true" />
               Delete Account
             </button>
           </div>
-          <p className="profile-action-unavailable" id="profile-delete-unavailable" role="note">
-            Contact support for account deletion. No account data will be removed here.
-          </p>
         </div>
       </section>
+
+      {deleteModalOpen ? (
+        <div className="profile-delete-backdrop" onMouseDown={handleDeleteBackdropMouseDown}>
+          <section
+            className="profile-delete-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-delete-title"
+            aria-describedby="profile-delete-description"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="profile-delete-heading">
+              <span className="profile-action-icon profile-action-icon--danger" aria-hidden="true">
+                <Trash2 size={18} />
+              </span>
+              <div>
+                <h2 id="profile-delete-title">Delete your account?</h2>
+                <p id="profile-delete-description">
+                  This permanently deletes your account and its associated financial records. This action cannot be undone.
+                </p>
+              </div>
+            </div>
+            <form onSubmit={handleDeleteAccount} className="profile-delete-form">
+              <label className="profile-field" htmlFor="profile-delete-password">
+                <span>Current Password</span>
+                <input
+                  id="profile-delete-password"
+                  type="password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  autoComplete="current-password"
+                  required
+                  disabled={deletingAccount}
+                  aria-invalid={Boolean(deleteError)}
+                  aria-describedby={deleteError ? "profile-delete-error" : undefined}
+                />
+              </label>
+              {deleteError ? (
+                <p className="profile-feedback profile-feedback--error" id="profile-delete-error" role="alert">
+                  {deleteError}
+                </p>
+              ) : null}
+              <div className="profile-delete-actions">
+                <button
+                  type="button"
+                  className="profile-button profile-button--secondary"
+                  onClick={closeDeleteModal}
+                  disabled={deletingAccount}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="profile-button profile-button--danger"
+                  disabled={deletingAccount || !deletePassword}
+                >
+                  <Trash2 size={15} aria-hidden="true" />
+                  {deletingAccount ? "Deleting..." : "Delete Account"}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

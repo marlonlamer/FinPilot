@@ -375,6 +375,61 @@
   line-height: 1.4;
 }
 
+.profile-delete-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.profile-delete-modal {
+  box-sizing: border-box;
+  width: min(100%, 440px);
+  padding: 22px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+}
+
+.profile-delete-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  margin-bottom: 20px;
+}
+
+.profile-delete-heading h2 {
+  margin: 1px 0 6px;
+  color: #0f172a;
+  font-size: 1.05rem;
+  font-weight: 720;
+}
+
+.profile-delete-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.profile-delete-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.profile-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 2px;
+}
+
 .profile-button--danger {
   border-color: #fecaca;
   background: #fff;
@@ -384,16 +439,6 @@
 .profile-button--danger:disabled {
   cursor: not-allowed;
   opacity: 0.58;
-}
-
-.profile-action-unavailable {
-  margin: 0;
-  padding: 9px 11px;
-  border-radius: 8px;
-  background: #fff7f7;
-  color: #9f3a43;
-  font-size: 0.71rem;
-  line-height: 1.45;
 }
 
 @media (max-width: 760px) {
@@ -468,6 +513,19 @@
   }
 
   .profile-action-row > .profile-button {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .profile-delete-modal {
+    padding: 18px 16px;
+  }
+
+  .profile-delete-actions {
+    flex-direction: column-reverse;
+  }
+
+  .profile-delete-actions .profile-button {
     width: 100%;
     min-height: 44px;
   }

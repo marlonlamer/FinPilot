@@ -1,6 +1,7 @@
 # node
 node_modules
 .env
+.env.test
 
 # frontend
 frontend/node_modules
