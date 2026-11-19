@@ -166,7 +166,7 @@ export default function Settings({
                 onClick={closeCurrencyModal}
                 aria-label="Close currency selection"
               >
-                <X size={19} aria-hidden="true" />
+                <X size={22} strokeWidth={2.25} aria-hidden="true" />
               </button>
             </header>
 

@@ -256,20 +256,22 @@
 
 .settings-modal-close {
   display: inline-flex;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
   align-items: center;
   justify-content: center;
-  border: 1px solid #e2e8f0;
-  border-radius: 9px;
-  background: #fff;
+  margin: -4px -4px 0 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
   color: #475569;
   cursor: pointer;
 }
 
 .settings-modal-close:hover {
-  background: #f8fafc;
+  background: #f3f4f6;
+  color: #111827;
 }
 
 .settings-modal-close svg {
