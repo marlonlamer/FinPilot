@@ -13,7 +13,7 @@ export default function SidebarMenuItem({ item, onLinkClick }) {
       }
       onClick={onLinkClick}
     >
-      <Icon size={20}/>
+      <Icon size={18} aria-hidden="true" />
 
       <span>
           {item.label}

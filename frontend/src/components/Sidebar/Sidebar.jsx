@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import SidebarHeader from "./SidebarHeader";
 import SidebarNavigation from "./SidebarNavigation";
-import SidebarFooter from "./SidebarFooter";
 
 const menuItems = [
   {
@@ -86,8 +85,6 @@ export default function Sidebar({
       <SidebarHeader onClose={onClose} />
 
       <SidebarNavigation items={menuItems} onLinkClick={handleLinkClick} />
-
-      <SidebarFooter />
     </aside>
   );
 }
