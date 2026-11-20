@@ -573,7 +573,7 @@ function AppController() {
 	};
 
 	// AppLayout expects: monthNames, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, dateFilter, setDateFilter, authToken, logout
-	const layoutProps = { monthNames, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, dateFilter, setDateFilter, authToken, logout };
+	const layoutProps = { logout };
 
 	return (
 		<BrowserRouter future={{ v7_startTransition: true }}>

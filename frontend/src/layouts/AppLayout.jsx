@@ -7,7 +7,7 @@ import "./AppLayout.css";
 export default function AppLayout(props) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const { monthNames, selectedMonth, setSelectedMonth, selectedYear, setSelectedYear, dateFilter, setDateFilter, authToken, logout } = props;
+  const { logout } = props;
 
   return (
     <div className="app-layout">
@@ -22,7 +22,7 @@ export default function AppLayout(props) {
           />
       )}
       <div className="app-content">
-        <Navbar monthNames={monthNames} selectedMonth={selectedMonth} setSelectedMonth={setSelectedMonth} selectedYear={selectedYear} setSelectedYear={setSelectedYear} dateFilter={dateFilter} setDateFilter={setDateFilter} authToken={authToken} logout={logout} 
+        <Navbar logout={logout}
           onMenuClick={() => setIsSidebarOpen(true)}
         />
         <main className="app-main">
